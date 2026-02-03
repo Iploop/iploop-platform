@@ -9,10 +9,11 @@ const logger = require('./utils/logger');
 const { connectDatabase, connectRedis } = require('./config/database');
 const authRoutes = require('./routes/auth');
 const proxyRoutes = require('./routes/proxy');
-const usageRoutes = require('./routes/usage');
-const billingRoutes = require('./routes/billing');
-const networkRoutes = require('./routes/network');
-const errorHandler = require('./middleware/errorHandler');
+// TODO: Implement these routes
+// const usageRoutes = require('./routes/usage');
+// const billingRoutes = require('./routes/billing');
+// const networkRoutes = require('./routes/network');
+const { errorHandler } = require('./middleware/errorHandler');
 
 const app = express();
 const PORT = process.env.PORT || 8002;
@@ -83,9 +84,10 @@ app.get('/health', async (req, res) => {
 // API routes
 app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/proxy', proxyRoutes);
-app.use('/api/v1/usage', usageRoutes);
-app.use('/api/v1/billing', billingRoutes);
-app.use('/api/v1/network', networkRoutes);
+// TODO: Implement these routes
+// app.use('/api/v1/usage', usageRoutes);
+// app.use('/api/v1/billing', billingRoutes);
+// app.use('/api/v1/network', networkRoutes);
 
 // Root endpoint
 app.get('/', (req, res) => {
@@ -115,21 +117,32 @@ app.use('*', (req, res) => {
   });
 });
 
+// Server variable for graceful shutdown
+let server;
+
 // Graceful shutdown
 process.on('SIGTERM', () => {
   logger.info('SIGTERM received, shutting down gracefully');
-  server.close(() => {
-    logger.info('Process terminated');
+  if (server) {
+    server.close(() => {
+      logger.info('Process terminated');
+      process.exit(0);
+    });
+  } else {
     process.exit(0);
-  });
+  }
 });
 
 process.on('SIGINT', () => {
   logger.info('SIGINT received, shutting down gracefully');
-  server.close(() => {
-    logger.info('Process terminated');
+  if (server) {
+    server.close(() => {
+      logger.info('Process terminated');
+      process.exit(0);
+    });
+  } else {
     process.exit(0);
-  });
+  }
 });
 
 // Start server
@@ -137,13 +150,10 @@ async function startServer() {
   try {
     await initializeConnections();
     
-    const server = app.listen(PORT, '0.0.0.0', () => {
+    server = app.listen(PORT, '0.0.0.0', () => {
       logger.info(`Customer API server running on port ${PORT}`);
       logger.info(`Environment: ${process.env.NODE_ENV || 'development'}`);
     });
-
-    // Export server for graceful shutdown
-    module.exports = server;
     
   } catch (error) {
     logger.error('Failed to start server:', error);

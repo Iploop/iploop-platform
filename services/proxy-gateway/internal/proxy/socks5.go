@@ -1,6 +1,7 @@
 package proxy
 
 import (
+	"context"
 	"fmt"
 	"net"
 	"time"
@@ -69,7 +70,7 @@ func (p *SOCKS5Proxy) Valid(user, password string) bool {
 	return true
 }
 
-func (p *SOCKS5Proxy) dialThroughNode(network, addr string) (net.Conn, error) {
+func (p *SOCKS5Proxy) dialThroughNode(ctx context.Context, network, addr string) (net.Conn, error) {
 	start := time.Now()
 
 	// Extract username from the connection (this is a simplified approach)

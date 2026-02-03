@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/sha256"
 	"database/sql"
+	"encoding/base64"
 	"encoding/hex"
 	"fmt"
 	"strings"
@@ -50,9 +51,15 @@ func (a *Authenticator) ParseProxyAuth(authHeader string) (*ProxyAuth, error) {
 	// Remove "Basic " prefix if present
 	if strings.HasPrefix(authHeader, "Basic ") {
 		authHeader = authHeader[6:]
+		// Decode base64
+		decoded, err := base64.StdEncoding.DecodeString(authHeader)
+		if err != nil {
+			return nil, fmt.Errorf("invalid base64 encoding")
+		}
+		authHeader = string(decoded)
 	}
 
-	// For HTTP proxy, auth is base64 encoded
+	// For HTTP proxy, auth is now decoded (user:pass format)
 	if strings.Contains(authHeader, ":") {
 		parts := strings.SplitN(authHeader, ":", 2)
 		if len(parts) != 2 {
@@ -105,18 +112,11 @@ func (a *Authenticator) ParseProxyAuth(authHeader string) (*ProxyAuth, error) {
 func (a *Authenticator) authenticateCustomer(customerID, apiKey string) (*Customer, error) {
 	ctx := context.Background()
 
-	// Check Redis cache first
-	cacheKey := fmt.Sprintf("auth:%s:%s", customerID, apiKey)
-	cached, err := a.rdb.Get(ctx, cacheKey).Result()
-	if err == nil && cached == "valid" {
-		// Get customer details from cache
-		return a.getCustomerFromCache(customerID)
-	}
-
 	// Hash the API key
 	hasher := sha256.New()
 	hasher.Write([]byte(apiKey))
 	keyHash := hex.EncodeToString(hasher.Sum(nil))
+	cacheKey := fmt.Sprintf("auth:%s:%s", customerID, apiKey)
 
 	// Query database
 	var customer Customer
@@ -135,7 +135,7 @@ func (a *Authenticator) authenticateCustomer(customerID, apiKey string) (*Custom
 		WHERE ak.key_hash = $1 AND ak.is_active = true AND u.status = 'active'
 	`
 
-	err = a.db.QueryRow(query, keyHash).Scan(
+	err := a.db.QueryRow(query, keyHash).Scan(
 		&customer.ID,
 		&customer.UserID,
 		&customer.Email,

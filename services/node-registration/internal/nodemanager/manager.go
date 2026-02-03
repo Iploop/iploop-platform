@@ -88,8 +88,6 @@ func NewNodeManager(db *sql.DB, rdb *redis.Client, logger *logrus.Entry) *NodeMa
 }
 
 func (nm *NodeManager) RegisterNode(registration *NodeRegistration) (*Node, error) {
-	ctx := context.Background()
-
 	// Check if node already exists
 	existingNode, err := nm.getNodeByDeviceID(registration.DeviceID)
 	if err != nil && err != sql.ErrNoRows {
@@ -99,7 +97,8 @@ func (nm *NodeManager) RegisterNode(registration *NodeRegistration) (*Node, erro
 	var node *Node
 	now := time.Now()
 
-	if existingNode != nil {
+	// If err is ErrNoRows, existingNode is empty, so treat as new node
+	if err == nil && existingNode != nil && existingNode.ID != "" {
 		// Update existing node
 		node = existingNode
 		node.IPAddress = registration.IPAddress

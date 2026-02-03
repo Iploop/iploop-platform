@@ -1,0 +1,184 @@
+version: '3.8'
+
+services:
+  # Database Services
+  postgres:
+    image: postgres:15-alpine
+    container_name: iploop-postgres
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./shared/database/init.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    container_name: iploop-redis
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    restart: unless-stopped
+
+  # Core Services
+  proxy-gateway:
+    build:
+      context: ./services/proxy-gateway
+      dockerfile: Dockerfile
+    container_name: iploop-proxy-gateway
+    depends_on:
+      redis:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    environment:
+      - REDIS_URL=${REDIS_URL}
+      - DATABASE_URL=${DATABASE_URL}
+      - HTTP_PORT=${PROXY_GATEWAY_HTTP_PORT}
+      - SOCKS_PORT=${PROXY_GATEWAY_SOCKS_PORT}
+      - LOG_LEVEL=${LOG_LEVEL}
+      - NODE_REGISTRATION_URL=http://node-registration:${NODE_REGISTRATION_PORT}
+    ports:
+      - "${PROXY_GATEWAY_HTTP_PORT}:${PROXY_GATEWAY_HTTP_PORT}"
+      - "${PROXY_GATEWAY_SOCKS_PORT}:${PROXY_GATEWAY_SOCKS_PORT}"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:${PROXY_GATEWAY_HTTP_PORT}/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  node-registration:
+    build:
+      context: ./services/node-registration
+      dockerfile: Dockerfile
+    container_name: iploop-node-registration
+    depends_on:
+      redis:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    environment:
+      - REDIS_URL=${REDIS_URL}
+      - DATABASE_URL=${DATABASE_URL}
+      - PORT=${NODE_REGISTRATION_PORT}
+      - LOG_LEVEL=${LOG_LEVEL}
+      - NODE_HEARTBEAT_INTERVAL=${NODE_HEARTBEAT_INTERVAL}
+      - NODE_INACTIVE_TIMEOUT=${NODE_INACTIVE_TIMEOUT}
+    ports:
+      - "${NODE_REGISTRATION_PORT}:${NODE_REGISTRATION_PORT}"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:${NODE_REGISTRATION_PORT}/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  customer-api:
+    build:
+      context: ./services/customer-api
+      dockerfile: Dockerfile
+    container_name: iploop-customer-api
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+      - REDIS_URL=${REDIS_URL}
+      - JWT_SECRET=${JWT_SECRET}
+      - JWT_EXPIRES_IN=${JWT_EXPIRES_IN}
+      - PORT=${CUSTOMER_API_PORT}
+      - LOG_LEVEL=${LOG_LEVEL}
+      - PROXY_ENDPOINT=${PROXY_ENDPOINT}
+      - PROXY_HTTP_PORT=${PROXY_GATEWAY_HTTP_PORT}
+      - PROXY_SOCKS_PORT=${PROXY_GATEWAY_SOCKS_PORT}
+    ports:
+      - "${CUSTOMER_API_PORT}:${CUSTOMER_API_PORT}"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:${CUSTOMER_API_PORT}/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  dashboard:
+    build:
+      context: ./services/dashboard
+      dockerfile: Dockerfile
+    container_name: iploop-dashboard
+    depends_on:
+      - customer-api
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:${CUSTOMER_API_PORT}
+      - NEXT_PUBLIC_PROXY_ENDPOINT=${PROXY_ENDPOINT}
+      - NEXT_PUBLIC_PROXY_HTTP_PORT=${PROXY_GATEWAY_HTTP_PORT}
+      - NEXT_PUBLIC_PROXY_SOCKS_PORT=${PROXY_GATEWAY_SOCKS_PORT}
+    ports:
+      - "${DASHBOARD_PORT}:3000"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Optional: Monitoring
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: iploop-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./shared/config/prometheus.yml:/etc/prometheus/prometheus.yml
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+    restart: unless-stopped
+    profiles:
+      - monitoring
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: iploop-grafana
+    ports:
+      - "3001:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin123
+    volumes:
+      - grafana_data:/var/lib/grafana
+    restart: unless-stopped
+    profiles:
+      - monitoring
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+  grafana_data:
+    driver: local
+
+networks:
+  default:
+    name: iploop-network
+    driver: bridge

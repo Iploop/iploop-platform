@@ -117,6 +117,10 @@ func (a *Authenticator) authenticateCustomer(customerID, apiKey string) (*Custom
 	hasher.Write([]byte(apiKey))
 	keyHash := hex.EncodeToString(hasher.Sum(nil))
 	cacheKey := fmt.Sprintf("auth:%s:%s", customerID, apiKey)
+	
+	// Debug logging
+	fmt.Printf("[AUTH DEBUG] customerID=%s, apiKey=%s, keyHash=%s\n", customerID, apiKey, keyHash)
+	_ = ctx // avoid unused warning
 
 	// Query database
 	var customer Customer

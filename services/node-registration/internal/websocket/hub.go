@@ -2,7 +2,11 @@ package websocket
 
 import (
 	"encoding/json"
+	"fmt"
+	"io"
+	"net"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/gorilla/websocket"
@@ -17,22 +21,88 @@ var upgrader = websocket.Upgrader{
 	},
 }
 
+// IPGeoInfo contains geolocation data from IP lookup
+type IPGeoInfo struct {
+	Country     string  `json:"countryCode"`
+	CountryName string  `json:"country"`
+	City        string  `json:"city"`
+	Region      string  `json:"regionName"`
+	Latitude    float64 `json:"lat"`
+	Longitude   float64 `json:"lon"`
+	ISP         string  `json:"isp"`
+	ASN         string  `json:"as"`
+}
+
+// lookupIPGeo fetches geolocation for an IP address
+func lookupIPGeo(ip string) (*IPGeoInfo, error) {
+	// Skip private/local IPs
+	if strings.HasPrefix(ip, "10.") || strings.HasPrefix(ip, "192.168.") || 
+	   strings.HasPrefix(ip, "172.") || ip == "127.0.0.1" || ip == "::1" {
+		return nil, fmt.Errorf("private IP address")
+	}
+
+	client := &http.Client{Timeout: 3 * time.Second}
+	resp, err := client.Get(fmt.Sprintf("http://ip-api.com/json/%s", ip))
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	var geo IPGeoInfo
+	if err := json.Unmarshal(body, &geo); err != nil {
+		return nil, err
+	}
+
+	return &geo, nil
+}
+
+// extractClientIP gets the real client IP from the request
+func extractClientIP(r *http.Request) string {
+	// Check X-Forwarded-For header first (for proxied connections)
+	if xff := r.Header.Get("X-Forwarded-For"); xff != "" {
+		ips := strings.Split(xff, ",")
+		if len(ips) > 0 {
+			return strings.TrimSpace(ips[0])
+		}
+	}
+	
+	// Check X-Real-IP header
+	if xri := r.Header.Get("X-Real-IP"); xri != "" {
+		return xri
+	}
+	
+	// Fall back to RemoteAddr
+	ip, _, err := net.SplitHostPort(r.RemoteAddr)
+	if err != nil {
+		return r.RemoteAddr
+	}
+	return ip
+}
+
 type Hub struct {
-	clients     map[*Client]bool
-	register    chan *Client
-	unregister  chan *Client
-	broadcast   chan []byte
-	nodeManager *nodemanager.NodeManager
-	logger      *logrus.Entry
+	clients       map[*Client]bool
+	register      chan *Client
+	unregister    chan *Client
+	broadcast     chan []byte
+	nodeManager   *nodemanager.NodeManager
+	proxyManager  *ProxyManager
+	tunnelManager *TunnelManager
+	logger        *logrus.Entry
 }
 
 type Client struct {
-	hub      *Hub
-	conn     *websocket.Conn
-	send     chan []byte
-	nodeID   string
-	deviceID string
-	logger   *logrus.Entry
+	hub       *Hub
+	conn      *websocket.Conn
+	send      chan []byte
+	nodeID    string
+	deviceID  string
+	clientIP  string
+	logger    *logrus.Entry
 }
 
 type Message struct {
@@ -63,7 +133,7 @@ type RegistrationMessage struct {
 }
 
 func NewHub(nodeManager *nodemanager.NodeManager, logger *logrus.Entry) *Hub {
-	return &Hub{
+	hub := &Hub{
 		clients:     make(map[*Client]bool),
 		register:    make(chan *Client),
 		unregister:  make(chan *Client),
@@ -71,6 +141,24 @@ func NewHub(nodeManager *nodemanager.NodeManager, logger *logrus.Entry) *Hub {
 		nodeManager: nodeManager,
 		logger:      logger.WithField("component", "websocket-hub"),
 	}
+	// ProxyManager will be set after hub creation
+	return hub
+}
+
+func (h *Hub) SetProxyManager(pm *ProxyManager) {
+	h.proxyManager = pm
+}
+
+func (h *Hub) GetProxyManager() *ProxyManager {
+	return h.proxyManager
+}
+
+func (h *Hub) SetTunnelManager(tm *TunnelManager) {
+	h.tunnelManager = tm
+}
+
+func (h *Hub) GetTunnelManager() *TunnelManager {
+	return h.tunnelManager
 }
 
 func (h *Hub) Run() {
@@ -123,11 +211,14 @@ func HandleNodeConnection(hub *Hub, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	clientIP := extractClientIP(r)
+
 	client := &Client{
-		hub:    hub,
-		conn:   conn,
-		send:   make(chan []byte, 256),
-		logger: hub.logger.WithField("client", conn.RemoteAddr().String()),
+		hub:      hub,
+		conn:     conn,
+		send:     make(chan []byte, 256),
+		clientIP: clientIP,
+		logger:   hub.logger.WithField("client", clientIP),
 	}
 
 	client.hub.register <- client
@@ -143,7 +234,7 @@ func (c *Client) readPump() {
 		c.conn.Close()
 	}()
 
-	c.conn.SetReadLimit(512)
+	c.conn.SetReadLimit(65536) // 64KB - enough for registration messages
 	c.conn.SetReadDeadline(time.Now().Add(60 * time.Second))
 	c.conn.SetPongHandler(func(string) error {
 		c.conn.SetReadDeadline(time.Now().Add(60 * time.Second))
@@ -217,8 +308,68 @@ func (c *Client) handleMessage(message *Message) {
 		c.handleRegistration(message)
 	case "heartbeat":
 		c.handleHeartbeat(message)
+	case "proxy_response":
+		c.handleProxyResponse(message)
+	case "tunnel_response":
+		c.handleTunnelResponse(message)
+	case "tunnel_data":
+		c.handleTunnelData(message)
 	default:
 		c.logger.Warnf("Unknown message type: %s", message.Type)
+	}
+}
+
+func (c *Client) handleProxyResponse(message *Message) {
+	dataBytes, err := json.Marshal(message.Data)
+	if err != nil {
+		c.logger.Errorf("Failed to marshal proxy response: %v", err)
+		return
+	}
+
+	var resp ProxyResponse
+	if err := json.Unmarshal(dataBytes, &resp); err != nil {
+		c.logger.Errorf("Failed to parse proxy response: %v", err)
+		return
+	}
+
+	if c.hub.proxyManager != nil {
+		c.hub.proxyManager.HandleProxyResponse(&resp)
+	}
+}
+
+func (c *Client) handleTunnelResponse(message *Message) {
+	dataBytes, err := json.Marshal(message.Data)
+	if err != nil {
+		c.logger.Errorf("Failed to marshal tunnel response: %v", err)
+		return
+	}
+
+	var resp TunnelOpenResponse
+	if err := json.Unmarshal(dataBytes, &resp); err != nil {
+		c.logger.Errorf("Failed to parse tunnel response: %v", err)
+		return
+	}
+
+	if c.hub.tunnelManager != nil {
+		c.hub.tunnelManager.HandleTunnelResponse(&resp)
+	}
+}
+
+func (c *Client) handleTunnelData(message *Message) {
+	dataBytes, err := json.Marshal(message.Data)
+	if err != nil {
+		c.logger.Errorf("Failed to marshal tunnel data: %v", err)
+		return
+	}
+
+	var data TunnelDataMessage
+	if err := json.Unmarshal(dataBytes, &data); err != nil {
+		c.logger.Errorf("Failed to parse tunnel data: %v", err)
+		return
+	}
+
+	if c.hub.tunnelManager != nil {
+		c.hub.tunnelManager.HandleTunnelData(&data)
 	}
 }
 
@@ -233,6 +384,41 @@ func (c *Client) handleRegistration(message *Message) {
 	if err := json.Unmarshal(dataBytes, &regData); err != nil {
 		c.sendError("Invalid registration data format")
 		return
+	}
+
+	// Debug log the received data
+	c.logger.Infof("Registration data: device_id=%s, device_type=%s, connection_type=%s, sdk_version=%s",
+		regData.DeviceID, regData.DeviceType, regData.ConnectionType, regData.SDKVersion)
+
+	// Map empty/unknown connection types to "unknown"
+	if regData.ConnectionType == "" {
+		regData.ConnectionType = "unknown"
+	}
+
+	// Use client's real IP address
+	regData.IPAddress = c.clientIP
+
+	// Do IP geolocation lookup if country not provided
+	if regData.Country == "" {
+		geo, err := lookupIPGeo(c.clientIP)
+		if err == nil && geo != nil {
+			regData.Country = geo.Country
+			regData.CountryName = geo.CountryName
+			regData.City = geo.City
+			regData.Region = geo.Region
+			regData.Latitude = geo.Latitude
+			regData.Longitude = geo.Longitude
+			regData.ISP = geo.ISP
+			// Parse ASN from string like "AS12345 Provider Name"
+			if geo.ASN != "" {
+				var asn int
+				fmt.Sscanf(geo.ASN, "AS%d", &asn)
+				regData.ASN = asn
+			}
+			c.logger.Infof("Geo lookup: %s -> %s, %s", c.clientIP, regData.Country, regData.City)
+		} else {
+			c.logger.Warnf("Geo lookup failed for %s: %v", c.clientIP, err)
+		}
 	}
 
 	// Convert to node manager format
@@ -276,16 +462,29 @@ func (c *Client) handleRegistration(message *Message) {
 	}
 
 	c.sendMessage(&response)
-	c.logger.Infof("Node registered: %s (device: %s)", node.ID, node.DeviceID)
+	c.logger.Infof("Node registered: %s (device: %s, ip: %s, country: %s)", 
+		node.ID, node.DeviceID, c.clientIP, regData.Country)
 }
 
 func (c *Client) handleHeartbeat(message *Message) {
-	if c.nodeID == "" {
+	// Use stored nodeID if not provided in message
+	nodeID := c.nodeID
+	
+	// Try to extract node_id from data if present
+	if dataMap, ok := message.Data.(map[string]interface{}); ok {
+		if id, exists := dataMap["node_id"]; exists {
+			if idStr, ok := id.(string); ok && idStr != "" {
+				nodeID = idStr
+			}
+		}
+	}
+
+	if nodeID == "" {
 		c.sendError("Node not registered")
 		return
 	}
 
-	err := c.hub.nodeManager.UpdateHeartbeat(c.nodeID)
+	err := c.hub.nodeManager.UpdateHeartbeat(nodeID)
 	if err != nil {
 		c.logger.Errorf("Failed to update heartbeat: %v", err)
 		c.sendError("Failed to update heartbeat")
@@ -296,7 +495,7 @@ func (c *Client) handleHeartbeat(message *Message) {
 	response := Message{
 		Type: "heartbeat_ack",
 		Data: map[string]interface{}{
-			"node_id":   c.nodeID,
+			"node_id":   nodeID,
 			"timestamp": time.Now().UTC(),
 			"status":    "active",
 		},

@@ -15,6 +15,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/joho/godotenv"
 
+	"node-registration/internal/api"
 	"node-registration/internal/config"
 	"node-registration/internal/websocket"
 	"node-registration/internal/nodemanager"
@@ -69,6 +70,18 @@ func main() {
 	hub := websocket.NewHub(nodeManager, logger)
 	go hub.Run()
 
+	// Initialize proxy manager and wire it up
+	proxyManager := websocket.NewProxyManager(hub, logger)
+	hub.SetProxyManager(proxyManager)
+
+	// Initialize tunnel manager and wire it up
+	tunnelManager := websocket.NewTunnelManager(hub, logger)
+	hub.SetTunnelManager(tunnelManager)
+
+	// Initialize handlers for internal API
+	proxyHandler := api.NewProxyHandler(proxyManager, logger)
+	tunnelHandler := api.NewTunnelHandler(tunnelManager, logger)
+
 	// Setup HTTP server
 	gin.SetMode(gin.ReleaseMode)
 	router := gin.New()
@@ -121,6 +134,16 @@ func main() {
 	router.GET("/stats", func(c *gin.Context) {
 		stats := nodeManager.GetStatistics()
 		c.JSON(http.StatusOK, stats)
+	})
+
+	// Internal proxy endpoint (called by proxy-gateway)
+	router.POST("/internal/proxy", func(c *gin.Context) {
+		proxyHandler.HandleProxyRequest(c.Writer, c.Request)
+	})
+
+	// Internal tunnel WebSocket endpoint (called by proxy-gateway for CONNECT)
+	router.GET("/internal/tunnel", func(c *gin.Context) {
+		tunnelHandler.HandleTunnelWebSocket(c.Writer, c.Request)
 	})
 
 	server := &http.Server{

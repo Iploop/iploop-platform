@@ -1,84 +1,76 @@
 'use client'
 
+import { useEffect, useState } from 'react'
 import { Layout } from '@/components/layout'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { BarChart3, Globe, Zap, Activity, TrendingUp, Users, Server, Clock } from 'lucide-react'
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell } from 'recharts'
+import { BarChart3, Globe, Zap, Activity, TrendingUp, Users, Server, Clock, Smartphone, MapPin, Wifi } from 'lucide-react'
 
-const statsData = [
-  {
-    title: "Total Requests",
-    value: "2.4M",
-    change: "+12.5%",
-    changeType: "increase" as const,
-    icon: BarChart3,
-    description: "Last 30 days"
-  },
-  {
-    title: "Bandwidth Used",
-    value: "1.2TB",
-    change: "+8.2%",
-    changeType: "increase" as const,
-    icon: Globe,
-    description: "Current month"
-  },
-  {
-    title: "Active Sessions",
-    value: "1,453",
-    change: "+3.1%",
-    changeType: "increase" as const,
-    icon: Users,
-    description: "Live connections"
-  },
-  {
-    title: "Success Rate",
-    value: "99.8%",
-    change: "+0.1%",
-    changeType: "increase" as const,
-    icon: TrendingUp,
-    description: "Last 24 hours"
-  }
-]
-
-const usageData = [
-  { name: 'Jan', requests: 1200, bandwidth: 450 },
-  { name: 'Feb', requests: 1900, bandwidth: 680 },
-  { name: 'Mar', requests: 3000, bandwidth: 920 },
-  { name: 'Apr', requests: 2800, bandwidth: 1100 },
-  { name: 'May', requests: 3200, bandwidth: 1300 },
-  { name: 'Jun', requests: 4100, bandwidth: 1600 },
-  { name: 'Jul', requests: 4500, bandwidth: 1800 },
-  { name: 'Aug', requests: 3900, bandwidth: 1550 },
-  { name: 'Sep', requests: 4200, bandwidth: 1700 },
-  { name: 'Oct', requests: 4800, bandwidth: 1900 },
-  { name: 'Nov', requests: 5100, bandwidth: 2100 },
-  { name: 'Dec', requests: 4600, bandwidth: 1950 }
-]
-
-const regionData = [
-  { name: 'North America', value: 35, color: '#3b82f6' },
-  { name: 'Europe', value: 28, color: '#10b981' },
-  { name: 'Asia Pacific', value: 22, color: '#f59e0b' },
-  { name: 'South America', value: 10, color: '#ef4444' },
-  { name: 'Others', value: 5, color: '#8b5cf6' }
-]
-
-const recentActivity = [
-  { action: 'API Key Generated', time: '2 minutes ago', status: 'success' },
-  { action: 'High Usage Alert', time: '15 minutes ago', status: 'warning' },
-  { action: 'New Session Started', time: '23 minutes ago', status: 'info' },
-  { action: 'Payment Processed', time: '1 hour ago', status: 'success' },
-  { action: 'Endpoint Added', time: '2 hours ago', status: 'info' }
-]
+interface NodeData {
+  nodes: any[]
+  nodeCount: number
+  stats: any
+  health: any
+}
 
 export default function DashboardPage() {
+  const [data, setData] = useState<NodeData | null>(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const res = await fetch('/api/nodes')
+        const json = await res.json()
+        setData(json)
+      } catch (err) {
+        console.error('Failed to fetch:', err)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchData()
+    const interval = setInterval(fetchData, 30000)
+    return () => clearInterval(interval)
+  }, [])
+
+  const activeNodes = data?.nodes?.filter(n => n.status === 'available') || []
+  const countries = new Set(data?.nodes?.map(n => n.country) || [])
+
+  const statsData = [
+    {
+      title: "Active Nodes",
+      value: activeNodes.length.toString(),
+      icon: Smartphone,
+      description: "Currently online"
+    },
+    {
+      title: "Total Nodes",
+      value: data?.stats?.total_nodes?.toString() || '0',
+      icon: Users,
+      description: "Registered devices"
+    },
+    {
+      title: "Countries",
+      value: countries.size.toString(),
+      icon: Globe,
+      description: "Available regions"
+    },
+    {
+      title: "System Status",
+      value: data?.health?.status === 'healthy' ? 'Healthy' : 'Unknown',
+      icon: Activity,
+      description: "Service health"
+    }
+  ]
+
   return (
     <Layout>
       <div className="space-y-6">
         <div>
           <h1 className="text-3xl font-bold">Dashboard Overview</h1>
-          <p className="text-muted-foreground">Welcome back! Here's what's happening with your proxy infrastructure.</p>
+          <p className="text-muted-foreground">IPLoop Residential Proxy Network Status</p>
         </div>
 
         {/* Stats Grid */}
@@ -90,156 +82,162 @@ export default function DashboardPage() {
                 <stat.icon className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{stat.value}</div>
-                <p className="text-xs text-muted-foreground flex items-center gap-1">
-                  <span className={`text-${stat.changeType === 'increase' ? 'green' : 'red'}-500`}>
-                    {stat.change}
-                  </span>
-                  from {stat.description}
-                </p>
+                <div className="text-2xl font-bold">{loading ? '...' : stat.value}</div>
+                <p className="text-xs text-muted-foreground">{stat.description}</p>
               </CardContent>
             </Card>
           ))}
         </div>
 
-        <div className="grid gap-4 lg:grid-cols-3">
-          {/* Usage Chart */}
-          <Card className="lg:col-span-2">
-            <CardHeader>
-              <CardTitle>Usage Overview</CardTitle>
-              <CardDescription>Monthly requests and bandwidth consumption</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="h-[300px]">
-                <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart data={usageData}>
-                    <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                    <XAxis dataKey="name" className="text-muted-foreground" />
-                    <YAxis className="text-muted-foreground" />
-                    <Area type="monotone" dataKey="requests" stackId="1" stroke="#3b82f6" fill="#3b82f6" fillOpacity={0.6} />
-                    <Area type="monotone" dataKey="bandwidth" stackId="2" stroke="#10b981" fill="#10b981" fillOpacity={0.6} />
-                  </AreaChart>
-                </ResponsiveContainer>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Regional Distribution */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Traffic by Region</CardTitle>
-              <CardDescription>Geographic distribution of requests</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="h-[200px]">
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={regionData}
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={40}
-                      outerRadius={80}
-                      paddingAngle={5}
-                      dataKey="value"
-                    >
-                      {regionData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} />
-                      ))}
-                    </Pie>
-                  </PieChart>
-                </ResponsiveContainer>
-              </div>
-              <div className="mt-4 space-y-2">
-                {regionData.map((region) => (
-                  <div key={region.name} className="flex items-center justify-between text-sm">
-                    <div className="flex items-center gap-2">
-                      <div className="w-3 h-3 rounded-full" style={{ backgroundColor: region.color }} />
-                      <span>{region.name}</span>
-                    </div>
-                    <span className="font-medium">{region.value}%</span>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
         <div className="grid gap-4 lg:grid-cols-2">
-          {/* Recent Activity */}
+          {/* Active Nodes */}
           <Card>
             <CardHeader>
-              <CardTitle>Recent Activity</CardTitle>
-              <CardDescription>Latest events and notifications</CardDescription>
+              <CardTitle className="flex items-center gap-2">
+                <Smartphone className="h-5 w-5" />
+                Active Nodes
+              </CardTitle>
+              <CardDescription>Currently connected devices</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                {recentActivity.map((activity, index) => (
-                  <div key={index} className="flex items-center gap-4">
-                    <div className={`w-2 h-2 rounded-full ${
-                      activity.status === 'success' ? 'bg-green-500' :
-                      activity.status === 'warning' ? 'bg-yellow-500' :
-                      'bg-blue-500'
-                    }`} />
-                    <div className="flex-1">
-                      <p className="text-sm font-medium">{activity.action}</p>
-                      <p className="text-xs text-muted-foreground">{activity.time}</p>
+              {loading ? (
+                <div className="text-center py-4 text-muted-foreground">Loading...</div>
+              ) : activeNodes.length === 0 ? (
+                <div className="text-center py-4 text-muted-foreground">No active nodes</div>
+              ) : (
+                <div className="space-y-3">
+                  {activeNodes.map((node) => (
+                    <div key={node.id} className="flex items-center justify-between p-3 border rounded-lg">
+                      <div className="flex items-center gap-3">
+                        <div className="w-2 h-2 bg-green-500 rounded-full" />
+                        <div>
+                          <div className="font-medium">{node.ip_address}</div>
+                          <div className="text-sm text-muted-foreground flex items-center gap-2">
+                            <MapPin className="h-3 w-3" />
+                            {node.city}, {node.country}
+                          </div>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <Badge variant="outline">{node.device_type}</Badge>
+                        <div className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
+                          <Wifi className="h-3 w-3" />
+                          {node.connection_type}
+                        </div>
+                      </div>
                     </div>
-                    <Badge variant={
-                      activity.status === 'success' ? 'success' :
-                      activity.status === 'warning' ? 'warning' :
-                      'secondary'
-                    }>
-                      {activity.status}
-                    </Badge>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              )}
             </CardContent>
           </Card>
 
           {/* Quick Stats */}
           <Card>
             <CardHeader>
-              <CardTitle>System Health</CardTitle>
-              <CardDescription>Current system status and metrics</CardDescription>
+              <CardTitle>Network Statistics</CardTitle>
+              <CardDescription>Real-time network metrics</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <Server className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-sm">Server Uptime</span>
+                  <span className="text-sm">Service Status</span>
                 </div>
-                <Badge variant="success">99.9%</Badge>
+                <Badge variant={data?.health?.status === 'healthy' ? 'success' : 'destructive'}>
+                  {data?.health?.status || 'Unknown'}
+                </Badge>
+              </div>
+              
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <Users className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-sm">Connected Nodes</span>
+                </div>
+                <Badge variant="secondary">{data?.health?.connected_nodes || 0}</Badge>
               </div>
               
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <Activity className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-sm">Response Time</span>
+                  <span className="text-sm">Average Quality</span>
                 </div>
-                <Badge variant="secondary">45ms</Badge>
+                <Badge variant="secondary">{data?.stats?.average_quality || 0}%</Badge>
               </div>
               
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <Clock className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-sm">Queue Status</span>
+                  <BarChart3 className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-sm">Bandwidth Used</span>
                 </div>
-                <Badge variant="success">Healthy</Badge>
-              </div>
-              
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <Zap className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-sm">Rate Limiting</span>
-                </div>
-                <Badge variant="secondary">Active</Badge>
+                <Badge variant="secondary">{data?.stats?.total_bandwidth_mb || 0} MB</Badge>
               </div>
             </CardContent>
           </Card>
         </div>
+
+        {/* Country Breakdown */}
+        {data?.stats?.country_breakdown && Object.keys(data.stats.country_breakdown).length > 0 && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Globe className="h-5 w-5" />
+                Nodes by Country
+              </CardTitle>
+              <CardDescription>Geographic distribution of nodes</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="flex flex-wrap gap-3">
+                {Object.entries(data.stats.country_breakdown).map(([country, count]) => (
+                  <div key={country} className="flex items-center gap-2 p-2 border rounded-lg">
+                    <span className="text-lg">{getCountryFlag(country)}</span>
+                    <span className="font-medium">{country}</span>
+                    <Badge variant="secondary">{count as number}</Badge>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Quick Actions */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Quick Actions</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-wrap gap-3">
+              <a href="/nodes" className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90">
+                View All Nodes
+              </a>
+              <a href="/api-keys" className="px-4 py-2 bg-secondary text-secondary-foreground rounded-md hover:bg-secondary/90">
+                Manage API Keys
+              </a>
+              <a href="/endpoints" className="px-4 py-2 bg-secondary text-secondary-foreground rounded-md hover:bg-secondary/90">
+                Proxy Endpoints
+              </a>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </Layout>
   )
+}
+
+function getCountryFlag(code: string): string {
+  const flags: Record<string, string> = {
+    IL: '🇮🇱',
+    US: '🇺🇸',
+    UK: '🇬🇧',
+    GB: '🇬🇧',
+    DE: '🇩🇪',
+    FR: '🇫🇷',
+    CA: '🇨🇦',
+    AU: '🇦🇺',
+    JP: '🇯🇵',
+    KR: '🇰🇷',
+    BR: '🇧🇷',
+    IN: '🇮🇳',
+  }
+  return flags[code] || '🌍'
 }

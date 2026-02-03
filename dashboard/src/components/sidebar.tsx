@@ -13,13 +13,15 @@ import {
   Menu,
   X,
   LogOut,
-  User
+  User,
+  Smartphone
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from './ui/button'
 
 const navigation = [
   { name: 'Dashboard', href: '/dashboard', icon: BarChart3 },
+  { name: 'Nodes', href: '/nodes', icon: Smartphone },
   { name: 'API Keys', href: '/api-keys', icon: Key },
   { name: 'Usage Stats', href: '/usage', icon: BarChart3 },
   { name: 'Proxy Endpoints', href: '/endpoints', icon: Globe },

@@ -121,12 +121,13 @@ services:
 
   dashboard:
     build:
-      context: ./services/dashboard
+      context: ./dashboard
       dockerfile: Dockerfile
     container_name: iploop-dashboard
     depends_on:
-      - customer-api
+      - node-registration
     environment:
+      - NODE_REGISTRATION_URL=http://node-registration:${NODE_REGISTRATION_PORT}
       - NEXT_PUBLIC_API_URL=http://localhost:${CUSTOMER_API_PORT}
       - NEXT_PUBLIC_PROXY_ENDPOINT=${PROXY_ENDPOINT}
       - NEXT_PUBLIC_PROXY_HTTP_PORT=${PROXY_GATEWAY_HTTP_PORT}

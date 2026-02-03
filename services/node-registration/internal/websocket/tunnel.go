@@ -222,7 +222,7 @@ func (tm *TunnelManager) HandleTunnelData(data *TunnelDataMessage) {
 	}
 
 	if data.EOF {
-		tm.logger.Debugf("Tunnel %s received EOF", data.TunnelID)
+		tm.logger.Infof("Tunnel %s received EOF from SDK", data.TunnelID)
 		tm.CloseTunnel(data.TunnelID)
 		return
 	}
@@ -234,11 +234,14 @@ func (tm *TunnelManager) HandleTunnelData(data *TunnelDataMessage) {
 		return
 	}
 
+	tm.logger.Debugf("Tunnel %s received %d bytes from SDK", data.TunnelID, len(decoded))
+
 	// Non-blocking send to data channel
 	select {
 	case tunnel.DataCh <- decoded:
+		tm.logger.Debugf("Tunnel %s forwarded %d bytes to DataCh", data.TunnelID, len(decoded))
 	default:
-		tm.logger.Warnf("Tunnel %s data channel full, dropping data", data.TunnelID)
+		tm.logger.Warnf("Tunnel %s data channel full, dropping %d bytes", data.TunnelID, len(decoded))
 	}
 }
 

@@ -1,0 +1,39 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFrameworks>net6.0;net48;netstandard2.0</TargetFrameworks>
+    <OutputType>Library</OutputType>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <LangVersion>10.0</LangVersion>
+    <AssemblyName>IPLoopSDK</AssemblyName>
+    <RootNamespace>IPLoop</RootNamespace>
+    <Version>1.0.0</Version>
+    <Authors>IPLoop</Authors>
+    <Company>IPLoop</Company>
+    <Product>IPLoop SDK</Product>
+    <Description>IPLoop SDK for Windows - Residential Proxy Network DLL</Description>
+    <PackageProjectUrl>https://iploop.io</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/iploop/windows-sdk</RepositoryUrl>
+    <PackageTags>proxy;residential;sdk;iploop;dll</PackageTags>
+    
+    <!-- DLL Output Settings -->
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <PackageId>IPLoopSDK</PackageId>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    
+    <!-- COM Interop for native apps -->
+    <EnableComHosting>true</EnableComHosting>
+    <ComVisible>true</ComVisible>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="System.Net.Http" Version="4.3.4" />
+    <PackageReference Include="System.Text.Json" Version="6.0.0" />
+  </ItemGroup>
+
+  <!-- Native DLL output for non-.NET apps -->
+  <PropertyGroup Condition="'$(Configuration)'=='Release'">
+    <PublishAot>false</PublishAot>
+    <PublishSingleFile>false</PublishSingleFile>
+  </PropertyGroup>
+</Project>

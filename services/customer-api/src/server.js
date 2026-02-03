@@ -9,10 +9,12 @@ const logger = require('./utils/logger');
 const { connectDatabase, connectRedis } = require('./config/database');
 const authRoutes = require('./routes/auth');
 const proxyRoutes = require('./routes/proxy');
+const usageRoutes = require('./routes/usage');
+const nodesRoutes = require('./routes/nodes');
+const adminRoutes = require('./routes/admin');
+const webhooksRoutes = require('./routes/webhooks');
 // TODO: Implement these routes
-// const usageRoutes = require('./routes/usage');
 // const billingRoutes = require('./routes/billing');
-// const networkRoutes = require('./routes/network');
 const { errorHandler } = require('./middleware/errorHandler');
 
 const app = express();
@@ -84,10 +86,12 @@ app.get('/health', async (req, res) => {
 // API routes
 app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/proxy', proxyRoutes);
+app.use('/api/v1/usage', usageRoutes);
+app.use('/api/v1/nodes', nodesRoutes);
+app.use('/api/v1/admin', adminRoutes);
+app.use('/api/v1/webhooks', webhooksRoutes);
 // TODO: Implement these routes
-// app.use('/api/v1/usage', usageRoutes);
 // app.use('/api/v1/billing', billingRoutes);
-// app.use('/api/v1/network', networkRoutes);
 
 // Root endpoint
 app.get('/', (req, res) => {

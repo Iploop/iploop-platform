@@ -71,11 +71,12 @@ func main() {
 	// Initialize components
 	authenticator := auth.NewAuthenticator(db, rdb)
 	nodePool := nodepool.NewNodePool(rdb, logger)
+	wsNodePool := nodepool.NewWebSocketNodePool(nodePool, logger)
 	metricsCollector := metrics.NewCollector()
 
-	// Initialize proxy servers
-	httpProxy := proxy.NewHTTPProxy(authenticator, nodePool, metricsCollector, logger)
-	socksProxy := proxy.NewSOCKS5Proxy(authenticator, nodePool, metricsCollector, logger)
+	// Initialize proxy servers (with WebSocket node pool for real-time routing)
+	httpProxy := proxy.NewHTTPProxy(authenticator, nodePool, wsNodePool, metricsCollector, logger)
+	socksProxy := proxy.NewSOCKS5Proxy(authenticator, nodePool, wsNodePool, metricsCollector, logger)
 
 	// Start HTTP proxy server
 	httpListener, err := net.Listen("tcp", fmt.Sprintf(":%s", cfg.HTTPPort))
@@ -147,6 +148,17 @@ func main() {
 	router.GET("/nodes", func(c *gin.Context) {
 		status := nodePool.GetStatus()
 		c.JSON(http.StatusOK, status)
+	})
+
+	// WebSocket node pool status
+	router.GET("/nodes/ws", func(c *gin.Context) {
+		stats := wsNodePool.GetStats()
+		c.JSON(http.StatusOK, stats)
+	})
+
+	// WebSocket endpoint for node connections
+	router.GET("/node/connect", func(c *gin.Context) {
+		wsNodePool.HandleNodeConnection(c.Writer, c.Request)
 	})
 
 	healthServer := &http.Server{

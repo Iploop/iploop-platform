@@ -14,7 +14,11 @@ import {
   X,
   LogOut,
   User,
-  Smartphone
+  Smartphone,
+  TrendingUp,
+  ShieldCheck,
+  Book,
+  Webhook
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from './ui/button'
@@ -22,11 +26,14 @@ import { Button } from './ui/button'
 const navigation = [
   { name: 'Dashboard', href: '/dashboard', icon: BarChart3 },
   { name: 'Nodes', href: '/nodes', icon: Smartphone },
+  { name: 'Analytics', href: '/analytics', icon: TrendingUp },
   { name: 'API Keys', href: '/api-keys', icon: Key },
-  { name: 'Usage Stats', href: '/usage', icon: BarChart3 },
+  { name: 'Webhooks', href: '/webhooks', icon: Webhook },
   { name: 'Proxy Endpoints', href: '/endpoints', icon: Globe },
+  { name: 'Docs', href: '/docs', icon: Book },
   { name: 'Billing', href: '/billing', icon: CreditCard },
   { name: 'Settings', href: '/settings', icon: Settings },
+  { name: 'Admin', href: '/admin', icon: ShieldCheck },
 ]
 
 export function Sidebar() {

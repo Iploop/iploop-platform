@@ -1,334 +1,447 @@
-'use client'
+'use client';
 
-import { Layout } from '@/components/layout'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-import { 
-  CreditCard, 
-  Download, 
-  Plus, 
-  AlertCircle, 
-  TrendingUp, 
-  DollarSign,
-  Calendar,
-  Zap,
-  Shield,
-  CheckCircle
-} from 'lucide-react'
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, ResponsiveContainer, BarChart, Bar } from 'recharts'
+import { useState, useEffect } from 'react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Progress } from '@/components/ui/progress';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import {
+  CreditCard, Download, CheckCircle, AlertTriangle,
+  TrendingUp, Calendar, DollarSign, Zap, ArrowUpRight
+} from 'lucide-react';
 
-const usageData = [
-  { date: '2024-01-01', cost: 45.20, requests: 120000, bandwidth: 18.5 },
-  { date: '2024-01-02', cost: 52.80, requests: 140000, bandwidth: 22.1 },
-  { date: '2024-01-03', cost: 38.90, requests: 98000, bandwidth: 15.2 },
-  { date: '2024-01-04', cost: 61.40, requests: 165000, bandwidth: 28.9 },
-  { date: '2024-01-05', cost: 49.60, requests: 132000, bandwidth: 20.3 },
-  { date: '2024-01-06', cost: 55.70, requests: 148000, bandwidth: 24.1 },
-  { date: '2024-01-07', cost: 43.20, requests: 115000, bandwidth: 17.8 }
-]
+interface Plan {
+  id: string;
+  name: string;
+  price_monthly: number;
+  bandwidth_gb: number;
+  requests_per_day: number;
+  concurrent_conns: number;
+  features: string[];
+}
 
-const monthlyUsage = [
-  { month: 'Aug', cost: 1240.50, budget: 2000 },
-  { month: 'Sep', cost: 1680.20, budget: 2000 },
-  { month: 'Oct', cost: 1890.75, budget: 2000 },
-  { month: 'Nov', cost: 2120.40, budget: 2500 },
-  { month: 'Dec', cost: 1950.30, budget: 2500 },
-  { month: 'Jan', cost: 2240.80, budget: 2500 }
-]
+interface Subscription {
+  plan_id: string;
+  status: string;
+  current_period_end: string;
+  cancel_at_period_end: boolean;
+}
 
-const transactions = [
-  { id: 'inv_001', date: '2024-02-01', description: 'Monthly Subscription - Pro Plan', amount: 299.00, status: 'paid' },
-  { id: 'inv_002', date: '2024-01-15', description: 'Additional Bandwidth - 500GB', amount: 150.00, status: 'paid' },
-  { id: 'inv_003', date: '2024-01-01', description: 'Monthly Subscription - Pro Plan', amount: 299.00, status: 'paid' },
-  { id: 'inv_004', date: '2023-12-01', description: 'Monthly Subscription - Pro Plan', amount: 299.00, status: 'paid' },
-  { id: 'inv_005', date: '2023-11-20', description: 'Setup Fee - Premium Endpoints', amount: 99.00, status: 'paid' }
-]
+interface UsageSummary {
+  total_bytes: number;
+  total_requests: number;
+  plan_limit_bytes: number;
+  usage_percent: number;
+  estimated_cost: number;
+}
 
-const plans = [
-  {
-    name: 'Starter',
-    price: 29,
-    period: 'month',
-    features: ['100K requests/month', '50GB bandwidth', 'Basic endpoints', 'Email support'],
-    current: false
-  },
-  {
-    name: 'Pro',
-    price: 299,
-    period: 'month',
-    features: ['2M requests/month', '1TB bandwidth', 'Premium endpoints', 'Priority support', 'Custom integrations'],
-    current: true
-  },
-  {
-    name: 'Enterprise',
-    price: 999,
-    period: 'month',
-    features: ['Unlimited requests', 'Unlimited bandwidth', 'Dedicated endpoints', '24/7 phone support', 'SLA guarantee'],
-    current: false
-  }
-]
+interface Invoice {
+  id: string;
+  amount_paid: number;
+  status: string;
+  created: number;
+  invoice_pdf?: string;
+}
 
 export default function BillingPage() {
-  const currentBalance = 1456.80
-  const monthlySpend = 2240.80
-  const remainingCredits = 759200
-  const billingCycle = '2024-03-01'
+  const [plans, setPlans] = useState<Plan[]>([]);
+  const [subscription, setSubscription] = useState<Subscription | null>(null);
+  const [usage, setUsage] = useState<UsageSummary | null>(null);
+  const [invoices, setInvoices] = useState<Invoice[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [upgrading, setUpgrading] = useState(false);
+
+  useEffect(() => {
+    fetchBillingData();
+  }, []);
+
+  const fetchBillingData = async () => {
+    try {
+      const [plansRes, subRes, usageRes, invoicesRes] = await Promise.all([
+        fetch('/api/billing/plans'),
+        fetch('/api/billing/subscription'),
+        fetch('/api/usage/summary'),
+        fetch('/api/billing/invoices')
+      ]);
+
+      const plansData = await plansRes.json();
+      const subData = await subRes.json();
+      const usageData = await usageRes.json();
+      const invoicesData = await invoicesRes.json();
+
+      setPlans(plansData || []);
+      setSubscription(subData);
+      setUsage(usageData);
+      setInvoices(invoicesData || []);
+    } catch (error) {
+      console.error('Failed to fetch billing data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleUpgrade = async (planId: string) => {
+    setUpgrading(true);
+    try {
+      const res = await fetch('/api/billing/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          plan_id: planId,
+          success_url: `${window.location.origin}/billing?success=true`,
+          cancel_url: `${window.location.origin}/billing?canceled=true`
+        })
+      });
+      const data = await res.json();
+      if (data.checkout_url) {
+        window.location.href = data.checkout_url;
+      }
+    } catch (error) {
+      console.error('Failed to create checkout:', error);
+    } finally {
+      setUpgrading(false);
+    }
+  };
+
+  const handleCancelSubscription = async () => {
+    if (!confirm('Are you sure you want to cancel your subscription?')) return;
+    
+    try {
+      await fetch('/api/billing/subscription/cancel', { method: 'POST' });
+      fetchBillingData();
+    } catch (error) {
+      console.error('Failed to cancel subscription:', error);
+    }
+  };
+
+  const formatCurrency = (cents: number) => {
+    return `$${(cents / 100).toFixed(2)}`;
+  };
+
+  const formatBytes = (bytes: number) => {
+    const gb = bytes / (1024 * 1024 * 1024);
+    if (gb >= 1) return `${gb.toFixed(2)} GB`;
+    const mb = bytes / (1024 * 1024);
+    return `${mb.toFixed(2)} MB`;
+  };
+
+  const formatDate = (timestamp: number) => {
+    return new Date(timestamp * 1000).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+  };
+
+  const currentPlan = plans.find(p => p.id === subscription?.plan_id);
+
+  if (loading) {
+    return (
+      <div className="p-6 flex items-center justify-center h-64">
+        <div className="text-muted-foreground">Loading billing information...</div>
+      </div>
+    );
+  }
 
   return (
-    <Layout>
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold">Billing & Credits</h1>
-            <p className="text-muted-foreground">Manage your subscription and track usage costs</p>
-          </div>
-          <div className="flex gap-2">
-            <Button variant="outline">
-              <Download className="w-4 h-4 mr-2" />
-              Download Invoice
-            </Button>
-            <Button>
-              <Plus className="w-4 h-4 mr-2" />
-              Add Credits
-            </Button>
-          </div>
-        </div>
+    <div className="p-6 space-y-6">
+      <div>
+        <h1 className="text-2xl font-bold">Billing & Usage</h1>
+        <p className="text-muted-foreground">
+          Manage your subscription and monitor usage
+        </p>
+      </div>
 
-        {/* Account Overview */}
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Current Balance</CardTitle>
-              <DollarSign className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">${currentBalance.toFixed(2)}</div>
-              <p className="text-xs text-muted-foreground">Available credits</p>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">This Month</CardTitle>
-              <TrendingUp className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">${monthlySpend.toFixed(2)}</div>
-              <p className="text-xs text-muted-foreground">
-                <span className="text-red-500">+12.5%</span> from last month
-              </p>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Remaining Requests</CardTitle>
-              <Zap className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{(remainingCredits / 1000).toFixed(0)}K</div>
-              <p className="text-xs text-muted-foreground">of 2M monthly limit</p>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Next Billing</CardTitle>
-              <Calendar className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">Mar 1</div>
-              <p className="text-xs text-muted-foreground">Pro Plan renewal</p>
-            </CardContent>
-          </Card>
-        </div>
+      <Tabs defaultValue="overview" className="space-y-6">
+        <TabsList>
+          <TabsTrigger value="overview">Overview</TabsTrigger>
+          <TabsTrigger value="plans">Plans</TabsTrigger>
+          <TabsTrigger value="invoices">Invoices</TabsTrigger>
+        </TabsList>
 
-        {/* Low Balance Warning */}
-        <Card className="border-yellow-200 bg-yellow-50 dark:bg-yellow-900/20 dark:border-yellow-800">
-          <CardContent className="pt-6">
-            <div className="flex items-start gap-3">
-              <AlertCircle className="w-5 h-5 text-yellow-600 dark:text-yellow-400 mt-0.5" />
-              <div>
-                <h3 className="font-semibold text-yellow-800 dark:text-yellow-200">Balance Running Low</h3>
-                <p className="text-sm text-yellow-700 dark:text-yellow-300 mt-1">
-                  Your account balance is below $2,000. Consider adding credits to avoid service interruption.
-                </p>
-                <Button variant="outline" size="sm" className="mt-2">
-                  Add Credits Now
-                </Button>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <div className="grid gap-4 lg:grid-cols-3">
-          {/* Daily Usage Chart */}
-          <Card className="lg:col-span-2">
-            <CardHeader>
-              <CardTitle>Daily Usage & Costs</CardTitle>
-              <CardDescription>Track your spending and usage patterns</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="h-[300px]">
-                <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart data={usageData}>
-                    <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                    <XAxis 
-                      dataKey="date" 
-                      className="text-muted-foreground"
-                      tickFormatter={(value) => new Date(value).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                    />
-                    <YAxis className="text-muted-foreground" tickFormatter={(value) => `$${value}`} />
-                    <Area 
-                      type="monotone" 
-                      dataKey="cost" 
-                      stroke="#3b82f6" 
-                      fill="#3b82f6" 
-                      fillOpacity={0.6} 
-                    />
-                  </AreaChart>
-                </ResponsiveContainer>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Current Plan */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Current Plan</CardTitle>
-              <CardDescription>Pro subscription details</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="text-center">
-                <div className="text-3xl font-bold">$299</div>
-                <div className="text-sm text-muted-foreground">per month</div>
-              </div>
-              
-              <div className="space-y-2">
-                <div className="flex items-center gap-2 text-sm">
-                  <CheckCircle className="w-4 h-4 text-green-500" />
-                  <span>2M requests/month</span>
-                </div>
-                <div className="flex items-center gap-2 text-sm">
-                  <CheckCircle className="w-4 h-4 text-green-500" />
-                  <span>1TB bandwidth</span>
-                </div>
-                <div className="flex items-center gap-2 text-sm">
-                  <CheckCircle className="w-4 h-4 text-green-500" />
-                  <span>Premium endpoints</span>
-                </div>
-                <div className="flex items-center gap-2 text-sm">
-                  <CheckCircle className="w-4 h-4 text-green-500" />
-                  <span>Priority support</span>
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Button className="w-full" variant="outline">
-                  Change Plan
-                </Button>
-                <Button className="w-full" variant="ghost">
-                  Cancel Subscription
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Monthly Budget Overview */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Monthly Spending Trends</CardTitle>
-            <CardDescription>Track your monthly costs against budget</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="h-[250px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={monthlyUsage}>
-                  <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                  <XAxis dataKey="month" className="text-muted-foreground" />
-                  <YAxis className="text-muted-foreground" tickFormatter={(value) => `$${value}`} />
-                  <Bar dataKey="cost" fill="#3b82f6" />
-                  <Bar dataKey="budget" fill="#e5e7eb" opacity={0.5} />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Transaction History */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Recent Transactions</CardTitle>
-            <CardDescription>Your payment and billing history</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {transactions.map((transaction) => (
-                <div key={transaction.id} className="flex items-center justify-between p-4 border border-border rounded-lg">
-                  <div className="flex items-center gap-4">
-                    <CreditCard className="w-8 h-8 text-muted-foreground" />
+        {/* Overview Tab */}
+        <TabsContent value="overview" className="space-y-6">
+          {/* Current Plan & Usage */}
+          <div className="grid md:grid-cols-2 gap-6">
+            {/* Current Plan */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center justify-between">
+                  <span>Current Plan</span>
+                  {subscription?.status === 'active' && (
+                    <Badge variant="default">Active</Badge>
+                  )}
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {currentPlan ? (
+                  <>
                     <div>
-                      <p className="font-medium">{transaction.description}</p>
-                      <p className="text-sm text-muted-foreground">
-                        {new Date(transaction.date).toLocaleDateString()} • {transaction.id}
-                      </p>
+                      <div className="text-3xl font-bold">{currentPlan.name}</div>
+                      <div className="text-muted-foreground">
+                        {formatCurrency(currentPlan.price_monthly)}/month
+                      </div>
                     </div>
+                    <div className="space-y-2 text-sm">
+                      <div className="flex justify-between">
+                        <span>Bandwidth</span>
+                        <span>{currentPlan.bandwidth_gb} GB/month</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Requests</span>
+                        <span>{currentPlan.requests_per_day.toLocaleString()}/day</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Connections</span>
+                        <span>{currentPlan.concurrent_conns} concurrent</span>
+                      </div>
+                    </div>
+                    {subscription?.current_period_end && (
+                      <div className="pt-4 border-t text-sm text-muted-foreground">
+                        <Calendar className="w-4 h-4 inline mr-2" />
+                        {subscription.cancel_at_period_end 
+                          ? `Cancels on ${new Date(subscription.current_period_end).toLocaleDateString()}`
+                          : `Renews on ${new Date(subscription.current_period_end).toLocaleDateString()}`
+                        }
+                      </div>
+                    )}
+                    <div className="pt-4 flex gap-2">
+                      <Button variant="outline" size="sm" onClick={() => handleCancelSubscription()}>
+                        {subscription?.cancel_at_period_end ? 'Resume' : 'Cancel'}
+                      </Button>
+                      <Button size="sm">
+                        Change Plan
+                      </Button>
+                    </div>
+                  </>
+                ) : (
+                  <div className="text-center py-4">
+                    <p className="text-muted-foreground mb-4">No active subscription</p>
+                    <Button onClick={() => handleUpgrade('starter')}>
+                      Get Started
+                    </Button>
                   </div>
-                  <div className="text-right">
-                    <div className="text-lg font-semibold">${transaction.amount.toFixed(2)}</div>
-                    <Badge variant="success">Paid</Badge>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Usage This Month */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Usage This Month</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                {usage && (
+                  <>
+                    {/* Bandwidth */}
+                    <div className="space-y-2">
+                      <div className="flex justify-between text-sm">
+                        <span>Bandwidth</span>
+                        <span>
+                          {formatBytes(usage.total_bytes)} / {formatBytes(usage.plan_limit_bytes)}
+                        </span>
+                      </div>
+                      <Progress value={usage.usage_percent} />
+                      {usage.usage_percent > 80 && (
+                        <div className="text-xs text-yellow-500 flex items-center gap-1">
+                          <AlertTriangle className="w-3 h-3" />
+                          {usage.usage_percent > 90 ? 'Almost at limit!' : 'Approaching limit'}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Requests */}
+                    <div className="space-y-2">
+                      <div className="flex justify-between text-sm">
+                        <span>Requests</span>
+                        <span>{usage.total_requests.toLocaleString()}</span>
+                      </div>
+                    </div>
+
+                    {/* Estimated Cost */}
+                    {usage.estimated_cost > 0 && (
+                      <div className="pt-4 border-t">
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm text-muted-foreground">Estimated Cost</span>
+                          <span className="text-2xl font-bold">
+                            ${usage.estimated_cost.toFixed(2)}
+                          </span>
+                        </div>
+                      </div>
+                    )}
+                  </>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Quick Stats */}
+          <div className="grid md:grid-cols-4 gap-4">
+            <Card>
+              <CardContent className="pt-6">
+                <div className="flex items-center gap-4">
+                  <div className="p-3 bg-blue-500/10 rounded-full">
+                    <TrendingUp className="w-6 h-6 text-blue-500" />
+                  </div>
+                  <div>
+                    <div className="text-2xl font-bold">
+                      {usage ? formatBytes(usage.total_bytes) : '0 B'}
+                    </div>
+                    <div className="text-sm text-muted-foreground">Data Used</div>
                   </div>
                 </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Available Plans */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Available Plans</CardTitle>
-            <CardDescription>Choose the right plan for your needs</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="grid gap-6 md:grid-cols-3">
-              {plans.map((plan) => (
-                <div key={plan.name} className={`p-6 rounded-lg border-2 ${
-                  plan.current ? 'border-primary bg-primary/5' : 'border-border'
-                }`}>
-                  <div className="text-center">
-                    <h3 className="text-xl font-bold">{plan.name}</h3>
-                    {plan.current && <Badge className="mt-1">Current Plan</Badge>}
-                    <div className="mt-4">
-                      <span className="text-3xl font-bold">${plan.price}</span>
-                      <span className="text-muted-foreground">/{plan.period}</span>
-                    </div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="pt-6">
+                <div className="flex items-center gap-4">
+                  <div className="p-3 bg-green-500/10 rounded-full">
+                    <Zap className="w-6 h-6 text-green-500" />
                   </div>
-                  
-                  <ul className="mt-6 space-y-3">
-                    {plan.features.map((feature, index) => (
-                      <li key={index} className="flex items-center gap-2 text-sm">
-                        <CheckCircle className="w-4 h-4 text-green-500" />
-                        <span>{feature}</span>
+                  <div>
+                    <div className="text-2xl font-bold">
+                      {usage?.total_requests.toLocaleString() || 0}
+                    </div>
+                    <div className="text-sm text-muted-foreground">Requests</div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="pt-6">
+                <div className="flex items-center gap-4">
+                  <div className="p-3 bg-purple-500/10 rounded-full">
+                    <DollarSign className="w-6 h-6 text-purple-500" />
+                  </div>
+                  <div>
+                    <div className="text-2xl font-bold">
+                      {currentPlan ? formatCurrency(currentPlan.price_monthly) : '$0'}
+                    </div>
+                    <div className="text-sm text-muted-foreground">Monthly Cost</div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="pt-6">
+                <div className="flex items-center gap-4">
+                  <div className="p-3 bg-yellow-500/10 rounded-full">
+                    <CreditCard className="w-6 h-6 text-yellow-500" />
+                  </div>
+                  <div>
+                    <div className="text-2xl font-bold">
+                      {invoices.filter(i => i.status === 'paid').length}
+                    </div>
+                    <div className="text-sm text-muted-foreground">Paid Invoices</div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+
+        {/* Plans Tab */}
+        <TabsContent value="plans">
+          <div className="grid md:grid-cols-4 gap-6">
+            {plans.filter(p => p.id !== 'enterprise').map((plan) => (
+              <Card 
+                key={plan.id} 
+                className={plan.id === subscription?.plan_id ? 'border-primary' : ''}
+              >
+                <CardHeader>
+                  <CardTitle className="flex items-center justify-between">
+                    {plan.name}
+                    {plan.id === subscription?.plan_id && (
+                      <Badge>Current</Badge>
+                    )}
+                  </CardTitle>
+                  <CardDescription>
+                    <span className="text-3xl font-bold text-foreground">
+                      {plan.price_monthly === 0 ? 'Custom' : formatCurrency(plan.price_monthly)}
+                    </span>
+                    {plan.price_monthly > 0 && (
+                      <span className="text-muted-foreground">/month</span>
+                    )}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <ul className="space-y-2">
+                    {plan.features.map((feature, i) => (
+                      <li key={i} className="flex items-start gap-2 text-sm">
+                        <CheckCircle className="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" />
+                        {feature}
                       </li>
                     ))}
                   </ul>
-                  
                   <Button 
-                    className="w-full mt-6" 
-                    variant={plan.current ? 'secondary' : 'default'}
-                    disabled={plan.current}
+                    className="w-full" 
+                    variant={plan.id === subscription?.plan_id ? 'outline' : 'default'}
+                    disabled={plan.id === subscription?.plan_id || upgrading}
+                    onClick={() => handleUpgrade(plan.id)}
                   >
-                    {plan.current ? 'Current Plan' : 'Upgrade'}
+                    {plan.id === subscription?.plan_id ? 'Current Plan' : 'Upgrade'}
+                    {plan.id !== subscription?.plan_id && (
+                      <ArrowUpRight className="w-4 h-4 ml-2" />
+                    )}
                   </Button>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </TabsContent>
+
+        {/* Invoices Tab */}
+        <TabsContent value="invoices">
+          <Card>
+            <CardHeader>
+              <CardTitle>Invoice History</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {invoices.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  No invoices yet
                 </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    </Layout>
-  )
+              ) : (
+                <div className="space-y-4">
+                  {invoices.map((invoice) => (
+                    <div 
+                      key={invoice.id}
+                      className="flex items-center justify-between p-4 border rounded-lg"
+                    >
+                      <div className="flex items-center gap-4">
+                        <div className="p-2 bg-muted rounded">
+                          <CreditCard className="w-5 h-5" />
+                        </div>
+                        <div>
+                          <div className="font-medium">
+                            {formatCurrency(invoice.amount_paid)}
+                          </div>
+                          <div className="text-sm text-muted-foreground">
+                            {formatDate(invoice.created)}
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-4">
+                        <Badge variant={invoice.status === 'paid' ? 'default' : 'secondary'}>
+                          {invoice.status}
+                        </Badge>
+                        {invoice.invoice_pdf && (
+                          <Button variant="ghost" size="sm" asChild>
+                            <a href={invoice.invoice_pdf} target="_blank" rel="noopener noreferrer">
+                              <Download className="w-4 h-4" />
+                            </a>
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
+    </div>
+  );
 }

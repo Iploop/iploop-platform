@@ -17,15 +17,17 @@ import (
 type SOCKS5Proxy struct {
 	authenticator *auth.Authenticator
 	nodePool      *nodepool.NodePool
+	wsNodePool    *nodepool.WebSocketNodePool
 	metrics       *metrics.Collector
 	logger        *logrus.Entry
 	server        *socks5.Server
 }
 
-func NewSOCKS5Proxy(authenticator *auth.Authenticator, nodePool *nodepool.NodePool, metrics *metrics.Collector, logger *logrus.Entry) *SOCKS5Proxy {
+func NewSOCKS5Proxy(authenticator *auth.Authenticator, nodePool *nodepool.NodePool, wsNodePool *nodepool.WebSocketNodePool, metrics *metrics.Collector, logger *logrus.Entry) *SOCKS5Proxy {
 	proxy := &SOCKS5Proxy{
 		authenticator: authenticator,
 		nodePool:      nodePool,
+		wsNodePool:    wsNodePool,
 		metrics:       metrics,
 		logger:        logger.WithField("component", "socks5-proxy"),
 	}

@@ -25,13 +25,14 @@ import (
 type HTTPProxy struct {
 	authenticator   *auth.Authenticator
 	nodePool        *nodepool.NodePool
+	wsNodePool      *nodepool.WebSocketNodePool
 	metrics         *metrics.Collector
 	logger          *logrus.Entry
 	nodeRegURL      string
 	httpClient      *http.Client
 }
 
-func NewHTTPProxy(authenticator *auth.Authenticator, nodePool *nodepool.NodePool, metrics *metrics.Collector, logger *logrus.Entry) *HTTPProxy {
+func NewHTTPProxy(authenticator *auth.Authenticator, nodePool *nodepool.NodePool, wsNodePool *nodepool.WebSocketNodePool, metrics *metrics.Collector, logger *logrus.Entry) *HTTPProxy {
 	nodeRegURL := os.Getenv("NODE_REGISTRATION_URL")
 	if nodeRegURL == "" {
 		nodeRegURL = "http://node-registration:8001"
@@ -40,6 +41,7 @@ func NewHTTPProxy(authenticator *auth.Authenticator, nodePool *nodepool.NodePool
 	return &HTTPProxy{
 		authenticator: authenticator,
 		nodePool:      nodePool,
+		wsNodePool:    wsNodePool,
 		metrics:       metrics,
 		logger:        logger.WithField("component", "http-proxy"),
 		nodeRegURL:    nodeRegURL,

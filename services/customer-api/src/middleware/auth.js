@@ -28,7 +28,7 @@ async function authenticateToken(req, res, next) {
     if (!user) {
       // Fetch user from database
       const result = await query(
-        'SELECT id, email, first_name, last_name, status FROM users WHERE id = $1',
+        'SELECT id, email, first_name, last_name, status, role FROM users WHERE id = $1',
         [decoded.userId]
       );
 
@@ -89,14 +89,16 @@ async function requireAdmin(req, res, next) {
 
     // Check if user has admin role
     const result = await query(
-      'SELECT email FROM users WHERE id = $1 AND email LIKE \'%@iploop.com\'',
+      'SELECT role FROM users WHERE id = $1',
       [req.user.id]
     );
 
-    if (result.rows.length === 0) {
+    if (result.rows.length === 0 || result.rows[0].role !== 'admin') {
+      logger.warn('Non-admin user attempted admin access', { userId: req.user.id, email: req.user.email });
       throw new APIError('Admin access required', 403);
     }
 
+    req.user.role = 'admin';
     next();
   } catch (error) {
     next(error);

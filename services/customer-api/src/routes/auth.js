@@ -110,7 +110,7 @@ router.post('/login', asyncHandler(async (req, res) => {
 
   // Get user
   const result = await query(`
-    SELECT id, email, password_hash, first_name, last_name, company, status
+    SELECT id, email, password_hash, first_name, last_name, company, status, role
     FROM users
     WHERE email = $1
   `, [email]);
@@ -153,7 +153,8 @@ router.post('/login', asyncHandler(async (req, res) => {
       email: user.email,
       firstName: user.first_name,
       lastName: user.last_name,
-      company: user.company
+      company: user.company,
+      role: user.role || 'customer'
     },
     token
   });

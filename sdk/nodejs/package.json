@@ -1,0 +1,53 @@
+{
+  "name": "iploop",
+  "version": "1.0.0",
+  "description": "Official Node.js SDK for IPLoop residential proxy service",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "prepublishOnly": "npm run build",
+    "test": "jest",
+    "lint": "eslint src/**/*.ts"
+  },
+  "keywords": [
+    "proxy",
+    "residential-proxy",
+    "mobile-proxy",
+    "web-scraping",
+    "iploop",
+    "socks5",
+    "http-proxy"
+  ],
+  "author": "IPLoop <support@iploop.io>",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/iploop/nodejs-sdk"
+  },
+  "homepage": "https://iploop.io",
+  "bugs": {
+    "url": "https://github.com/iploop/nodejs-sdk/issues"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "dependencies": {
+    "axios": "^1.6.0",
+    "https-proxy-agent": "^7.0.0",
+    "socks-proxy-agent": "^8.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "typescript": "^5.0.0",
+    "jest": "^29.0.0",
+    "@types/jest": "^29.0.0",
+    "ts-jest": "^29.0.0",
+    "eslint": "^8.0.0",
+    "@typescript-eslint/eslint-plugin": "^6.0.0",
+    "@typescript-eslint/parser": "^6.0.0"
+  }
+}

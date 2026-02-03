@@ -2,29 +2,62 @@ global:
   scrape_interval: 15s
   evaluation_interval: 15s
 
-rule_files:
-  # - "first_rules.yml"
-  # - "second_rules.yml"
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets: []
+
+rule_files: []
 
 scrape_configs:
-  - job_name: "prometheus"
+  # Prometheus self-monitoring
+  - job_name: 'prometheus'
     static_configs:
-      - targets: ["localhost:9090"]
+      - targets: ['localhost:9090']
 
-  - job_name: "proxy-gateway"
+  # IPLoop Proxy Gateway
+  - job_name: 'iploop-proxy-gateway'
     static_configs:
-      - targets: ["proxy-gateway:7777"]
+      - targets: ['proxy-gateway:8080']
+    metrics_path: /metrics
+    scrape_interval: 10s
+
+  # IPLoop Node Registration
+  - job_name: 'iploop-node-registration'
+    static_configs:
+      - targets: ['node-registration:8001']
+    metrics_path: /metrics
+    scrape_interval: 10s
+
+  # IPLoop Customer API
+  - job_name: 'iploop-customer-api'
+    static_configs:
+      - targets: ['customer-api:8002']
+    metrics_path: /metrics
+    scrape_interval: 15s
+
+  # IPLoop Billing Service
+  - job_name: 'iploop-billing'
+    static_configs:
+      - targets: ['billing:8003']
     metrics_path: /metrics
     scrape_interval: 30s
 
-  - job_name: "node-registration"
+  # IPLoop Notifications Service
+  - job_name: 'iploop-notifications'
     static_configs:
-      - targets: ["node-registration:8001"]
+      - targets: ['notifications:8004']
     metrics_path: /metrics
     scrape_interval: 30s
 
-  - job_name: "customer-api"
+  # PostgreSQL Exporter (optional)
+  - job_name: 'postgres'
     static_configs:
-      - targets: ["customer-api:8002"]
-    metrics_path: /metrics
+      - targets: ['postgres-exporter:9187']
     scrape_interval: 30s
+
+  # Redis Exporter (optional)
+  - job_name: 'redis'
+    static_configs:
+      - targets: ['redis-exporter:9121']
+    scrape_interval: 15s

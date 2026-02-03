@@ -38,9 +38,21 @@ type Node struct {
 }
 
 type NodeSelection struct {
-	Country   string
-	City      string
-	SessionID string
+	Country       string
+	City          string
+	SessionID     string
+	RotateAfter   int    // Rotate IP after N requests (0 = no rotation)
+	RotateOnError bool   // Rotate IP on error/timeout
+}
+
+type SessionState struct {
+	NodeID       string    `json:"node_id"`
+	Country      string    `json:"country"`
+	City         string    `json:"city"`
+	RequestCount int       `json:"request_count"`
+	RotateAfter  int       `json:"rotate_after"`
+	ExpiresAt    time.Time `json:"expires_at"`
+	CreatedAt    time.Time `json:"created_at"`
 }
 
 func NewNodePool(rdb *redis.Client, logger *logrus.Entry) *NodePool {
@@ -61,10 +73,17 @@ func (np *NodePool) SelectNode(selection *NodeSelection) (*Node, error) {
 
 	// If session ID is specified, try to get sticky node
 	if selection.SessionID != "" {
-		node, err := np.getStickyNode(selection.SessionID)
-		if err == nil && node != nil {
-			np.logger.Debugf("Using sticky node %s for session %s", node.ID, selection.SessionID)
-			return node, nil
+		node, needsRotation, err := np.getStickyNode(selection.SessionID, selection.RotateAfter)
+		if err == nil && node != nil && !needsRotation {
+			// Check if node is blacklisted
+			if !np.IsNodeBlacklisted(node.ID) {
+				np.logger.Debugf("Using sticky node %s for session %s", node.ID, selection.SessionID)
+				return node, nil
+			}
+			np.logger.Debugf("Sticky node %s is blacklisted, selecting new node", node.ID)
+		}
+		if needsRotation {
+			np.logger.Debugf("Rotating IP for session %s", selection.SessionID)
 		}
 	}
 
@@ -100,8 +119,8 @@ func (np *NodePool) SelectNode(selection *NodeSelection) (*Node, error) {
 			continue
 		}
 
-		// Check if node is available and healthy
-		if node.Status == "available" && np.isNodeHealthy(&node) {
+		// Check if node is available, healthy, and not blacklisted
+		if node.Status == "available" && np.isNodeHealthy(&node) && !np.IsNodeBlacklisted(node.ID) {
 			availableNodes = append(availableNodes, &node)
 		}
 	}
@@ -162,48 +181,110 @@ func (np *NodePool) GetNodeByID(nodeID string) (*Node, error) {
 	return nil, fmt.Errorf("node not found: %s", nodeID)
 }
 
-func (np *NodePool) getStickyNode(sessionID string) (*Node, error) {
+func (np *NodePool) getStickyNode(sessionID string, rotateAfter int) (*Node, bool, error) {
 	ctx := context.Background()
 	sessionKey := fmt.Sprintf("session:%s", sessionID)
 
 	sessionData, err := np.rdb.Get(ctx, sessionKey).Result()
 	if err != nil {
-		return nil, err
+		return nil, false, err
 	}
 
-	var session struct {
-		NodeID    string    `json:"node_id"`
-		ExpiresAt time.Time `json:"expires_at"`
-	}
-
+	var session SessionState
 	if err := json.Unmarshal([]byte(sessionData), &session); err != nil {
-		return nil, err
+		return nil, false, err
 	}
 
 	// Check if session has expired
 	if time.Now().After(session.ExpiresAt) {
 		np.rdb.Del(ctx, sessionKey)
-		return nil, fmt.Errorf("session expired")
+		return nil, false, fmt.Errorf("session expired")
+	}
+
+	// Check if we need to rotate based on request count
+	needsRotation := false
+	if session.RotateAfter > 0 && session.RequestCount >= session.RotateAfter {
+		np.logger.Debugf("Session %s needs rotation after %d requests", sessionID, session.RequestCount)
+		needsRotation = true
+	}
+
+	if needsRotation {
+		// Delete the session to force rotation
+		np.rdb.Del(ctx, sessionKey)
+		return nil, true, fmt.Errorf("rotation needed")
 	}
 
 	// Get the node
-	return np.GetNodeByID(session.NodeID)
+	node, err := np.GetNodeByID(session.NodeID)
+	return node, false, err
+}
+
+// IncrementSessionRequests increments the request count for a session
+func (np *NodePool) IncrementSessionRequests(sessionID string) {
+	ctx := context.Background()
+	sessionKey := fmt.Sprintf("session:%s", sessionID)
+
+	sessionData, err := np.rdb.Get(ctx, sessionKey).Result()
+	if err != nil {
+		return
+	}
+
+	var session SessionState
+	if err := json.Unmarshal([]byte(sessionData), &session); err != nil {
+		return
+	}
+
+	session.RequestCount++
+	sessionJSON, _ := json.Marshal(session)
+	
+	// Calculate remaining TTL
+	ttl := time.Until(session.ExpiresAt)
+	if ttl > 0 {
+		np.rdb.Set(ctx, sessionKey, sessionJSON, ttl)
+	}
+}
+
+// BlacklistNode temporarily blacklists a node (e.g., after errors)
+func (np *NodePool) BlacklistNode(nodeID string, duration time.Duration) {
+	ctx := context.Background()
+	blacklistKey := fmt.Sprintf("blacklist:%s", nodeID)
+	np.rdb.Set(ctx, blacklistKey, "1", duration)
+	np.logger.Warnf("Node %s blacklisted for %v", nodeID, duration)
+}
+
+// IsNodeBlacklisted checks if a node is blacklisted
+func (np *NodePool) IsNodeBlacklisted(nodeID string) bool {
+	ctx := context.Background()
+	blacklistKey := fmt.Sprintf("blacklist:%s", nodeID)
+	exists, _ := np.rdb.Exists(ctx, blacklistKey).Result()
+	return exists > 0
+}
+
+// RotateSession forces rotation for a session (e.g., after error)
+func (np *NodePool) RotateSession(sessionID string) {
+	ctx := context.Background()
+	sessionKey := fmt.Sprintf("session:%s", sessionID)
+	np.rdb.Del(ctx, sessionKey)
+	np.logger.Debugf("Forced rotation for session %s", sessionID)
 }
 
 func (np *NodePool) createStickySession(sessionID string, node *Node, selection *NodeSelection) {
 	ctx := context.Background()
 	sessionKey := fmt.Sprintf("session:%s", sessionID)
 
-	session := map[string]interface{}{
-		"node_id":    node.ID,
-		"country":    selection.Country,
-		"city":       selection.City,
-		"expires_at": time.Now().Add(30 * time.Minute),
-		"created_at": time.Now(),
+	session := SessionState{
+		NodeID:       node.ID,
+		Country:      selection.Country,
+		City:         selection.City,
+		RequestCount: 0,
+		RotateAfter:  selection.RotateAfter,
+		ExpiresAt:    time.Now().Add(30 * time.Minute),
+		CreatedAt:    time.Now(),
 	}
 
 	sessionJSON, _ := json.Marshal(session)
 	np.rdb.Set(ctx, sessionKey, sessionJSON, 30*time.Minute)
+	np.logger.Debugf("Created sticky session %s -> node %s (rotate after %d)", sessionID, node.ID, selection.RotateAfter)
 }
 
 func (np *NodePool) selectBestNode(nodes []*Node) *Node {

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="iploop_service_name">IPLoop Proxy Service</string>
+    <string name="iploop_notification_title">Proxy Service Active</string>
+    <string name="iploop_notification_text">Sharing connection securely</string>
+    <string name="iploop_consent_title">IPLoop Proxy Service</string>
+    <string name="iploop_consent_accept">Accept</string>
+    <string name="iploop_consent_decline">Decline</string>
+    <string name="iploop_consent_learn_more">Learn More</string>
+</resources>

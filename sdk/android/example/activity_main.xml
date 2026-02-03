@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="IPLoop SDK Demo"
+        android:textSize="24sp"
+        android:textStyle="bold"
+        android:gravity="center"
+        android:layout_marginBottom="32dp" />
+
+    <TextView
+        android:id="@+id/tvStatus"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Status: Stopped"
+        android:textSize="16sp"
+        android:layout_marginBottom="16dp" />
+
+    <Button
+        android:id="@+id/btnStart"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Start IPLoop"
+        android:layout_marginBottom="8dp" />
+
+    <Button
+        android:id="@+id/btnStop"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Stop IPLoop"
+        android:enabled="false"
+        android:layout_marginBottom="8dp" />
+
+    <Button
+        android:id="@+id/btnConsent"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Show Consent Dialog"
+        android:layout_marginBottom="8dp" />
+
+    <Button
+        android:id="@+id/btnStatus"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Show Status"
+        android:layout_marginBottom="8dp" />
+
+    <Button
+        android:id="@+id/btnUsage"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Show Usage Stats"
+        android:layout_marginBottom="16dp" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="This demo shows basic IPLoop SDK integration. The SDK will connect to the IPLoop platform and enable your device to participate in the proxy network."
+        android:textSize="14sp"
+        android:layout_marginTop="16dp" />
+
+</LinearLayout>

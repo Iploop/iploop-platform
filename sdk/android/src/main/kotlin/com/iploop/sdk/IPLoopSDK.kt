@@ -163,6 +163,44 @@ object IPLoopSDK : CoroutineScope {
     }
     
     /**
+     * Start the SDK (Java-friendly, non-blocking)
+     * Use this from Java code instead of the suspend function
+     */
+    @JvmStatic
+    fun startAsync() {
+        launch {
+            start()
+        }
+    }
+    
+    /**
+     * Start the SDK with callback (Java-friendly)
+     * @param onSuccess Called when SDK starts successfully
+     * @param onError Called with error message if start fails
+     */
+    @JvmStatic
+    fun startAsync(onSuccess: Runnable?, onError: java.util.function.Consumer<String>?) {
+        launch {
+            val result = start()
+            if (result.isSuccess) {
+                onSuccess?.run()
+            } else {
+                onError?.accept(result.exceptionOrNull()?.message ?: "Unknown error")
+            }
+        }
+    }
+    
+    /**
+     * Stop the SDK (Java-friendly, non-blocking)
+     */
+    @JvmStatic
+    fun stopAsync() {
+        launch {
+            stop()
+        }
+    }
+    
+    /**
      * Check if the SDK is currently running
      */
     @JvmStatic

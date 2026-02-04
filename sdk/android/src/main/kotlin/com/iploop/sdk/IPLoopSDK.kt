@@ -3,43 +3,38 @@ package com.iploop.sdk
 import android.content.Context
 import android.content.Intent
 import android.os.Build
+import android.os.Handler
+import android.os.Looper
 import com.iploop.sdk.internal.*
-import kotlinx.coroutines.*
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
+import java.util.concurrent.ExecutorService
+import java.util.concurrent.Executors
 import java.util.concurrent.atomic.AtomicBoolean
-import kotlin.coroutines.CoroutineContext
+import java.util.concurrent.atomic.AtomicReference
 
 /**
  * IPLoop Android SDK - Main entry point
  * 
- * Converts Android devices into proxy nodes for the IPLoop platform.
- * Handles consent, connectivity, traffic relay, and compliance.
+ * Simple Java-compatible API for integrating IPLoop proxy functionality.
  */
-object IPLoopSDK : CoroutineScope {
+object IPLoopSDK {
     
     private lateinit var applicationContext: Context
     private lateinit var sdkKey: String
     private lateinit var config: IPLoopConfig
     
     private var connectionManager: ConnectionManager? = null
-    private var tunnelManager: TunnelManager? = null
-    private var trafficRelay: TrafficRelay? = null
     private var bandwidthTracker: BandwidthTracker? = null
     private var consentManager: ConsentManager? = null
     
-    private val job = SupervisorJob()
-    override val coroutineContext: CoroutineContext = Dispatchers.Main + job
+    private val executor: ExecutorService = Executors.newSingleThreadExecutor()
+    private val mainHandler = Handler(Looper.getMainLooper())
     
-    private val _status = MutableStateFlow(SDKStatus.STOPPED)
-    val status: StateFlow<SDKStatus> = _status.asStateFlow()
-    
+    private val _status = AtomicReference(SDKStatus.STOPPED)
     private val _isRunning = AtomicBoolean(false)
+    private val _isInitialized = AtomicBoolean(false)
     
     /**
-     * Initialize the SDK with default config
-     * Call this once in your Application's onCreate()
+     * Initialize the SDK (Java-friendly, config optional)
      */
     @JvmStatic
     fun init(context: Context, sdkKey: String) {
@@ -48,13 +43,11 @@ object IPLoopSDK : CoroutineScope {
     
     /**
      * Initialize the SDK
-     * Call this once in your Application's onCreate()
-     * @param config Optional - if null, uses IPLoopConfig.createDefault()
+     * @param config Optional - if null, uses defaults
      */
     @JvmStatic
-    @JvmOverloads
     fun init(context: Context, sdkKey: String, config: IPLoopConfig?) {
-        if (::applicationContext.isInitialized) {
+        if (_isInitialized.get()) {
             IPLoopLogger.w("IPLoopSDK", "Already initialized, ignoring")
             return
         }
@@ -68,161 +61,147 @@ object IPLoopSDK : CoroutineScope {
         // Initialize managers
         consentManager = ConsentManager(applicationContext, this.config)
         connectionManager = ConnectionManager(applicationContext, sdkKey, this.config)
-        tunnelManager = TunnelManager(applicationContext, this.config)
-        trafficRelay = TrafficRelay(applicationContext, this.config)
         bandwidthTracker = BandwidthTracker(applicationContext)
         
-        _status.value = SDKStatus.INITIALIZED
+        _isInitialized.set(true)
+        _status.set(SDKStatus.INITIALIZED)
     }
     
     /**
-     * Start the proxy service
-     * Requires user consent and proper network conditions
+     * Start the SDK (non-blocking)
      */
     @JvmStatic
-    suspend fun start(): Result<Unit> = withContext(Dispatchers.IO) {
+    fun start() {
+        start(null, null)
+    }
+    
+    /**
+     * Start the SDK with callbacks
+     */
+    @JvmStatic
+    fun start(onSuccess: Runnable?, onError: java.util.function.Consumer<String>?) {
         checkInitialized()
         
         if (_isRunning.get()) {
-            return@withContext Result.success(Unit)
+            onSuccess?.run()
+            return
         }
         
-        try {
-            _status.value = SDKStatus.STARTING
-            
-            // Check consent
-            if (!consentManager!!.hasConsent()) {
-                _status.value = SDKStatus.CONSENT_REQUIRED
-                return@withContext Result.failure(Exception("User consent required"))
+        executor.execute {
+            try {
+                _status.set(SDKStatus.STARTING)
+                
+                // Check consent
+                if (consentManager?.hasConsent() != true) {
+                    _status.set(SDKStatus.CONSENT_REQUIRED)
+                    mainHandler.post { onError?.accept("User consent required") }
+                    return@execute
+                }
+                
+                // Check network conditions
+                val networkInfo = DeviceInfo.getNetworkInfo(applicationContext)
+                if (config.wifiOnly && networkInfo["connection_type"] != "wifi") {
+                    _status.set(SDKStatus.WAITING_WIFI)
+                    mainHandler.post { onError?.accept("WiFi required but not connected") }
+                    return@execute
+                }
+                
+                // Start connection manager
+                connectionManager?.start()
+                bandwidthTracker?.start()
+                
+                // Start foreground service
+                try {
+                    val serviceIntent = Intent(applicationContext, IPLoopProxyService::class.java)
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                        applicationContext.startForegroundService(serviceIntent)
+                    } else {
+                        applicationContext.startService(serviceIntent)
+                    }
+                } catch (e: Exception) {
+                    IPLoopLogger.w("IPLoopSDK", "Could not start foreground service: ${e.message}")
+                }
+                
+                _isRunning.set(true)
+                _status.set(SDKStatus.RUNNING)
+                
+                IPLoopLogger.i("IPLoopSDK", "Started successfully")
+                mainHandler.post { onSuccess?.run() }
+                
+            } catch (e: Exception) {
+                IPLoopLogger.e("IPLoopSDK", "Failed to start", e)
+                _status.set(SDKStatus.ERROR)
+                mainHandler.post { onError?.accept(e.message ?: "Unknown error") }
             }
-            
-            // Check network conditions
-            val networkInfo = DeviceInfo.getNetworkInfo(applicationContext)
-            if (config.wifiOnly && networkInfo["connection_type"] != "wifi") {
-                _status.value = SDKStatus.WAITING_WIFI
-                return@withContext Result.failure(Exception("WiFi required but not connected"))
-            }
-            
-            // Start services
-            connectionManager!!.start()
-            tunnelManager!!.start()
-            trafficRelay!!.start()
-            bandwidthTracker!!.start()
-            
-            // Start foreground service
-            val serviceIntent = Intent(applicationContext, IPLoopProxyService::class.java)
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                applicationContext.startForegroundService(serviceIntent)
-            } else {
-                applicationContext.startService(serviceIntent)
-            }
-            
-            _isRunning.set(true)
-            _status.value = SDKStatus.RUNNING
-            
-            IPLoopLogger.i("IPLoopSDK", "Started successfully")
-            Result.success(Unit)
-            
-        } catch (e: Exception) {
-            IPLoopLogger.e("IPLoopSDK", "Failed to start", e)
-            _status.value = SDKStatus.ERROR
-            Result.failure(e)
         }
     }
     
     /**
-     * Stop the proxy service
+     * Stop the SDK (non-blocking)
      */
     @JvmStatic
-    suspend fun stop() = withContext(Dispatchers.IO) {
-        checkInitialized()
+    fun stop() {
+        stop(null)
+    }
+    
+    /**
+     * Stop the SDK with callback
+     */
+    @JvmStatic
+    fun stop(onComplete: Runnable?) {
+        if (!_isInitialized.get()) return
+        if (!_isRunning.get()) {
+            onComplete?.run()
+            return
+        }
         
-        if (!_isRunning.get()) return@withContext
-        
-        try {
-            _status.value = SDKStatus.STOPPING
-            
-            // Stop services
-            trafficRelay?.stop()
-            tunnelManager?.stop()
-            connectionManager?.stop()
-            bandwidthTracker?.stop()
-            
-            // Stop foreground service
-            val serviceIntent = Intent(applicationContext, IPLoopProxyService::class.java)
-            applicationContext.stopService(serviceIntent)
-            
-            _isRunning.set(false)
-            _status.value = SDKStatus.STOPPED
-            
-            IPLoopLogger.i("IPLoopSDK", "Stopped successfully")
-            
-        } catch (e: Exception) {
-            IPLoopLogger.e("IPLoopSDK", "Error during stop", e)
-        }
-    }
-    
-    /**
-     * Start the SDK (Java-friendly, non-blocking)
-     * Use this from Java code instead of the suspend function
-     */
-    @JvmStatic
-    fun startAsync() {
-        launch {
-            start()
-        }
-    }
-    
-    /**
-     * Start the SDK with callback (Java-friendly)
-     * @param onSuccess Called when SDK starts successfully
-     * @param onError Called with error message if start fails
-     */
-    @JvmStatic
-    fun startAsync(onSuccess: Runnable?, onError: java.util.function.Consumer<String>?) {
-        launch {
-            val result = start()
-            if (result.isSuccess) {
-                onSuccess?.run()
-            } else {
-                onError?.accept(result.exceptionOrNull()?.message ?: "Unknown error")
+        executor.execute {
+            try {
+                _status.set(SDKStatus.STOPPING)
+                
+                connectionManager?.stop()
+                bandwidthTracker?.stop()
+                
+                // Stop foreground service
+                try {
+                    val serviceIntent = Intent(applicationContext, IPLoopProxyService::class.java)
+                    applicationContext.stopService(serviceIntent)
+                } catch (e: Exception) {
+                    IPLoopLogger.w("IPLoopSDK", "Could not stop service: ${e.message}")
+                }
+                
+                _isRunning.set(false)
+                _status.set(SDKStatus.STOPPED)
+                
+                IPLoopLogger.i("IPLoopSDK", "Stopped successfully")
+                mainHandler.post { onComplete?.run() }
+                
+            } catch (e: Exception) {
+                IPLoopLogger.e("IPLoopSDK", "Error during stop", e)
+                mainHandler.post { onComplete?.run() }
             }
         }
     }
     
     /**
-     * Stop the SDK (Java-friendly, non-blocking)
-     */
-    @JvmStatic
-    fun stopAsync() {
-        launch {
-            stop()
-        }
-    }
-    
-    /**
-     * Check if the SDK is currently running
+     * Check if SDK is running
      */
     @JvmStatic
     fun isRunning(): Boolean = _isRunning.get()
     
     /**
-     * Get current SDK status
+     * Get current status
      */
     @JvmStatic
-    fun getStatus(): SDKStatus = _status.value
+    fun getStatus(): SDKStatus = _status.get()
     
     /**
-     * Set user consent for proxy operation
+     * Set user consent
      */
     @JvmStatic
-    fun setConsentGiven(consent: Boolean) {
+    fun setConsentGiven(given: Boolean) {
         checkInitialized()
-        consentManager!!.setConsent(consent)
-        
-        if (!consent && isRunning()) {
-            launch { stop() }
-        }
+        consentManager?.setConsent(given)
     }
     
     /**
@@ -230,79 +209,41 @@ object IPLoopSDK : CoroutineScope {
      */
     @JvmStatic
     fun hasConsent(): Boolean {
-        checkInitialized()
-        return consentManager!!.hasConsent()
+        return consentManager?.hasConsent() ?: false
     }
     
     /**
-     * Get bandwidth usage statistics
-     */
-    @JvmStatic
-    fun getBandwidthUsage(): BandwidthUsage? {
-        return bandwidthTracker?.getCurrentUsage()
-    }
-    
-    /**
-     * Get current device/network information
-     */
-    @JvmStatic
-    fun getDeviceInfo(): Map<String, Any> {
-        checkInitialized()
-        return DeviceInfo.getDeviceInfo(applicationContext)
-    }
-    
-    /**
-     * Force kill switch - remotely disable the SDK
-     */
-    @JvmStatic
-    internal fun emergencyStop(reason: String) {
-        IPLoopLogger.w("IPLoopSDK", "Emergency stop triggered: $reason")
-        launch { stop() }
-        
-        // Mark as disabled
-        consentManager?.setConsent(false)
-        _status.value = SDKStatus.DISABLED
-    }
-    
-    /**
-     * Show consent dialog to user
+     * Show consent dialog
      */
     @JvmStatic
     fun showConsentDialog(context: Context) {
         checkInitialized()
-        consentManager!!.showConsentDialog(context)
+        consentManager?.showConsentDialog(context)
     }
     
-    /**
-     * Check if SDK is initialized
-     */
-    @JvmStatic
-    fun isInitialized(): Boolean = ::applicationContext.isInitialized
-    
     private fun checkInitialized() {
-        if (!::applicationContext.isInitialized) {
+        if (!_isInitialized.get()) {
             throw IllegalStateException("IPLoopSDK not initialized. Call init() first.")
         }
     }
 }
 
 /**
- * SDK Status enumeration
+ * SDK Status enum
  */
 enum class SDKStatus {
     STOPPED,
-    INITIALIZED, 
+    INITIALIZED,
     STARTING,
     RUNNING,
     STOPPING,
     CONSENT_REQUIRED,
     WAITING_WIFI,
-    ERROR,
-    DISABLED
+    ERROR
 }
 
 /**
- * Bandwidth usage data class
+ * Bandwidth usage data
  */
 data class BandwidthUsage(
     val uploadedMB: Long,

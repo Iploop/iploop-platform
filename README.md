@@ -1,158 +1,164 @@
-# IPLoop Proxy Platform MVP
+# IPLoop Proxy Platform
 
-A complete proxy platform with SDK-based node network and customer management.
+Residential proxy platform with SDK-based node network and customer management.
+
+## Live Endpoints
+
+| Service | URL |
+|---------|-----|
+| **Dashboard** | https://gateway.iploop.io |
+| **WebSocket (Nodes)** | wss://gateway.iploop.io/ws |
+| **Customer API** | https://gateway.iploop.io/api |
 
 ## Architecture
 
 ```
-┌──────────────────────────────────────────────────────┐
-│                    IPLoop Platform                     │
-│                                                        │
-│  ┌─────────────┐    ┌──────────────┐    ┌───────────┐ │
-│  │  Supply SDK  │───▶│ Proxy Engine │◀───│  Customer  │ │
-│  │  (Devices)   │    │  (Backend)   │    │ Dashboard  │ │
-│  └─────────────┘    └──────────────┘    └───────────┘ │
-└──────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────┐
+│                       IPLoop Platform                            │
+│                                                                  │
+│  ┌─────────────┐                          ┌──────────────────┐  │
+│  │  Android/   │◀── WSS ──▶ Cloudflare ──▶│ Node Registration │  │
+│  │  iOS SDK    │           Tunnel         │    (port 8001)    │  │
+│  └─────────────┘           │              └──────────────────┘  │
+│                            │                                     │
+│  ┌─────────────┐           │              ┌──────────────────┐  │
+│  │  Customer   │◀── HTTPS ─┤              │  Customer API    │  │
+│  │  Dashboard  │           │              │   (port 8002)    │  │
+│  └─────────────┘           │              └──────────────────┘  │
+│                            │                                     │
+│  ┌─────────────┐           │              ┌──────────────────┐  │
+│  │   Proxy     │◀── HTTP/  └─────────────▶│  Proxy Gateway   │  │
+│  │  Customers  │   SOCKS5                 │  (7777/1080)     │  │
+│  └─────────────┘                          └──────────────────┘  │
+└─────────────────────────────────────────────────────────────────┘
 ```
 
 ## Components
 
 ### 1. Proxy Gateway (Go)
-- HTTP/SOCKS5 proxy server
-- Customer authentication (API key based)
-- Node pool management
-- Country/geo targeting
+- HTTP proxy (port 7777)
+- SOCKS5 proxy (port 1080)
+- Customer authentication via API key
+- Geo-targeting by country
 - Bandwidth tracking
-- Format: `customer_id:api_key@proxy.iploop.com:7777`
 
 ### 2. Node Registration Service (Go)
-- WebSocket server for device connections
-- Device registration and heartbeat monitoring
+- WebSocket endpoint: `/ws`
+- Device registration & heartbeat
 - Node health scoring
-- Redis for real-time node pool state
+- Redis for real-time state
 
-### 3. Customer API (Node.js/Express)
+### 3. Customer API (Node.js)
 - REST API for customer management
 - JWT authentication
 - API key generation
-- Usage tracking and analytics
-- Basic billing system
+- Usage tracking
 
-### 4. Dashboard (React/Next.js)
+### 4. Dashboard (Next.js)
 - Customer web interface
-- Login/signup pages
-- Usage dashboard
+- Real-time node monitoring
 - API key management
-- Node availability map
+- Usage analytics
 
-### 5. Docker Compose
-- Full stack deployment
-- All services + Redis + PostgreSQL
-- One-command startup
+### 5. Android SDK
+- **Version:** 1.0.2
+- **WebSocket:** `wss://gateway.iploop.io/ws`
+- **Min SDK:** 21 (Android 5.0)
 
 ## Quick Start
 
 ```bash
-# Clone and setup
-git clone <this-repo>
-cd iploop-platform
-
 # Start all services
-docker-compose up -d
+cd iploop-platform
+docker compose up -d
 
 # Check status
-docker-compose ps
-
-# View logs
-docker-compose logs -f
+docker compose ps
 ```
 
-## Services
+## SDK Integration
 
-| Service | Port | Description |
-|---------|------|-------------|
-| **Proxy Gateway** | 7777 | HTTP proxy endpoint |
-| **Proxy Gateway** | 1080 | SOCKS5 proxy endpoint |
-| **Node Registration** | 8001 | WebSocket for SDK nodes |
-| **Customer API** | 8002 | REST API |
-| **Dashboard** | 3000 | Web interface |
-| **Redis** | 6379 | Node pool cache |
-| **PostgreSQL** | 5432 | Main database |
+### Android
 
-## Customer Usage
+```kotlin
+// Initialize
+IPLoopSDK.init(context, "your-sdk-key", IPLoopConfig.createDefault())
+
+// Start
+IPLoopSDK.start()
+
+// Stop
+IPLoopSDK.stop()
+```
+
+### Required Permissions
+```xml
+<uses-permission android:name="android.permission.INTERNET" />
+<uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+```
+
+### Optional Permissions
+```xml
+<uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+<uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+```
+
+## Proxy Usage
 
 ```bash
 # HTTP Proxy
-curl -x http://customer1:key123@localhost:7777 http://httpbin.org/ip
+curl -x http://CUSTOMER_ID:API_KEY@gateway.iploop.io:7777 http://httpbin.org/ip
 
 # SOCKS5 Proxy
-curl --socks5 customer1:key123@localhost:1080 http://httpbin.org/ip
+curl --socks5 CUSTOMER_ID:API_KEY@gateway.iploop.io:1080 http://httpbin.org/ip
 
-# With targeting
-curl -x http://customer1:key123-country-us@localhost:7777 http://httpbin.org/ip
+# With country targeting
+curl -x http://CUSTOMER_ID:API_KEY-country-us@gateway.iploop.io:7777 http://httpbin.org/ip
 ```
 
 ## API Endpoints
 
 ### Authentication
-- `POST /api/v1/auth/register` - User registration
-- `POST /api/v1/auth/login` - User login
+- `POST /api/auth/register` - Register
+- `POST /api/auth/login` - Login
 
-### Proxy Management
-- `GET /api/v1/proxy/endpoint` - Get proxy endpoint
-- `POST /api/v1/proxy/config` - Update targeting config
+### API Keys
+- `GET /api/keys` - List keys
+- `POST /api/keys` - Create key
+- `DELETE /api/keys/:id` - Delete key
 
-### Usage & Billing
-- `GET /api/v1/usage` - Current usage stats
-- `GET /api/v1/usage/history` - Usage history
-- `GET /api/v1/billing/balance` - Account balance
+### Usage
+- `GET /api/usage` - Current usage
+- `GET /api/usage/history` - History
 
-### Network Status
-- `GET /api/v1/network/status` - Overall network status
-- `GET /api/v1/network/countries` - Available countries
+### Network
+- `GET /api/network/status` - Network status
+- `GET /api/network/countries` - Available countries
 
-## Development
+## Services (Docker)
 
-Each service has its own README with detailed setup instructions:
+| Container | Port | Health |
+|-----------|------|--------|
+| iploop-proxy-gateway | 7777, 1080 | HTTP/SOCKS |
+| iploop-node-registration | 8001 | WebSocket |
+| iploop-customer-api | 8002 | REST API |
+| iploop-dashboard | 3000 | Web UI |
+| iploop-postgres | 5432 | Database |
+| iploop-redis | 6379 | Cache |
 
-- [`services/proxy-gateway/README.md`](services/proxy-gateway/README.md)
-- [`services/node-registration/README.md`](services/node-registration/README.md)
-- [`services/customer-api/README.md`](services/customer-api/README.md)
-- [`services/dashboard/README.md`](services/dashboard/README.md)
+## Cloudflare Tunnel
+
+The platform uses a named Cloudflare tunnel for secure public access:
+
+- **Tunnel name:** `iploop-gateway`
+- **Domain:** `gateway.iploop.io`
+- **Config:** `/etc/cloudflared/config.yml`
+- **Service:** `systemctl status cloudflared`
 
 ## Environment Variables
 
-Copy `.env.example` to `.env` and configure:
-
-```env
-# Database
-POSTGRES_DB=iploop
-POSTGRES_USER=iploop
-POSTGRES_PASSWORD=securepassword123
-
-# Redis
-REDIS_URL=redis://localhost:6379
-
-# JWT
-JWT_SECRET=your-jwt-secret-key
-
-# Services
-PROXY_GATEWAY_HOST=0.0.0.0
-PROXY_GATEWAY_HTTP_PORT=7777
-PROXY_GATEWAY_SOCKS_PORT=1080
-NODE_REGISTRATION_PORT=8001
-CUSTOMER_API_PORT=8002
-DASHBOARD_PORT=3000
-```
-
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Add tests
-5. Submit a pull request
+See `.env.example` for all configuration options.
 
 ## License
 
-MIT License - see LICENSE file for details.
+MIT

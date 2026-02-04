@@ -38,11 +38,22 @@ object IPLoopSDK : CoroutineScope {
     private val _isRunning = AtomicBoolean(false)
     
     /**
-     * Initialize the SDK
+     * Initialize the SDK with default config
      * Call this once in your Application's onCreate()
      */
     @JvmStatic
-    fun init(context: Context, sdkKey: String, config: IPLoopConfig) {
+    fun init(context: Context, sdkKey: String) {
+        init(context, sdkKey, null)
+    }
+    
+    /**
+     * Initialize the SDK
+     * Call this once in your Application's onCreate()
+     * @param config Optional - if null, uses IPLoopConfig.createDefault()
+     */
+    @JvmStatic
+    @JvmOverloads
+    fun init(context: Context, sdkKey: String, config: IPLoopConfig?) {
         if (::applicationContext.isInitialized) {
             IPLoopLogger.w("IPLoopSDK", "Already initialized, ignoring")
             return
@@ -50,15 +61,15 @@ object IPLoopSDK : CoroutineScope {
         
         this.applicationContext = context.applicationContext
         this.sdkKey = sdkKey
-        this.config = config
+        this.config = config ?: IPLoopConfig.createDefault()
         
         IPLoopLogger.i("IPLoopSDK", "Initialized with key: ${sdkKey.take(8)}***")
         
         // Initialize managers
-        consentManager = ConsentManager(applicationContext, config)
-        connectionManager = ConnectionManager(applicationContext, sdkKey, config)
-        tunnelManager = TunnelManager(applicationContext, config)
-        trafficRelay = TrafficRelay(applicationContext, config)
+        consentManager = ConsentManager(applicationContext, this.config)
+        connectionManager = ConnectionManager(applicationContext, sdkKey, this.config)
+        tunnelManager = TunnelManager(applicationContext, this.config)
+        trafficRelay = TrafficRelay(applicationContext, this.config)
         bandwidthTracker = BandwidthTracker(applicationContext)
         
         _status.value = SDKStatus.INITIALIZED

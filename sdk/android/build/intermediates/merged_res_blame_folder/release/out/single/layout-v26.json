@@ -1,6 +1,6 @@
 [
     {
-        "merged": "com.iploop.sdk.iploop-sdk-merged_res-30:/layout-v26/abc_screen_toolbar.xml",
-        "source": "com.iploop.sdk.iploop-sdk-appcompat-1.6.1-10:/layout-v26/abc_screen_toolbar.xml"
+        "merged": "com.iploop.sdk-merged_res-30:/layout-v26/abc_screen_toolbar.xml",
+        "source": "com.iploop.sdk-appcompat-1.6.1-12:/layout-v26/abc_screen_toolbar.xml"
     }
 ]

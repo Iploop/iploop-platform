@@ -1,7 +1,36 @@
 plugins {
-    id("com.android.library")
-    id("org.jetbrains.kotlin.android")
+    id("com.android.library") version "8.2.0"
+    id("org.jetbrains.kotlin.android") version "1.9.21"
     id("maven-publish")
+}
+
+// Fat JAR task - bundles all dependencies into a single JAR
+// Must be configured at configuration time for Gradle 8.x
+
+val fatJarInputs by configurations.creating {
+    isCanBeConsumed = false
+    isCanBeResolved = true
+    extendsFrom(configurations.getByName("releaseRuntimeClasspath"))
+}
+
+tasks.register<Jar>("fatJar") {
+    archiveClassifier.set("fat")
+    archiveBaseName.set("iploop-sdk")
+    archiveVersion.set("1.0.5")
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    
+    dependsOn("assembleRelease")
+    
+    // Configure inputs at configuration time (evaluated lazily)
+    from(provider { 
+        zipTree(file("build/intermediates/aar_main_jar/release/syncReleaseLibJars/classes.jar"))
+    })
+    
+    from(provider {
+        fatJarInputs.filter { it.name.endsWith(".jar") }.map { zipTree(it) }
+    }) {
+        exclude("META-INF/*.SF", "META-INF/*.DSA", "META-INF/*.RSA", "META-INF/MANIFEST.MF")
+    }
 }
 
 android {

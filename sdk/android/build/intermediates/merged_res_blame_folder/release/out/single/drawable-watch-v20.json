@@ -1,6 +1,6 @@
 [
     {
-        "merged": "com.iploop.sdk.iploop-sdk-merged_res-30:/drawable-watch-v20/abc_dialog_material_background.xml",
-        "source": "com.iploop.sdk.iploop-sdk-appcompat-1.6.1-10:/drawable-watch-v20/abc_dialog_material_background.xml"
+        "merged": "com.iploop.sdk-merged_res-30:/drawable-watch-v20/abc_dialog_material_background.xml",
+        "source": "com.iploop.sdk-appcompat-1.6.1-12:/drawable-watch-v20/abc_dialog_material_background.xml"
     }
 ]

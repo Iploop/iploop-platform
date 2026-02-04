@@ -1,6 +1,6 @@
 [
     {
-        "merged": "com.iploop.sdk.iploop-sdk-merged_res-30:/color-v21/abc_btn_colored_borderless_text_material.xml",
-        "source": "com.iploop.sdk.iploop-sdk-appcompat-1.6.1-10:/color-v21/abc_btn_colored_borderless_text_material.xml"
+        "merged": "com.iploop.sdk-merged_res-30:/color-v21/abc_btn_colored_borderless_text_material.xml",
+        "source": "com.iploop.sdk-appcompat-1.6.1-12:/color-v21/abc_btn_colored_borderless_text_material.xml"
     }
 ]

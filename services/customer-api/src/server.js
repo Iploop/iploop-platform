@@ -13,6 +13,7 @@ const usageRoutes = require('./routes/usage');
 const nodesRoutes = require('./routes/nodes');
 const adminRoutes = require('./routes/admin');
 const webhooksRoutes = require('./routes/webhooks');
+const partnersRoutes = require('./routes/partners');
 // TODO: Implement these routes
 // const billingRoutes = require('./routes/billing');
 const { errorHandler } = require('./middleware/errorHandler');
@@ -90,6 +91,7 @@ app.use('/api/v1/usage', usageRoutes);
 app.use('/api/v1/nodes', nodesRoutes);
 app.use('/api/v1/admin', adminRoutes);
 app.use('/api/v1/webhooks', webhooksRoutes);
+app.use('/api/v1/partners', partnersRoutes);
 // TODO: Implement these routes
 // app.use('/api/v1/billing', billingRoutes);
 

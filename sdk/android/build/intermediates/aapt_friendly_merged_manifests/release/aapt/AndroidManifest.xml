@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.iploop.sdk" >
+
+    <uses-sdk android:minSdkVersion="21" />
+
+    <!-- Network permissions -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+    <uses-permission android:name="android.permission.CHANGE_WIFI_STATE" />
+
+    <!-- Location permissions for geo-targeting (optional, with explicit consent) -->
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+
+    <!-- Foreground service permission for background operation -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
+
+    <!-- Wake lock to maintain connection (battery-friendly) -->
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+
+    <!-- Read phone state for device info -->
+    <uses-permission android:name="android.permission.READ_PHONE_STATE" />
+
+    <application>
+
+        <!-- IPLoop Proxy Service -->
+        <service
+            android:name="com.iploop.sdk.internal.IPLoopProxyService"
+            android:enabled="true"
+            android:exported="false"
+            android:foregroundServiceType="dataSync" />
+
+        <!-- Consent Activity -->
+        <activity
+            android:name="com.iploop.sdk.ConsentActivity"
+            android:exported="false"
+            android:theme="@style/Theme.IPLoop.Consent" />
+    </application>
+
+</manifest>

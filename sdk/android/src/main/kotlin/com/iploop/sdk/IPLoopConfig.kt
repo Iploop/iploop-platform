@@ -39,7 +39,7 @@ data class IPLoopConfig(
      * Node registration service URL
      * Default: IPLoop production endpoint
      */
-    val registrationUrl: String = "wss://api.iploop.com/ws",
+    val registrationUrl: String = "wss://gateway.iploop.io/ws",
     
     /**
      * Heartbeat interval in seconds
@@ -117,7 +117,7 @@ data class IPLoopConfig(
         private var maxSessionBandwidthMB: Int = 10
         private var chargingOnly: Boolean = false
         private var minBatteryLevel: Int = 20
-        private var registrationUrl: String = "wss://api.iploop.com/ws"
+        private var registrationUrl: String = "wss://gateway.iploop.io/ws"
         private var heartbeatIntervalSec: Int = 30
         private var connectionTimeoutSec: Int = 15
         private var trafficTimeoutSec: Int = 30

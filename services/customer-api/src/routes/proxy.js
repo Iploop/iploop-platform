@@ -1,5 +1,6 @@
 const express = require('express');
 const Joi = require('joi');
+const crypto = require('crypto');
 
 const { query, setCache, getCache } = require('../config/database');
 const { APIError, asyncHandler } = require('../middleware/errorHandler');
@@ -9,12 +10,207 @@ const logger = require('../utils/logger');
 const router = express.Router();
 
 // Validation schemas
+const apiKeySchema = Joi.object({
+  name: Joi.string().min(1).max(100).required()
+});
+
 const configSchema = Joi.object({
   country: Joi.string().length(2).uppercase().optional(),
   city: Joi.string().min(2).max(50).optional(),
   sessionId: Joi.string().max(100).optional(),
   stickySession: Joi.boolean().optional()
 });
+
+// ==================== API KEY MANAGEMENT ====================
+
+// List all API keys for user
+router.get('/keys', authenticateToken, asyncHandler(async (req, res) => {
+  const result = await query(`
+    SELECT id, name, key_prefix, is_active, created_at, last_used_at
+    FROM api_keys
+    WHERE user_id = $1
+    ORDER BY created_at DESC
+  `, [req.user.id]);
+
+  res.json({
+    keys: result.rows.map(row => ({
+      id: row.id,
+      name: row.name,
+      keyPrefix: row.key_prefix,
+      isActive: row.is_active,
+      createdAt: row.created_at,
+      lastUsedAt: row.last_used_at
+    }))
+  });
+}));
+
+// Create new API key
+router.post('/keys', authenticateToken, asyncHandler(async (req, res) => {
+  const { error, value } = apiKeySchema.validate(req.body);
+  if (error) {
+    throw new APIError(error.details[0].message, 400);
+  }
+
+  const { name } = value;
+
+  // Check max keys limit (5 per user)
+  const countResult = await query('SELECT COUNT(*) FROM api_keys WHERE user_id = $1', [req.user.id]);
+  if (parseInt(countResult.rows[0].count) >= 5) {
+    throw new APIError('Maximum number of API keys reached (5)', 400);
+  }
+
+  // Generate API key
+  const apiKey = 'iploop_' + crypto.randomBytes(24).toString('hex');
+  const keyHash = crypto.createHash('sha256').update(apiKey).digest('hex');
+  const keyPrefix = apiKey.substring(0, 14) + '...';
+
+  // Save to database
+  const result = await query(`
+    INSERT INTO api_keys (user_id, name, key_hash, key_prefix, is_active)
+    VALUES ($1, $2, $3, $4, true)
+    RETURNING id, name, key_prefix, is_active, created_at
+  `, [req.user.id, name, keyHash, keyPrefix]);
+
+  logger.info('API key created', { userId: req.user.id, keyId: result.rows[0].id });
+
+  res.status(201).json({
+    message: 'API key created successfully',
+    key: {
+      id: result.rows[0].id,
+      name: result.rows[0].name,
+      keyPrefix: result.rows[0].key_prefix,
+      apiKey: apiKey, // Only shown once!
+      isActive: result.rows[0].is_active,
+      createdAt: result.rows[0].created_at
+    },
+    warning: 'Save this API key now! It will not be shown again.'
+  });
+}));
+
+// Delete API key
+router.delete('/keys/:keyId', authenticateToken, asyncHandler(async (req, res) => {
+  const { keyId } = req.params;
+
+  const result = await query(`
+    DELETE FROM api_keys
+    WHERE id = $1 AND user_id = $2
+    RETURNING id
+  `, [keyId, req.user.id]);
+
+  if (result.rows.length === 0) {
+    throw new APIError('API key not found', 404);
+  }
+
+  logger.info('API key deleted', { userId: req.user.id, keyId });
+
+  res.json({ message: 'API key deleted successfully' });
+}));
+
+// Toggle API key active status
+router.patch('/keys/:keyId', authenticateToken, asyncHandler(async (req, res) => {
+  const { keyId } = req.params;
+  const { isActive } = req.body;
+
+  if (typeof isActive !== 'boolean') {
+    throw new APIError('isActive must be a boolean', 400);
+  }
+
+  const result = await query(`
+    UPDATE api_keys
+    SET is_active = $1
+    WHERE id = $2 AND user_id = $3
+    RETURNING id, name, key_prefix, is_active, created_at, last_used_at
+  `, [isActive, keyId, req.user.id]);
+
+  if (result.rows.length === 0) {
+    throw new APIError('API key not found', 404);
+  }
+
+  logger.info('API key status updated', { userId: req.user.id, keyId, isActive });
+
+  res.json({
+    message: `API key ${isActive ? 'activated' : 'deactivated'} successfully`,
+    key: result.rows[0]
+  });
+}));
+
+// Update API key IP whitelist
+router.put('/keys/:keyId/whitelist', authenticateToken, asyncHandler(async (req, res) => {
+  const { keyId } = req.params;
+  const { ips } = req.body;
+
+  // Validate IPs array
+  if (!Array.isArray(ips)) {
+    throw new APIError('ips must be an array', 400);
+  }
+
+  // Validate each IP/CIDR
+  const ipRegex = /^(\d{1,3}\.){3}\d{1,3}(\/\d{1,2})?$/;
+  for (const ip of ips) {
+    if (!ipRegex.test(ip)) {
+      throw new APIError(`Invalid IP or CIDR: ${ip}`, 400);
+    }
+  }
+
+  // Max 50 IPs per key
+  if (ips.length > 50) {
+    throw new APIError('Maximum 50 IPs allowed per API key', 400);
+  }
+
+  const result = await query(`
+    UPDATE api_keys
+    SET ip_whitelist = $1, updated_at = NOW()
+    WHERE id = $2 AND user_id = $3
+    RETURNING id, name, key_prefix, ip_whitelist, is_active
+  `, [JSON.stringify(ips), keyId, req.user.id]);
+
+  if (result.rows.length === 0) {
+    throw new APIError('API key not found', 404);
+  }
+
+  logger.info('API key IP whitelist updated', { userId: req.user.id, keyId, ipCount: ips.length });
+
+  res.json({
+    message: ips.length > 0 ? 'IP whitelist updated successfully' : 'IP whitelist cleared',
+    key: {
+      id: result.rows[0].id,
+      name: result.rows[0].name,
+      keyPrefix: result.rows[0].key_prefix,
+      ipWhitelist: result.rows[0].ip_whitelist,
+      isActive: result.rows[0].is_active
+    }
+  });
+}));
+
+// Get API key with IP whitelist
+router.get('/keys/:keyId', authenticateToken, asyncHandler(async (req, res) => {
+  const { keyId } = req.params;
+
+  const result = await query(`
+    SELECT id, name, key_prefix, ip_whitelist, is_active, created_at, last_used_at
+    FROM api_keys
+    WHERE id = $1 AND user_id = $2
+  `, [keyId, req.user.id]);
+
+  if (result.rows.length === 0) {
+    throw new APIError('API key not found', 404);
+  }
+
+  const row = result.rows[0];
+  res.json({
+    key: {
+      id: row.id,
+      name: row.name,
+      keyPrefix: row.key_prefix,
+      ipWhitelist: row.ip_whitelist || [],
+      isActive: row.is_active,
+      createdAt: row.created_at,
+      lastUsedAt: row.last_used_at
+    }
+  });
+}));
+
+// ==================== PROXY ENDPOINTS ====================
 
 // Get proxy endpoint configuration
 router.get('/endpoint', authenticateToken, asyncHandler(async (req, res) => {

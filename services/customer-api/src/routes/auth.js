@@ -327,4 +327,197 @@ router.post('/logout', authenticateToken, asyncHandler(async (req, res) => {
   });
 }));
 
+// ==================== PASSWORD RESET ====================
+
+// Request password reset
+router.post('/forgot-password', asyncHandler(async (req, res) => {
+  const { email } = req.body;
+  
+  if (!email) {
+    throw new APIError('Email is required', 400);
+  }
+
+  // Find user (don't reveal if user exists for security)
+  const userResult = await query('SELECT id, email, first_name FROM users WHERE email = $1', [email.toLowerCase()]);
+  
+  // Always return success to prevent email enumeration
+  if (userResult.rows.length === 0) {
+    logger.info('Password reset requested for non-existent email', { email });
+    return res.json({ message: 'If an account exists with this email, a reset link has been sent.' });
+  }
+
+  const user = userResult.rows[0];
+
+  // Generate reset token
+  const resetToken = crypto.randomBytes(32).toString('hex');
+  const tokenHash = crypto.createHash('sha256').update(resetToken).digest('hex');
+  const expiresAt = new Date(Date.now() + 3600000); // 1 hour
+
+  // Invalidate any existing tokens for this user
+  await query('UPDATE password_reset_tokens SET used_at = NOW() WHERE user_id = $1 AND used_at IS NULL', [user.id]);
+
+  // Save new token
+  await query(`
+    INSERT INTO password_reset_tokens (user_id, token_hash, expires_at)
+    VALUES ($1, $2, $3)
+  `, [user.id, tokenHash, expiresAt]);
+
+  // Send password reset email
+  const resetUrl = `https://dashboard.iploop.io/reset-password?token=${resetToken}`;
+  
+  try {
+    const { sendTemplateEmail } = require('../services/email');
+    await sendTemplateEmail('passwordReset', user.email, { 
+      firstName: user.first_name,
+      resetUrl: resetUrl
+    });
+    logger.info('Password reset email sent', { userId: user.id, email: user.email });
+  } catch (emailError) {
+    logger.error('Failed to send password reset email', { error: emailError.message, userId: user.id });
+    // Don't fail the request if email fails - still log the token for debugging
+  }
+
+  logger.info('Password reset token generated', { 
+    userId: user.id, 
+    email: user.email,
+    resetUrl: resetUrl,
+    expiresAt: expiresAt
+  });
+
+  res.json({ 
+    message: 'If an account exists with this email, a reset link has been sent.',
+    // Include token in response for testing (remove in production with email)
+    _debug: process.env.NODE_ENV !== 'production' ? { resetToken, resetUrl } : undefined
+  });
+}));
+
+// Reset password with token
+router.post('/reset-password', asyncHandler(async (req, res) => {
+  const { token, newPassword } = req.body;
+
+  if (!token || !newPassword) {
+    throw new APIError('Token and new password are required', 400);
+  }
+
+  if (newPassword.length < 8) {
+    throw new APIError('Password must be at least 8 characters', 400);
+  }
+
+  // Hash the provided token
+  const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
+
+  // Find valid token
+  const tokenResult = await query(`
+    SELECT prt.id, prt.user_id, prt.expires_at, u.email
+    FROM password_reset_tokens prt
+    JOIN users u ON prt.user_id = u.id
+    WHERE prt.token_hash = $1 AND prt.used_at IS NULL AND prt.expires_at > NOW()
+  `, [tokenHash]);
+
+  if (tokenResult.rows.length === 0) {
+    throw new APIError('Invalid or expired reset token', 400);
+  }
+
+  const resetData = tokenResult.rows[0];
+
+  // Hash new password
+  const saltRounds = 12;
+  const passwordHash = await bcrypt.hash(newPassword, saltRounds);
+
+  // Update password and mark token as used
+  await transaction(async (client) => {
+    await client.query('UPDATE users SET password_hash = $1, updated_at = NOW() WHERE id = $2', 
+      [passwordHash, resetData.user_id]);
+    
+    await client.query('UPDATE password_reset_tokens SET used_at = NOW() WHERE id = $1', 
+      [resetData.id]);
+  });
+
+  // Clear user cache
+  await delCache(`user:${resetData.user_id}`);
+
+  logger.info('Password reset completed', { userId: resetData.user_id, email: resetData.email });
+
+  res.json({ message: 'Password has been reset successfully. You can now log in with your new password.' });
+}));
+
+// Verify reset token (check if valid)
+router.get('/verify-reset-token', asyncHandler(async (req, res) => {
+  const { token } = req.query;
+
+  if (!token) {
+    throw new APIError('Token is required', 400);
+  }
+
+  const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
+
+  const result = await query(`
+    SELECT id, expires_at FROM password_reset_tokens
+    WHERE token_hash = $1 AND used_at IS NULL AND expires_at > NOW()
+  `, [tokenHash]);
+
+  if (result.rows.length === 0) {
+    return res.json({ valid: false, message: 'Invalid or expired token' });
+  }
+
+  res.json({ valid: true, expiresAt: result.rows[0].expires_at });
+}));
+
+// ==================== EMAIL VERIFICATION ====================
+
+// Resend verification email
+router.post('/resend-verification', authenticateToken, asyncHandler(async (req, res) => {
+  // Check if already verified
+  const userResult = await query('SELECT email, email_verified FROM users WHERE id = $1', [req.user.id]);
+  
+  if (userResult.rows[0].email_verified) {
+    return res.json({ message: 'Email is already verified' });
+  }
+
+  // Generate verification token
+  const verificationToken = crypto.randomBytes(32).toString('hex');
+  
+  await query(`
+    UPDATE users SET email_verification_token = $1, updated_at = NOW()
+    WHERE id = $2
+  `, [verificationToken, req.user.id]);
+
+  // TODO: Send verification email
+  const verifyUrl = `https://dashboard.iploop.io/verify-email?token=${verificationToken}`;
+  logger.info('Verification email requested', { 
+    userId: req.user.id,
+    email: userResult.rows[0].email,
+    verifyUrl: verifyUrl
+  });
+
+  res.json({ 
+    message: 'Verification email has been sent.',
+    _debug: process.env.NODE_ENV !== 'production' ? { verificationToken, verifyUrl } : undefined
+  });
+}));
+
+// Verify email with token
+router.get('/verify-email', asyncHandler(async (req, res) => {
+  const { token } = req.query;
+
+  if (!token) {
+    throw new APIError('Verification token is required', 400);
+  }
+
+  const result = await query(`
+    UPDATE users 
+    SET email_verified = true, email_verified_at = NOW(), email_verification_token = NULL, updated_at = NOW()
+    WHERE email_verification_token = $1 AND email_verified = false
+    RETURNING id, email
+  `, [token]);
+
+  if (result.rows.length === 0) {
+    throw new APIError('Invalid or already used verification token', 400);
+  }
+
+  logger.info('Email verified', { userId: result.rows[0].id, email: result.rows[0].email });
+
+  res.json({ message: 'Email verified successfully!' });
+}));
+
 module.exports = router;

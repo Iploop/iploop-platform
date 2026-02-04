@@ -1,0 +1,70 @@
+1<?xml version="1.0" encoding="utf-8"?>
+2<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+3    package="com.iploop.sdk" >
+4
+5    <uses-sdk android:minSdkVersion="21" />
+6
+7    <!-- Network permissions -->
+8    <uses-permission android:name="android.permission.INTERNET" />
+8-->/root/clawd-secure/iploop-platform/sdk/android/src/main/AndroidManifest.xml:5:5-67
+8-->/root/clawd-secure/iploop-platform/sdk/android/src/main/AndroidManifest.xml:5:22-64
+9    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+9-->/root/clawd-secure/iploop-platform/sdk/android/src/main/AndroidManifest.xml:6:5-79
+9-->/root/clawd-secure/iploop-platform/sdk/android/src/main/AndroidManifest.xml:6:22-76
+10    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+10-->/root/clawd-secure/iploop-platform/sdk/android/src/main/AndroidManifest.xml:7:5-76
+10-->/root/clawd-secure/iploop-platform/sdk/android/src/main/AndroidManifest.xml:7:22-73
+11    <uses-permission android:name="android.permission.CHANGE_WIFI_STATE" />
+11-->/root/clawd-secure/iploop-platform/sdk/android/src/main/AndroidManifest.xml:8:5-76
+11-->/root/clawd-secure/iploop-platform/sdk/android/src/main/AndroidManifest.xml:8:22-73
+12
+13    <!-- Location permissions for geo-targeting (optional, with explicit consent) -->
+14    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+14-->/root/clawd-secure/iploop-platform/sdk/android/src/main/AndroidManifest.xml:11:5-81
+14-->/root/clawd-secure/iploop-platform/sdk/android/src/main/AndroidManifest.xml:11:22-78
+15
+16    <!-- Foreground service permission for background operation -->
+17    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+17-->/root/clawd-secure/iploop-platform/sdk/android/src/main/AndroidManifest.xml:14:5-77
+17-->/root/clawd-secure/iploop-platform/sdk/android/src/main/AndroidManifest.xml:14:22-74
+18    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
+18-->/root/clawd-secure/iploop-platform/sdk/android/src/main/AndroidManifest.xml:15:5-87
+18-->/root/clawd-secure/iploop-platform/sdk/android/src/main/AndroidManifest.xml:15:22-84
+19
+20    <!-- Wake lock to maintain connection (battery-friendly) -->
+21    <uses-permission android:name="android.permission.WAKE_LOCK" />
+21-->/root/clawd-secure/iploop-platform/sdk/android/src/main/AndroidManifest.xml:18:5-68
+21-->/root/clawd-secure/iploop-platform/sdk/android/src/main/AndroidManifest.xml:18:22-65
+22
+23    <!-- Read phone state for device info -->
+24    <uses-permission android:name="android.permission.READ_PHONE_STATE" />
+24-->/root/clawd-secure/iploop-platform/sdk/android/src/main/AndroidManifest.xml:21:5-75
+24-->/root/clawd-secure/iploop-platform/sdk/android/src/main/AndroidManifest.xml:21:22-72
+25
+26    <application>
+26-->/root/clawd-secure/iploop-platform/sdk/android/src/main/AndroidManifest.xml:23:5-36:19
+27
+28        <!-- IPLoop Proxy Service -->
+29        <service
+29-->/root/clawd-secure/iploop-platform/sdk/android/src/main/AndroidManifest.xml:25:9-29:56
+30            android:name="com.iploop.sdk.internal.IPLoopProxyService"
+30-->/root/clawd-secure/iploop-platform/sdk/android/src/main/AndroidManifest.xml:26:13-70
+31            android:enabled="true"
+31-->/root/clawd-secure/iploop-platform/sdk/android/src/main/AndroidManifest.xml:27:13-35
+32            android:exported="false"
+32-->/root/clawd-secure/iploop-platform/sdk/android/src/main/AndroidManifest.xml:28:13-37
+33            android:foregroundServiceType="dataSync" />
+33-->/root/clawd-secure/iploop-platform/sdk/android/src/main/AndroidManifest.xml:29:13-53
+34
+35        <!-- Consent Activity -->
+36        <activity
+36-->/root/clawd-secure/iploop-platform/sdk/android/src/main/AndroidManifest.xml:32:9-35:40
+37            android:name="com.iploop.sdk.ConsentActivity"
+37-->/root/clawd-secure/iploop-platform/sdk/android/src/main/AndroidManifest.xml:33:13-58
+38            android:exported="false"
+38-->/root/clawd-secure/iploop-platform/sdk/android/src/main/AndroidManifest.xml:35:13-37
+39            android:theme="@style/Theme.IPLoop.Consent" />
+39-->/root/clawd-secure/iploop-platform/sdk/android/src/main/AndroidManifest.xml:34:13-56
+40    </application>
+41
+42</manifest>

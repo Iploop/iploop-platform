@@ -57,7 +57,9 @@ function LoginForm() {
       const data = await res.json()
 
       if (!res.ok) {
-        throw new Error(data.error || 'Authentication failed')
+        const errMsg = typeof data.error === 'string' ? data.error : 
+                       data.message || 'Authentication failed'
+        throw new Error(errMsg)
       }
 
       // Store token
@@ -67,7 +69,9 @@ function LoginForm() {
       // Redirect to dashboard
       router.push('/dashboard')
     } catch (err: any) {
-      setError(err.message || 'An error occurred')
+      const errorMsg = typeof err.message === 'string' ? err.message : 
+                       typeof err === 'string' ? err : 'An error occurred'
+      setError(errorMsg)
     } finally {
       setLoading(false)
     }
@@ -76,9 +80,9 @@ function LoginForm() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background to-muted p-4">
       <div className="absolute top-4 left-4">
-        <Link href="/" className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors">
+        <a href="https://iploop.io" className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors">
           <ArrowLeft className="h-4 w-4" /> Back to Home
-        </Link>
+        </a>
       </div>
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
@@ -148,6 +152,13 @@ function LoginForm() {
                   {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </Button>
               </div>
+              {isLogin && (
+                <div className="flex justify-end">
+                  <Link href="/forgot-password" className="text-sm text-primary hover:underline">
+                    Forgot password?
+                  </Link>
+                </div>
+              )}
             </div>
 
             {!isLogin && (

@@ -529,10 +529,9 @@ function CreateWebhookDialog({
             <Label className="mb-3 block">Events to Subscribe</Label>
             <div className="space-y-2 max-h-64 overflow-y-auto">
               {AVAILABLE_EVENTS.map((event) => (
-                <div
+                <label
                   key={event.id}
                   className="flex items-start gap-3 p-2 rounded hover:bg-muted cursor-pointer"
-                  onClick={() => toggleEvent(event.id)}
                 >
                   <Checkbox
                     checked={selectedEvents.includes(event.id)}
@@ -544,7 +543,7 @@ function CreateWebhookDialog({
                       {event.description}
                     </div>
                   </div>
-                </div>
+                </label>
               ))}
             </div>
             <p className="text-xs text-muted-foreground mt-2">

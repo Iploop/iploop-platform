@@ -235,7 +235,7 @@ func (nm *NodeManager) DisconnectNode(nodeID string) error {
 func (nm *NodeManager) GetAllNodes() []*Node {
 	query := `
 		SELECT id, device_id, ip_address, country, country_name, city, region,
-			   latitude, longitude, asn, isp, carrier, connection_type, device_type,
+			   COALESCE(latitude, 0), COALESCE(longitude, 0), asn, isp, carrier, connection_type, device_type,
 			   sdk_version, status, quality_score, bandwidth_used_mb, total_requests,
 			   successful_requests, last_heartbeat, connected_since, created_at, updated_at
 		FROM nodes
@@ -330,7 +330,7 @@ func (nm *NodeManager) GetStatistics() *Statistics {
 func (nm *NodeManager) getNodeByDeviceID(deviceID string) (*Node, error) {
 	query := `
 		SELECT id, device_id, ip_address, country, country_name, city, region,
-			   latitude, longitude, asn, isp, carrier, connection_type, device_type,
+			   COALESCE(latitude, 0), COALESCE(longitude, 0), asn, isp, carrier, connection_type, device_type,
 			   sdk_version, status, quality_score, bandwidth_used_mb, total_requests,
 			   successful_requests, last_heartbeat, connected_since, created_at, updated_at
 		FROM nodes
@@ -353,7 +353,7 @@ func (nm *NodeManager) getNodeByDeviceID(deviceID string) (*Node, error) {
 func (nm *NodeManager) getNodeByID(nodeID string) (*Node, error) {
 	query := `
 		SELECT id, device_id, ip_address, country, country_name, city, region,
-			   latitude, longitude, asn, isp, carrier, connection_type, device_type,
+			   COALESCE(latitude, 0), COALESCE(longitude, 0), asn, isp, carrier, connection_type, device_type,
 			   sdk_version, status, quality_score, bandwidth_used_mb, total_requests,
 			   successful_requests, last_heartbeat, connected_since, created_at, updated_at
 		FROM nodes

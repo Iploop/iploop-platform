@@ -12,7 +12,7 @@ router.get('/summary', authenticateToken, asyncHandler(async (req, res) => {
   
   // Get user's plan info
   const planResult = await query(`
-    SELECT up.gb_balance, up.gb_used, p.name as plan_name, p.monthly_gb
+    SELECT up.gb_balance, up.gb_used, p.name as plan_name, p.included_gb
     FROM user_plans up
     JOIN plans p ON up.plan_id = p.id
     WHERE up.user_id = $1 AND up.status = 'active'
@@ -22,20 +22,20 @@ router.get('/summary', authenticateToken, asyncHandler(async (req, res) => {
     gb_balance: 0,
     gb_used: 0,
     plan_name: 'Free',
-    monthly_gb: 0
+    included_gb: 0
   };
 
   // Get usage stats for the period
   const usageResult = await query(`
     SELECT 
       COUNT(*) as total_requests,
-      SUM(CASE WHEN status_code >= 200 AND status_code < 400 THEN 1 ELSE 0 END) as successful_requests,
-      SUM(CASE WHEN status_code >= 400 THEN 1 ELSE 0 END) as failed_requests,
-      COALESCE(SUM(bytes_transferred), 0) as total_bytes,
-      COALESCE(AVG(response_time_ms), 0) as avg_response_time
-    FROM usage_logs
+      SUM(CASE WHEN success = true THEN 1 ELSE 0 END) as successful_requests,
+      SUM(CASE WHEN success = false THEN 1 ELSE 0 END) as failed_requests,
+      COALESCE(SUM(total_bytes), 0) as total_bytes,
+      COALESCE(AVG(duration_ms), 0) as avg_response_time
+    FROM usage_records
     WHERE user_id = $1 
-    AND created_at >= NOW() - INTERVAL '${parseInt(days)} days'
+    AND started_at >= NOW() - INTERVAL '${parseInt(days)} days'
   `, [req.user.id]);
 
   const usage = usageResult.rows[0];
@@ -45,7 +45,7 @@ router.get('/summary', authenticateToken, asyncHandler(async (req, res) => {
   res.json({
     plan: {
       name: plan.plan_name,
-      monthlyGb: parseFloat(plan.monthly_gb) || 0,
+      includedGb: parseFloat(plan.included_gb) || 0,
       gbBalance: parseFloat(plan.gb_balance) || 0,
       gbUsed: parseFloat(plan.gb_used) || 0
     },
@@ -60,7 +60,7 @@ router.get('/summary', authenticateToken, asyncHandler(async (req, res) => {
       failedRequests: parseInt(usage.failed_requests) || 0,
       successRate: usage.total_requests > 0 
         ? ((usage.successful_requests / usage.total_requests) * 100).toFixed(2) 
-        : 0,
+        : '0.00',
       totalBytesTransferred: totalBytes,
       totalGbTransferred: totalGB.toFixed(4),
       avgResponseTimeMs: Math.round(parseFloat(usage.avg_response_time) || 0)
@@ -74,15 +74,15 @@ router.get('/daily', authenticateToken, asyncHandler(async (req, res) => {
 
   const result = await query(`
     SELECT 
-      DATE(created_at) as date,
+      DATE(started_at) as date,
       COUNT(*) as requests,
-      SUM(CASE WHEN status_code >= 200 AND status_code < 400 THEN 1 ELSE 0 END) as successful,
-      COALESCE(SUM(bytes_transferred), 0) as bytes,
-      COALESCE(AVG(response_time_ms), 0) as avg_response_time
-    FROM usage_logs
+      SUM(CASE WHEN success = true THEN 1 ELSE 0 END) as successful,
+      COALESCE(SUM(total_bytes), 0) as bytes,
+      COALESCE(AVG(duration_ms), 0) as avg_response_time
+    FROM usage_records
     WHERE user_id = $1 
-    AND created_at >= NOW() - INTERVAL '${parseInt(days)} days'
-    GROUP BY DATE(created_at)
+    AND started_at >= NOW() - INTERVAL '${parseInt(days)} days'
+    GROUP BY DATE(started_at)
     ORDER BY date DESC
   `, [req.user.id]);
 
@@ -104,19 +104,19 @@ router.get('/by-country', authenticateToken, asyncHandler(async (req, res) => {
 
   const result = await query(`
     SELECT 
-      country_code,
+      target_country,
       COUNT(*) as requests,
-      COALESCE(SUM(bytes_transferred), 0) as bytes
-    FROM usage_logs
+      COALESCE(SUM(total_bytes), 0) as bytes
+    FROM usage_records
     WHERE user_id = $1 
-    AND created_at >= NOW() - INTERVAL '${parseInt(days)} days'
-    GROUP BY country_code
+    AND started_at >= NOW() - INTERVAL '${parseInt(days)} days'
+    GROUP BY target_country
     ORDER BY requests DESC
   `, [req.user.id]);
 
   res.json({
     byCountry: result.rows.map(row => ({
-      country: row.country_code || 'Unknown',
+      country: row.target_country || 'Unknown',
       requests: parseInt(row.requests),
       bytesTransferred: parseInt(row.bytes),
       mbTransferred: (parseInt(row.bytes) / (1024 * 1024)).toFixed(2)
@@ -130,16 +130,16 @@ router.get('/by-key', authenticateToken, asyncHandler(async (req, res) => {
 
   const result = await query(`
     SELECT 
-      ul.api_key_id,
+      ur.api_key_id,
       ak.name as key_name,
       COUNT(*) as requests,
-      COALESCE(SUM(ul.bytes_transferred), 0) as bytes,
-      COALESCE(AVG(ul.response_time_ms), 0) as avg_response_time
-    FROM usage_logs ul
-    LEFT JOIN api_keys ak ON ul.api_key_id = ak.id
-    WHERE ul.user_id = $1 
-    AND ul.created_at >= NOW() - INTERVAL '${parseInt(days)} days'
-    GROUP BY ul.api_key_id, ak.name
+      COALESCE(SUM(ur.total_bytes), 0) as bytes,
+      COALESCE(AVG(ur.duration_ms), 0) as avg_response_time
+    FROM usage_records ur
+    LEFT JOIN api_keys ak ON ur.api_key_id = ak.id
+    WHERE ur.user_id = $1 
+    AND ur.started_at >= NOW() - INTERVAL '${parseInt(days)} days'
+    GROUP BY ur.api_key_id, ak.name
     ORDER BY requests DESC
   `, [req.user.id]);
 
@@ -162,27 +162,29 @@ router.get('/recent', authenticateToken, asyncHandler(async (req, res) => {
   const result = await query(`
     SELECT 
       id, 
-      target_url, 
-      country_code, 
-      status_code, 
-      bytes_transferred, 
-      response_time_ms, 
-      created_at
-    FROM usage_logs
+      target_country, 
+      target_city,
+      proxy_type,
+      success,
+      total_bytes, 
+      duration_ms, 
+      started_at
+    FROM usage_records
     WHERE user_id = $1
-    ORDER BY created_at DESC
+    ORDER BY started_at DESC
     LIMIT $2
   `, [req.user.id, Math.min(parseInt(limit), 100)]);
 
   res.json({
     requests: result.rows.map(row => ({
       id: row.id,
-      targetUrl: row.target_url,
-      country: row.country_code,
-      statusCode: row.status_code,
-      bytesTransferred: row.bytes_transferred,
-      responseTimeMs: row.response_time_ms,
-      timestamp: row.created_at
+      country: row.target_country,
+      city: row.target_city,
+      proxyType: row.proxy_type,
+      success: row.success,
+      bytesTransferred: row.total_bytes,
+      responseTimeMs: row.duration_ms,
+      timestamp: row.started_at
     }))
   });
 }));

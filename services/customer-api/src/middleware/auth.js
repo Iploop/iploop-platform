@@ -123,7 +123,7 @@ async function authenticateAPIKey(req, res, next) {
       const keyHash = crypto.createHash('sha256').update(apiKey).digest('hex');
 
       const result = await query(`
-        SELECT ak.id, ak.user_id, ak.name, ak.permissions, ak.is_active,
+        SELECT ak.id, ak.user_id, ak.name, ak.permissions, ak.is_active, ak.ip_whitelist,
                u.email, u.first_name, u.last_name, u.status
         FROM api_keys ak
         JOIN users u ON ak.user_id = u.id
@@ -143,6 +143,24 @@ async function authenticateAPIKey(req, res, next) {
       await query('UPDATE api_keys SET last_used_at = NOW() WHERE id = $1', [keyData.id]);
     }
 
+    // Check IP whitelist if configured
+    const ipWhitelist = keyData.ip_whitelist || [];
+    if (ipWhitelist.length > 0) {
+      const clientIP = req.headers['x-forwarded-for']?.split(',')[0]?.trim() || 
+                       req.headers['x-real-ip'] || 
+                       req.connection?.remoteAddress ||
+                       req.socket?.remoteAddress;
+      
+      if (!isIPAllowed(clientIP, ipWhitelist)) {
+        logger.warn('API request blocked by IP whitelist', { 
+          keyId: keyData.id, 
+          clientIP, 
+          whitelist: ipWhitelist 
+        });
+        throw new APIError('IP address not in whitelist', 403);
+      }
+    }
+
     req.user = {
       id: keyData.user_id,
       email: keyData.email,
@@ -160,6 +178,36 @@ async function authenticateAPIKey(req, res, next) {
   } catch (error) {
     next(error);
   }
+}
+
+// Helper function to check if IP is in whitelist (supports CIDR)
+function isIPAllowed(clientIP, whitelist) {
+  if (!clientIP || whitelist.length === 0) return true;
+  
+  // Clean up IPv6-mapped IPv4 addresses
+  const cleanIP = clientIP.replace(/^::ffff:/, '');
+  
+  for (const allowed of whitelist) {
+    if (allowed.includes('/')) {
+      // CIDR notation
+      if (isIPInCIDR(cleanIP, allowed)) return true;
+    } else {
+      // Exact match
+      if (cleanIP === allowed) return true;
+    }
+  }
+  return false;
+}
+
+// Check if IP is within CIDR range
+function isIPInCIDR(ip, cidr) {
+  const [range, bits] = cidr.split('/');
+  const mask = ~(2 ** (32 - parseInt(bits)) - 1);
+  
+  const ipNum = ip.split('.').reduce((acc, octet) => (acc << 8) + parseInt(octet), 0);
+  const rangeNum = range.split('.').reduce((acc, octet) => (acc << 8) + parseInt(octet), 0);
+  
+  return (ipNum & mask) === (rangeNum & mask);
 }
 
 // Permission check middleware

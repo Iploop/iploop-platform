@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { 
   Users, DollarSign, Activity, Globe, Settings, 
-  Plus, Trash2, Edit, Search, RefreshCw 
+  Plus, Trash2, Edit, Search, RefreshCw, Server, Wifi, WifiOff, MapPin
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -42,11 +42,42 @@ interface Plan {
   isActive: boolean
 }
 
+interface Node {
+  id: string
+  deviceId: string
+  ipAddress: string
+  country: string
+  countryName: string
+  city: string
+  region: string
+  isp: string
+  connectionType: string
+  deviceType: string
+  sdkVersion: string
+  status: string
+  qualityScore: number
+  bandwidthUsedMb: number
+  totalRequests: number
+  lastHeartbeat: string
+  connectedSince: string
+}
+
+interface NodeStats {
+  totalNodes: number
+  activeNodes: number
+  inactiveNodes: number
+  countryBreakdown: Record<string, number>
+  deviceTypes: Record<string, number>
+  connectionTypes: Record<string, number>
+}
+
 export default function AdminPage() {
   const router = useRouter()
-  const [activeTab, setActiveTab] = useState<'users' | 'plans' | 'settings'>('users')
+  const [activeTab, setActiveTab] = useState<'users' | 'plans' | 'supply' | 'settings'>('users')
   const [users, setUsers] = useState<User[]>([])
   const [plans, setPlans] = useState<Plan[]>([])
+  const [nodes, setNodes] = useState<Node[]>([])
+  const [nodeStats, setNodeStats] = useState<NodeStats | null>(null)
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
   const [showAddUser, setShowAddUser] = useState(false)
@@ -106,6 +137,16 @@ export default function AdminPage() {
       if (plansRes.ok) {
         const data = await plansRes.json()
         setPlans(data.plans || [])
+      }
+
+      // Fetch nodes/supply
+      const nodesRes = await fetch('/api/admin/nodes', {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+      if (nodesRes.ok) {
+        const data = await nodesRes.json()
+        setNodes(data.nodes || [])
+        setNodeStats(data.stats || null)
       }
     } catch (err) {
       console.error('Failed to fetch admin data:', err)
@@ -370,6 +411,13 @@ export default function AdminPage() {
           >
             <DollarSign className="h-4 w-4 mr-2" />
             Plans
+          </Button>
+          <Button 
+            variant={activeTab === 'supply' ? 'default' : 'outline'}
+            onClick={() => setActiveTab('supply')}
+          >
+            <Server className="h-4 w-4 mr-2" />
+            Supply
           </Button>
           <Button 
             variant={activeTab === 'settings' ? 'default' : 'outline'}
@@ -759,6 +807,192 @@ export default function AdminPage() {
               </div>
             </CardContent>
           </Card>
+        )}
+
+        {/* Supply Tab */}
+        {activeTab === 'supply' && (
+          <div className="space-y-6">
+            {/* Supply Stats */}
+            <div className="grid gap-4 md:grid-cols-4">
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between pb-2">
+                  <CardTitle className="text-sm font-medium">Total Nodes</CardTitle>
+                  <Server className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{nodeStats?.totalNodes || 0}</div>
+                  <p className="text-xs text-muted-foreground">All registered</p>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between pb-2">
+                  <CardTitle className="text-sm font-medium">Active Nodes</CardTitle>
+                  <Wifi className="h-4 w-4 text-green-500" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold text-green-600">{nodeStats?.activeNodes || 0}</div>
+                  <p className="text-xs text-muted-foreground">Currently online</p>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between pb-2">
+                  <CardTitle className="text-sm font-medium">Countries</CardTitle>
+                  <Globe className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">
+                    {Object.keys(nodeStats?.countryBreakdown || {}).length}
+                  </div>
+                  <p className="text-xs text-muted-foreground">Geographic coverage</p>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between pb-2">
+                  <CardTitle className="text-sm font-medium">Device Types</CardTitle>
+                  <Activity className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">
+                    {Object.keys(nodeStats?.deviceTypes || {}).length}
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    {Object.entries(nodeStats?.deviceTypes || {}).map(([type, count]) => 
+                      `${type}: ${count}`
+                    ).join(', ') || 'None'}
+                  </p>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Country Breakdown */}
+            {nodeStats?.countryBreakdown && Object.keys(nodeStats.countryBreakdown).length > 0 && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Geographic Distribution</CardTitle>
+                  <CardDescription>Nodes by country</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex flex-wrap gap-2">
+                    {Object.entries(nodeStats.countryBreakdown)
+                      .sort(([,a], [,b]) => (b as number) - (a as number))
+                      .map(([country, count]) => (
+                        <Badge key={country} variant="outline" className="text-sm">
+                          {country}: {count as number}
+                        </Badge>
+                      ))
+                    }
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Nodes Table */}
+            <Card>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle>Connected Nodes</CardTitle>
+                    <CardDescription>SDK devices in the network</CardDescription>
+                  </div>
+                  <Button size="sm" variant="outline" onClick={fetchData}>
+                    <RefreshCw className="h-4 w-4 mr-2" />
+                    Refresh
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent>
+                {loading ? (
+                  <div className="text-center py-8 text-muted-foreground">Loading...</div>
+                ) : nodes.length === 0 ? (
+                  <div className="text-center py-8 text-muted-foreground">
+                    <Server className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                    <p>No nodes connected yet</p>
+                    <p className="text-sm mt-2">Deploy the SDK to start building your network</p>
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="w-full">
+                      <thead>
+                        <tr className="border-b">
+                          <th className="text-left py-3 px-4">Status</th>
+                          <th className="text-left py-3 px-4">Location</th>
+                          <th className="text-left py-3 px-4">Device</th>
+                          <th className="text-left py-3 px-4">IP</th>
+                          <th className="text-left py-3 px-4">Quality</th>
+                          <th className="text-left py-3 px-4">Last Seen</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {nodes.map((node) => (
+                          <tr key={node.id} className="border-b hover:bg-muted/50">
+                            <td className="py-3 px-4">
+                              {node.status === 'available' ? (
+                                <Badge variant="default" className="bg-green-600">
+                                  <Wifi className="h-3 w-3 mr-1" />
+                                  Online
+                                </Badge>
+                              ) : (
+                                <Badge variant="secondary">
+                                  <WifiOff className="h-3 w-3 mr-1" />
+                                  {node.status}
+                                </Badge>
+                              )}
+                            </td>
+                            <td className="py-3 px-4">
+                              <div className="flex items-center gap-2">
+                                <MapPin className="h-4 w-4 text-muted-foreground" />
+                                <div>
+                                  <div className="font-medium">{node.city || 'Unknown'}</div>
+                                  <div className="text-xs text-muted-foreground">
+                                    {node.countryName || node.country} • {node.isp || 'Unknown ISP'}
+                                  </div>
+                                </div>
+                              </div>
+                            </td>
+                            <td className="py-3 px-4">
+                              <div>
+                                <Badge variant="outline">{node.deviceType || 'unknown'}</Badge>
+                                <div className="text-xs text-muted-foreground mt-1">
+                                  {node.connectionType || 'wifi'} • v{node.sdkVersion || '1.0.0'}
+                                </div>
+                              </div>
+                            </td>
+                            <td className="py-3 px-4">
+                              <code className="text-xs bg-muted px-2 py-1 rounded">
+                                {node.ipAddress}
+                              </code>
+                            </td>
+                            <td className="py-3 px-4">
+                              <div className="flex items-center gap-2">
+                                <div className="w-16 h-2 bg-muted rounded-full overflow-hidden">
+                                  <div 
+                                    className={`h-full ${
+                                      node.qualityScore >= 80 ? 'bg-green-500' : 
+                                      node.qualityScore >= 50 ? 'bg-yellow-500' : 'bg-red-500'
+                                    }`}
+                                    style={{ width: `${node.qualityScore}%` }}
+                                  />
+                                </div>
+                                <span className="text-sm">{node.qualityScore}%</span>
+                              </div>
+                            </td>
+                            <td className="py-3 px-4 text-sm text-muted-foreground">
+                              {node.lastHeartbeat ? (
+                                new Date(node.lastHeartbeat).toLocaleString()
+                              ) : 'Never'}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
         )}
 
         {/* Settings Tab */}

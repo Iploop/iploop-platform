@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import {
   BarChart3,
   Key,
@@ -13,32 +13,60 @@ import {
   Menu,
   X,
   LogOut,
+  MessageCircle,
   User,
   Smartphone,
   TrendingUp,
   ShieldCheck,
   Book,
-  Webhook
+  Webhook,
+  Bot
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from './ui/button'
 
 const navigation = [
-  { name: 'Dashboard', href: '/dashboard', icon: BarChart3 },
-  { name: 'Nodes', href: '/nodes', icon: Smartphone },
-  { name: 'Analytics', href: '/analytics', icon: TrendingUp },
-  { name: 'API Keys', href: '/api-keys', icon: Key },
-  { name: 'Webhooks', href: '/webhooks', icon: Webhook },
-  { name: 'Proxy Endpoints', href: '/endpoints', icon: Globe },
-  { name: 'Docs', href: '/docs', icon: Book },
-  { name: 'Billing', href: '/billing', icon: CreditCard },
-  { name: 'Settings', href: '/settings', icon: Settings },
-  { name: 'Admin', href: '/admin', icon: ShieldCheck },
+  { name: 'Dashboard', href: '/dashboard', icon: BarChart3, adminOnly: false },
+  { name: 'Nodes', href: '/nodes', icon: Smartphone, adminOnly: false },
+  { name: 'Analytics', href: '/analytics', icon: TrendingUp, adminOnly: false },
+  { name: 'API Keys', href: '/api-keys', icon: Key, adminOnly: false },
+  { name: 'Webhooks', href: '/webhooks', icon: Webhook, adminOnly: false },
+  { name: 'Proxy Endpoints', href: '/endpoints', icon: Globe, adminOnly: false },
+  { name: 'Docs', href: '/docs', icon: Book, adminOnly: false },
+  { name: 'AI Assistant', href: '/ai-assistant', icon: Bot, adminOnly: false },
+  { name: 'Billing', href: '/billing', icon: CreditCard, adminOnly: false },
+  { name: 'Settings', href: '/settings', icon: Settings, adminOnly: false },
+  { name: 'Support', href: '/support', icon: MessageCircle, adminOnly: false },
+  { name: 'Admin', href: '/admin', icon: ShieldCheck, adminOnly: true },
 ]
 
-export function Sidebar() {
+interface SidebarProps {
+  user?: {
+    firstName?: string
+    lastName?: string
+    email?: string
+    role?: string
+  }
+}
+
+export function Sidebar({ user }: SidebarProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const pathname = usePathname()
+  const router = useRouter()
+
+  const isAdmin = user?.role === 'admin'
+  const displayName = user?.firstName && user?.lastName 
+    ? `${user.firstName} ${user.lastName}` 
+    : user?.firstName || user?.email || 'User'
+  const displayEmail = user?.email || ''
+
+  const filteredNavigation = navigation.filter(item => !item.adminOnly || isAdmin)
+
+  const handleLogout = () => {
+    localStorage.removeItem('token')
+    localStorage.removeItem('user')
+    router.push('/login')
+  }
 
   return (
     <>
@@ -73,7 +101,7 @@ export function Sidebar() {
               <span className="ml-2 text-xl font-bold">IPLoop</span>
             </div>
             <nav className="mt-5 px-2 space-y-1">
-              {navigation.map((item) => {
+              {filteredNavigation.map((item) => {
                 const isActive = pathname === item.href
                 return (
                   <Link
@@ -100,10 +128,10 @@ export function Sidebar() {
                 <User className="h-8 w-8 text-muted-foreground" />
               </div>
               <div className="ml-3">
-                <p className="text-sm font-medium">Demo User</p>
-                <p className="text-xs text-muted-foreground">demo@iploop.com</p>
+                <p className="text-sm font-medium">{displayName}</p>
+                <p className="text-xs text-muted-foreground">{displayEmail}</p>
               </div>
-              <Button variant="ghost" size="icon" className="ml-auto">
+              <Button variant="ghost" size="icon" className="ml-auto" onClick={handleLogout}>
                 <LogOut className="h-4 w-4" />
               </Button>
             </div>
@@ -120,7 +148,7 @@ export function Sidebar() {
               <span className="ml-2 text-xl font-bold">IPLoop</span>
             </div>
             <nav className="mt-5 flex-1 px-2 space-y-1">
-              {navigation.map((item) => {
+              {filteredNavigation.map((item) => {
                 const isActive = pathname === item.href
                 return (
                   <Link
@@ -147,10 +175,10 @@ export function Sidebar() {
                 <User className="h-8 w-8 text-muted-foreground" />
               </div>
               <div className="ml-3 flex-1">
-                <p className="text-sm font-medium">Demo User</p>
-                <p className="text-xs text-muted-foreground">demo@iploop.com</p>
+                <p className="text-sm font-medium">{displayName}</p>
+                <p className="text-xs text-muted-foreground">{displayEmail}</p>
               </div>
-              <Button variant="ghost" size="icon">
+              <Button variant="ghost" size="icon" onClick={handleLogout}>
                 <LogOut className="h-4 w-4" />
               </Button>
             </div>

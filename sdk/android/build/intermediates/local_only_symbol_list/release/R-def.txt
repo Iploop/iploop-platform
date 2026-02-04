@@ -1,0 +1,10 @@
+R_DEF: Internal format may change without notice
+local
+string iploop_consent_accept
+string iploop_consent_decline
+string iploop_consent_learn_more
+string iploop_consent_title
+string iploop_notification_text
+string iploop_notification_title
+string iploop_service_name
+style Theme.IPLoop.Consent

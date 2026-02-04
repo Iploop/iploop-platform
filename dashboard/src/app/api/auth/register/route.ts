@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { cookies } from 'next/headers'
 
 const CUSTOMER_API_URL = process.env.CUSTOMER_API_URL || 'http://localhost:8002'
 
@@ -19,6 +20,17 @@ export async function POST(request: Request) {
         { error: data.error || 'Registration failed' },
         { status: response.status }
       )
+    }
+
+    // Set token as HTTP-only cookie for API routes
+    if (data.token) {
+      const cookieStore = cookies()
+      cookieStore.set('token', data.token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        maxAge: 60 * 60 * 24 // 24 hours
+      })
     }
 
     return NextResponse.json(data)

@@ -1,0 +1,72 @@
+-- Merging decision tree log ---
+manifest
+ADDED from /root/clawd-secure/iploop-platform/sdk/android/src/main/AndroidManifest.xml:2:1-38:12
+INJECTED from /root/clawd-secure/iploop-platform/sdk/android/src/main/AndroidManifest.xml:2:1-38:12
+	package
+		INJECTED from /root/clawd-secure/iploop-platform/sdk/android/src/main/AndroidManifest.xml
+	xmlns:android
+		ADDED from /root/clawd-secure/iploop-platform/sdk/android/src/main/AndroidManifest.xml:2:11-69
+uses-permission#android.permission.INTERNET
+ADDED from /root/clawd-secure/iploop-platform/sdk/android/src/main/AndroidManifest.xml:5:5-67
+	android:name
+		ADDED from /root/clawd-secure/iploop-platform/sdk/android/src/main/AndroidManifest.xml:5:22-64
+uses-permission#android.permission.ACCESS_NETWORK_STATE
+ADDED from /root/clawd-secure/iploop-platform/sdk/android/src/main/AndroidManifest.xml:6:5-79
+	android:name
+		ADDED from /root/clawd-secure/iploop-platform/sdk/android/src/main/AndroidManifest.xml:6:22-76
+uses-permission#android.permission.ACCESS_WIFI_STATE
+ADDED from /root/clawd-secure/iploop-platform/sdk/android/src/main/AndroidManifest.xml:7:5-76
+	android:name
+		ADDED from /root/clawd-secure/iploop-platform/sdk/android/src/main/AndroidManifest.xml:7:22-73
+uses-permission#android.permission.CHANGE_WIFI_STATE
+ADDED from /root/clawd-secure/iploop-platform/sdk/android/src/main/AndroidManifest.xml:8:5-76
+	android:name
+		ADDED from /root/clawd-secure/iploop-platform/sdk/android/src/main/AndroidManifest.xml:8:22-73
+uses-permission#android.permission.ACCESS_COARSE_LOCATION
+ADDED from /root/clawd-secure/iploop-platform/sdk/android/src/main/AndroidManifest.xml:11:5-81
+	android:name
+		ADDED from /root/clawd-secure/iploop-platform/sdk/android/src/main/AndroidManifest.xml:11:22-78
+uses-permission#android.permission.FOREGROUND_SERVICE
+ADDED from /root/clawd-secure/iploop-platform/sdk/android/src/main/AndroidManifest.xml:14:5-77
+	android:name
+		ADDED from /root/clawd-secure/iploop-platform/sdk/android/src/main/AndroidManifest.xml:14:22-74
+uses-permission#android.permission.FOREGROUND_SERVICE_DATA_SYNC
+ADDED from /root/clawd-secure/iploop-platform/sdk/android/src/main/AndroidManifest.xml:15:5-87
+	android:name
+		ADDED from /root/clawd-secure/iploop-platform/sdk/android/src/main/AndroidManifest.xml:15:22-84
+uses-permission#android.permission.WAKE_LOCK
+ADDED from /root/clawd-secure/iploop-platform/sdk/android/src/main/AndroidManifest.xml:18:5-68
+	android:name
+		ADDED from /root/clawd-secure/iploop-platform/sdk/android/src/main/AndroidManifest.xml:18:22-65
+uses-permission#android.permission.READ_PHONE_STATE
+ADDED from /root/clawd-secure/iploop-platform/sdk/android/src/main/AndroidManifest.xml:21:5-75
+	android:name
+		ADDED from /root/clawd-secure/iploop-platform/sdk/android/src/main/AndroidManifest.xml:21:22-72
+application
+ADDED from /root/clawd-secure/iploop-platform/sdk/android/src/main/AndroidManifest.xml:23:5-36:19
+service#com.iploop.sdk.internal.IPLoopProxyService
+ADDED from /root/clawd-secure/iploop-platform/sdk/android/src/main/AndroidManifest.xml:25:9-29:56
+	android:enabled
+		ADDED from /root/clawd-secure/iploop-platform/sdk/android/src/main/AndroidManifest.xml:27:13-35
+	android:exported
+		ADDED from /root/clawd-secure/iploop-platform/sdk/android/src/main/AndroidManifest.xml:28:13-37
+	android:foregroundServiceType
+		ADDED from /root/clawd-secure/iploop-platform/sdk/android/src/main/AndroidManifest.xml:29:13-53
+	android:name
+		ADDED from /root/clawd-secure/iploop-platform/sdk/android/src/main/AndroidManifest.xml:26:13-70
+activity#com.iploop.sdk.ConsentActivity
+ADDED from /root/clawd-secure/iploop-platform/sdk/android/src/main/AndroidManifest.xml:32:9-35:40
+	android:exported
+		ADDED from /root/clawd-secure/iploop-platform/sdk/android/src/main/AndroidManifest.xml:35:13-37
+	android:theme
+		ADDED from /root/clawd-secure/iploop-platform/sdk/android/src/main/AndroidManifest.xml:34:13-56
+	android:name
+		ADDED from /root/clawd-secure/iploop-platform/sdk/android/src/main/AndroidManifest.xml:33:13-58
+uses-sdk
+INJECTED from /root/clawd-secure/iploop-platform/sdk/android/src/main/AndroidManifest.xml reason: use-sdk injection requested
+INJECTED from /root/clawd-secure/iploop-platform/sdk/android/src/main/AndroidManifest.xml
+INJECTED from /root/clawd-secure/iploop-platform/sdk/android/src/main/AndroidManifest.xml
+	android:targetSdkVersion
+		INJECTED from /root/clawd-secure/iploop-platform/sdk/android/src/main/AndroidManifest.xml
+	android:minSdkVersion
+		INJECTED from /root/clawd-secure/iploop-platform/sdk/android/src/main/AndroidManifest.xml

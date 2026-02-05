@@ -281,6 +281,15 @@ class WebSocketClient {
             } else {
                 IPLoopSDK.logError(TAG, "proxy_request missing request_id");
             }
+        } else if (message.contains("\"type\":\"tunnel_open\"")) {
+            // Handle tunnel open request
+            handleTunnelOpen(message);
+        } else if (message.contains("\"type\":\"tunnel_data\"")) {
+            // Handle incoming tunnel data
+            handleTunnelData(message);
+        } else if (message.contains("\"type\":\"tunnel_close\"")) {
+            // Handle tunnel close
+            handleTunnelClose(message);
         } else if (message.contains("\"type\":\"pong\"")) {
             IPLoopSDK.logDebug(TAG, "Received pong");
         }
@@ -539,6 +548,204 @@ class WebSocketClient {
             return Settings.Secure.getString(context.getContentResolver(), Settings.Secure.ANDROID_ID);
         } catch (Exception e) {
             return "unknown-" + System.currentTimeMillis();
+        }
+    }
+    
+    // ========== TUNNEL SUPPORT ==========
+    
+    // Active tunnels map: tunnelId -> TunnelConnection
+    private final java.util.concurrent.ConcurrentHashMap<String, TunnelConnection> activeTunnels = 
+        new java.util.concurrent.ConcurrentHashMap<>();
+    
+    private static class TunnelConnection {
+        final String tunnelId;
+        final java.net.Socket socket;
+        final OutputStream socketOut;
+        final InputStream socketIn;
+        volatile boolean closed = false;
+        
+        TunnelConnection(String tunnelId, java.net.Socket socket) throws IOException {
+            this.tunnelId = tunnelId;
+            this.socket = socket;
+            this.socketOut = socket.getOutputStream();
+            this.socketIn = socket.getInputStream();
+        }
+        
+        void close() {
+            closed = true;
+            try { socket.close(); } catch (Exception ignored) {}
+        }
+    }
+    
+    private void handleTunnelOpen(String message) {
+        // Extract tunnel parameters
+        String tunnelId = extractJsonString(message, "tunnel_id");
+        String host = extractJsonString(message, "host");
+        String port = extractJsonString(message, "port");
+        
+        if (tunnelId == null || host == null || port == null) {
+            IPLoopSDK.logError(TAG, "tunnel_open missing required fields");
+            return;
+        }
+        
+        IPLoopSDK.logDebug(TAG, "Opening tunnel " + tunnelId + " to " + host + ":" + port);
+        
+        // Execute in background thread (using inner class for d8 compatibility)
+        TunnelOpenTask task = new TunnelOpenTask(tunnelId, host, port);
+        Executors.newSingleThreadExecutor().execute(task);
+    }
+    
+    // Named inner class for d8 compatibility (avoids lambda)
+    private class TunnelOpenTask implements Runnable {
+        private final String tunnelId;
+        private final String host;
+        private final String port;
+        
+        TunnelOpenTask(String tunnelId, String host, String port) {
+            this.tunnelId = tunnelId;
+            this.host = host;
+            this.port = port;
+        }
+        
+        public void run() {
+            try {
+                // Connect to target
+                java.net.Socket socket = new java.net.Socket();
+                socket.connect(new InetSocketAddress(host, Integer.parseInt(port)), 10000);
+                socket.setSoTimeout(60000);
+                
+                TunnelConnection tunnel = new TunnelConnection(tunnelId, socket);
+                activeTunnels.put(tunnelId, tunnel);
+                
+                // Send success response
+                sendTunnelOpenResponse(tunnelId, true, null);
+                IPLoopSDK.logDebug(TAG, "Tunnel " + tunnelId + " connected to " + host + ":" + port);
+                
+                // Start reading from socket in background
+                startTunnelReader(tunnel);
+                
+            } catch (Exception e) {
+                IPLoopSDK.logError(TAG, "Failed to open tunnel " + tunnelId + ": " + e.getMessage());
+                sendTunnelOpenResponse(tunnelId, false, e.getMessage());
+            }
+        }
+    }
+    
+    private void sendTunnelOpenResponse(String tunnelId, boolean success, String error) {
+        StringBuilder json = new StringBuilder();
+        json.append("{\"type\":\"tunnel_open_response\",\"data\":{");
+        json.append("\"tunnel_id\":\"").append(tunnelId).append("\",");
+        json.append("\"success\":").append(success);
+        if (error != null) {
+            json.append(",\"error\":\"").append(error.replace("\"", "\\\"")).append("\"");
+        }
+        json.append("}}");
+        try {
+            sendFrame(1, json.toString().getBytes(StandardCharsets.UTF_8));
+        } catch (IOException e) {
+            IPLoopSDK.logError(TAG, "Failed to send tunnel_open_response: " + e.getMessage());
+        }
+    }
+    
+    private void startTunnelReader(TunnelConnection tunnel) {
+        // Using inner class for d8 compatibility (avoids lambda)
+        TunnelReaderTask task = new TunnelReaderTask(tunnel);
+        Executors.newSingleThreadExecutor().execute(task);
+    }
+    
+    // Named inner class for d8 compatibility
+    private class TunnelReaderTask implements Runnable {
+        private final TunnelConnection tunnel;
+        
+        TunnelReaderTask(TunnelConnection tunnel) {
+            this.tunnel = tunnel;
+        }
+        
+        public void run() {
+            byte[] buffer = new byte[32768];
+            try {
+                while (!tunnel.closed && connected.get()) {
+                    int bytesRead = tunnel.socketIn.read(buffer);
+                    if (bytesRead == -1) {
+                        // EOF - connection closed by remote
+                        break;
+                    }
+                    if (bytesRead > 0) {
+                        // Send data to server
+                        byte[] data = new byte[bytesRead];
+                        System.arraycopy(buffer, 0, data, 0, bytesRead);
+                        sendTunnelData(tunnel.tunnelId, data, false);
+                    }
+                }
+            } catch (Exception e) {
+                if (!tunnel.closed) {
+                    IPLoopSDK.logDebug(TAG, "Tunnel " + tunnel.tunnelId + " read error: " + e.getMessage());
+                }
+            } finally {
+                // Send EOF and cleanup
+                sendTunnelData(tunnel.tunnelId, new byte[0], true);
+                closeTunnel(tunnel.tunnelId);
+            }
+        }
+    }
+    
+    private void sendTunnelData(String tunnelId, byte[] data, boolean eof) {
+        String base64Data = Base64.encodeToString(data, Base64.NO_WRAP);
+        StringBuilder json = new StringBuilder();
+        json.append("{\"type\":\"tunnel_data\",\"data\":{");
+        json.append("\"tunnel_id\":\"").append(tunnelId).append("\",");
+        json.append("\"data\":\"").append(base64Data).append("\",");
+        json.append("\"eof\":").append(eof);
+        json.append("}}");
+        try {
+            sendFrame(1, json.toString().getBytes(StandardCharsets.UTF_8));
+        } catch (IOException e) {
+            IPLoopSDK.logError(TAG, "Failed to send tunnel_data: " + e.getMessage());
+        }
+    }
+    
+    private void handleTunnelData(String message) {
+        String tunnelId = extractJsonString(message, "tunnel_id");
+        String base64Data = extractJsonString(message, "data");
+        boolean eof = message.contains("\"eof\":true");
+        
+        if (tunnelId == null) return;
+        
+        TunnelConnection tunnel = activeTunnels.get(tunnelId);
+        if (tunnel == null || tunnel.closed) {
+            IPLoopSDK.logDebug(TAG, "Received data for unknown/closed tunnel: " + tunnelId);
+            return;
+        }
+        
+        if (eof) {
+            closeTunnel(tunnelId);
+            return;
+        }
+        
+        if (base64Data != null && !base64Data.isEmpty()) {
+            try {
+                byte[] data = Base64.decode(base64Data, Base64.DEFAULT);
+                tunnel.socketOut.write(data);
+                tunnel.socketOut.flush();
+            } catch (Exception e) {
+                IPLoopSDK.logError(TAG, "Failed to write to tunnel " + tunnelId + ": " + e.getMessage());
+                closeTunnel(tunnelId);
+            }
+        }
+    }
+    
+    private void handleTunnelClose(String message) {
+        String tunnelId = extractJsonString(message, "tunnel_id");
+        if (tunnelId != null) {
+            closeTunnel(tunnelId);
+        }
+    }
+    
+    private void closeTunnel(String tunnelId) {
+        TunnelConnection tunnel = activeTunnels.remove(tunnelId);
+        if (tunnel != null) {
+            tunnel.close();
+            IPLoopSDK.logDebug(TAG, "Closed tunnel: " + tunnelId);
         }
     }
 }

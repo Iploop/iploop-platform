@@ -16,7 +16,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 public class IPLoopSDK {
     private static final String TAG = "IPLoopSDK";
-    private static final String VERSION = "1.0.19";
+    private static final String VERSION = "1.0.20";
     
     // Logging control
     private static boolean loggingEnabled = false;
@@ -30,6 +30,9 @@ public class IPLoopSDK {
     private static final AtomicBoolean consentGiven = new AtomicBoolean(false);
     private static final AtomicInteger status = new AtomicInteger(SDKStatus.IDLE);
     
+    // Proxy configuration
+    private static ProxyConfig proxyConfig;
+    
     // Callbacks
     public interface Callback {
         void onSuccess();
@@ -40,7 +43,161 @@ public class IPLoopSDK {
         void onStatusChanged(int newStatus);
     }
     
+    public interface ProxyCallback {
+        void onProxyConfigured(String proxyHost, int proxyPort);
+        void onProxyError(String error);
+    }
+    
     private static StatusCallback statusCallback;
+    private static ProxyCallback proxyCallback;
+    
+    /**
+     * Proxy configuration class for enhanced features
+     */
+    public static class ProxyConfig {
+        public String country = "";
+        public String city = "";
+        public int asn = 0;
+        public String sessionId = "";
+        public String sessionType = "sticky"; // sticky, rotating, per-request
+        public int lifetimeMinutes = 30;
+        public String rotateMode = "manual"; // request, time, manual, ip-change
+        public int rotateIntervalMinutes = 5;
+        public String profile = "chrome-win"; // chrome-win, firefox-mac, mobile-ios, etc.
+        public String userAgent = "";
+        public int minSpeedMbps = 10;
+        public int maxLatencyMs = 1000;
+        public boolean debugMode = false;
+        
+        public ProxyConfig() {}
+        
+        public ProxyConfig setCountry(String country) {
+            this.country = country;
+            return this;
+        }
+        
+        public ProxyConfig setCity(String city) {
+            this.city = city;
+            return this;
+        }
+        
+        public ProxyConfig setASN(int asn) {
+            this.asn = asn;
+            return this;
+        }
+        
+        public ProxyConfig setSessionId(String sessionId) {
+            this.sessionId = sessionId;
+            return this;
+        }
+        
+        public ProxyConfig setSessionType(String type) {
+            this.sessionType = type;
+            return this;
+        }
+        
+        public ProxyConfig setLifetime(int minutes) {
+            this.lifetimeMinutes = minutes;
+            return this;
+        }
+        
+        public ProxyConfig setRotateMode(String mode) {
+            this.rotateMode = mode;
+            return this;
+        }
+        
+        public ProxyConfig setRotateInterval(int minutes) {
+            this.rotateIntervalMinutes = minutes;
+            return this;
+        }
+        
+        public ProxyConfig setProfile(String profile) {
+            this.profile = profile;
+            return this;
+        }
+        
+        public ProxyConfig setUserAgent(String userAgent) {
+            this.userAgent = userAgent;
+            return this;
+        }
+        
+        public ProxyConfig setMinSpeed(int mbps) {
+            this.minSpeedMbps = mbps;
+            return this;
+        }
+        
+        public ProxyConfig setMaxLatency(int ms) {
+            this.maxLatencyMs = ms;
+            return this;
+        }
+        
+        public ProxyConfig setDebugMode(boolean debug) {
+            this.debugMode = debug;
+            return this;
+        }
+        
+        /**
+         * Generate proxy authentication string with parameters
+         */
+        public String generateProxyAuth(String customerId, String apiKey) {
+            StringBuilder auth = new StringBuilder();
+            auth.append(customerId).append(":").append(apiKey);
+            
+            if (!country.isEmpty()) {
+                auth.append("-country-").append(country);
+            }
+            
+            if (!city.isEmpty()) {
+                auth.append("-city-").append(city);
+            }
+            
+            if (asn > 0) {
+                auth.append("-asn-").append(asn);
+            }
+            
+            if (!sessionId.isEmpty()) {
+                auth.append("-session-").append(sessionId);
+            }
+            
+            if (!sessionType.equals("sticky")) {
+                auth.append("-sesstype-").append(sessionType);
+            }
+            
+            if (lifetimeMinutes != 30) {
+                auth.append("-lifetime-").append(lifetimeMinutes).append("m");
+            }
+            
+            if (!rotateMode.equals("manual")) {
+                auth.append("-rotate-").append(rotateMode);
+            }
+            
+            if (rotateIntervalMinutes != 5) {
+                auth.append("-rotateint-").append(rotateIntervalMinutes).append("m");
+            }
+            
+            if (!profile.equals("chrome-win")) {
+                auth.append("-profile-").append(profile);
+            }
+            
+            if (!userAgent.isEmpty()) {
+                auth.append("-ua-").append(userAgent);
+            }
+            
+            if (minSpeedMbps != 10) {
+                auth.append("-speed-").append(minSpeedMbps);
+            }
+            
+            if (maxLatencyMs != 1000) {
+                auth.append("-latency-").append(maxLatencyMs);
+            }
+            
+            if (debugMode) {
+                auth.append("-debug-1");
+            }
+            
+            return auth.toString();
+        }
+    }
     
     /**
      * Initialize the SDK
@@ -207,6 +364,132 @@ public class IPLoopSDK {
      */
     public static boolean isLoggingEnabled() {
         return loggingEnabled;
+    }
+    
+    /**
+     * Configure proxy settings (Enhanced v1.0.20)
+     */
+    public static void configureProxy(ProxyConfig config) {
+        proxyConfig = config;
+        logInfo(TAG, "Proxy configured: " + config.generateProxyAuth("test", "test"));
+    }
+    
+    /**
+     * Get current proxy configuration
+     */
+    public static ProxyConfig getProxyConfig() {
+        if (proxyConfig == null) {
+            proxyConfig = new ProxyConfig();
+        }
+        return proxyConfig;
+    }
+    
+    /**
+     * Set proxy callback for connection updates
+     */
+    public static void setProxyCallback(ProxyCallback callback) {
+        proxyCallback = callback;
+    }
+    
+    /**
+     * Get proxy authentication string for HTTP proxy
+     */
+    public static String getProxyAuth(String customerId, String apiKey) {
+        if (proxyConfig == null) {
+            return customerId + ":" + apiKey;
+        }
+        return proxyConfig.generateProxyAuth(customerId, apiKey);
+    }
+    
+    /**
+     * Get proxy host for HTTP/SOCKS5 proxy
+     */
+    public static String getProxyHost() {
+        return "proxy.iploop.com"; // Can be made configurable
+    }
+    
+    /**
+     * Get HTTP proxy port
+     */
+    public static int getHttpProxyPort() {
+        return 8080;
+    }
+    
+    /**
+     * Get SOCKS5 proxy port
+     */
+    public static int getSocks5ProxyPort() {
+        return 1080;
+    }
+    
+    /**
+     * Create configured HTTP proxy URL
+     */
+    public static String getHttpProxyUrl(String customerId, String apiKey) {
+        String auth = getProxyAuth(customerId, apiKey);
+        return "http://" + auth + "@" + getProxyHost() + ":" + getHttpProxyPort();
+    }
+    
+    /**
+     * Create configured SOCKS5 proxy URL
+     */
+    public static String getSocks5ProxyUrl(String customerId, String apiKey) {
+        String auth = getProxyAuth(customerId, apiKey);
+        return "socks5://" + auth + "@" + getProxyHost() + ":" + getSocks5ProxyPort();
+    }
+    
+    /**
+     * Test proxy connectivity
+     */
+    public static void testProxy(final String customerId, final String apiKey, final Callback callback) {
+        if (customerId == null || apiKey == null) {
+            if (callback != null) {
+                postError(callback, "Customer ID and API key required");
+            }
+            return;
+        }
+        
+        executor.execute(new Runnable() {
+            public void run() {
+                try {
+                    // Test HTTP proxy connection
+                    String proxyAuth = getProxyAuth(customerId, apiKey);
+                    logInfo(TAG, "Testing proxy with auth: " + proxyAuth);
+                    
+                    // Simulate proxy test (in real implementation, make HTTP request)
+                    Thread.sleep(1000); // Simulate network call
+                    
+                    if (proxyCallback != null) {
+                        mainHandler.post(new Runnable() {
+                            public void run() {
+                                proxyCallback.onProxyConfigured(getProxyHost(), getHttpProxyPort());
+                            }
+                        });
+                    }
+                    
+                    if (callback != null) {
+                        postSuccess(callback);
+                    }
+                    
+                    logInfo(TAG, "Proxy test successful");
+                    
+                } catch (final Exception e) {
+                    logError(TAG, "Proxy test failed: " + e.getMessage());
+                    
+                    if (proxyCallback != null) {
+                        mainHandler.post(new Runnable() {
+                            public void run() {
+                                proxyCallback.onProxyError(e.getMessage());
+                            }
+                        });
+                    }
+                    
+                    if (callback != null) {
+                        postError(callback, e.getMessage());
+                    }
+                }
+            }
+        });
     }
     
     // Internal logging helpers

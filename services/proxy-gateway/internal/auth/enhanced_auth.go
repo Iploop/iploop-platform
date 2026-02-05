@@ -1,20 +1,15 @@
 package auth
 
 import (
-	"context"
 	"crypto/hmac"
 	"crypto/sha256"
 	"encoding/base64"
 	"encoding/hex"
-	"encoding/json"
 	"fmt"
-	"net"
 	"regexp"
 	"strconv"
 	"strings"
 	"time"
-
-	"github.com/go-redis/redis/v8"
 )
 
 // EnhancedProxyAuth supports multiple authentication methods and parameters

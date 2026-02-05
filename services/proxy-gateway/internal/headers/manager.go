@@ -1,13 +1,11 @@
 package headers
 
 import (
-	"fmt"
 	"math/rand"
 	"net/http"
 	"strings"
 	"time"
 
-	"proxy-gateway/internal/auth"
 	"proxy-gateway/internal/session"
 )
 

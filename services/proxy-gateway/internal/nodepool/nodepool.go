@@ -40,6 +40,9 @@ type Node struct {
 type NodeSelection struct {
 	Country       string
 	City          string
+	ASN           int    // Target ASN/ISP
+	MinSpeed      int    // Minimum speed in Mbps
+	MaxLatency    int    // Maximum latency in ms
 	SessionID     string
 	RotateAfter   int    // Rotate IP after N requests (0 = no rotation)
 	RotateOnError bool   // Rotate IP on error/timeout

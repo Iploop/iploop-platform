@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IPLoop - Premium Residential Proxies</title>
+    <meta name="description" content="Access millions of residential IPs from real mobile devices worldwide. Undetectable, ethical, and blazing fast.">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔄</text></svg>">
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <style>
+        :root { --primary: #10b981; --primary-dark: #059669; }
+        .bg-primary { background-color: var(--primary); }
+        .bg-primary-dark { background-color: var(--primary-dark); }
+        .text-primary { color: var(--primary); }
+        .border-primary { border-color: var(--primary); }
+        .gradient-bg { background: linear-gradient(to bottom, #111827, #0f172a); }
+        .hero-gradient { background: linear-gradient(135deg, #111827 0%, #1e293b 50%, #111827 100%); }
+        .faq-content { max-height: 0; overflow: hidden; transition: max-height 0.3s ease; }
+        .faq-content.open { max-height: 300px; }
+        .trust-badge { filter: grayscale(100%); opacity: 0.6; transition: all 0.3s; }
+        .trust-badge:hover { filter: grayscale(0%); opacity: 1; }
+    </style>
+</head>
+<body class="gradient-bg text-white min-h-screen">
+    <!-- Navigation -->
+    <nav class="fixed top-0 w-full z-50 bg-gray-900 bg-opacity-90 backdrop-blur-md border-b border-gray-800">
+        <div class="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
+            <div class="flex items-center gap-2">
+                <div class="p-2 bg-primary rounded-lg">
+                    <svg class="h-5 w-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+                    </svg>
+                </div>
+                <span class="text-xl font-bold">IPLoop</span>
+            </div>
+            <div class="hidden md:flex items-center gap-8">
+                <a href="#features" class="text-gray-400 hover:text-white transition">Features</a>
+                <a href="#use-cases" class="text-gray-400 hover:text-white transition">Use Cases</a>
+                <a href="#pricing" class="text-gray-400 hover:text-white transition">Pricing</a>
+                <a href="#faq" class="text-gray-400 hover:text-white transition">FAQ</a>
+            </div>
+            <div class="flex items-center gap-4">
+                <a href="https://dashboard.iploop.io/login" class="text-gray-300 hover:text-white transition">Sign In</a>
+                <a href="https://dashboard.iploop.io/login?signup=true" class="bg-primary hover:bg-primary-dark px-4 py-2 rounded-lg font-medium transition">Get Started</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero-gradient pt-32 pb-20 px-4">
+        <div class="max-w-4xl mx-auto text-center">
+            <div class="inline-flex items-center gap-2 bg-green-900 bg-opacity-30 text-primary px-4 py-2 rounded-full text-sm font-medium mb-8 border border-green-800">
+                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                </svg>
+                Real Residential IPs from Mobile Devices
+            </div>
+            <h1 class="text-5xl md:text-6xl font-bold tracking-tight mb-6">
+                Premium Residential Proxies
+                <span class="text-primary block mt-2">Powered by Real Devices</span>
+            </h1>
+            <p class="text-xl text-gray-400 mb-8 max-w-2xl mx-auto">
+                Access millions of residential IPs from real mobile devices worldwide. 
+                Undetectable, ethical, and blazing fast.
+            </p>
+            <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
+                <a href="https://dashboard.iploop.io/login?signup=true" class="bg-primary hover:bg-primary-dark text-white text-lg px-8 py-3 rounded-lg font-medium transition flex items-center gap-2">
+                    Start Free Trial 
+                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/>
+                    </svg>
+                </a>
+                <a href="#use-cases" class="border border-gray-600 hover:border-gray-500 text-white text-lg px-8 py-3 rounded-lg font-medium transition">
+                    See Use Cases
+                </a>
+            </div>
+            <div class="mt-12 flex items-center justify-center gap-8 text-sm text-gray-400 flex-wrap">
+                <div class="flex items-center gap-2">
+                    <svg class="h-4 w-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                    </svg>
+                    No credit card required
+                </div>
+                <div class="flex items-center gap-2">
+                    <svg class="h-4 w-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                    </svg>
+                    1GB free trial
+                </div>
+                <div class="flex items-center gap-2">
+                    <svg class="h-4 w-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                    </svg>
+                    Cancel anytime
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Trust Badges -->
+    <section class="py-8 border-y border-gray-800 bg-gray-900 bg-opacity-50">
+        <div class="max-w-6xl mx-auto px-4">
+            <p class="text-center text-gray-500 text-sm mb-6">Trusted by developers worldwide • Compatible with your favorite tools</p>
+            <div class="flex items-center justify-center gap-8 md:gap-12 flex-wrap">
+                <div class="flex items-center gap-2 text-gray-400">
+                    <svg class="h-8 w-8" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm-.003 4.148c.473 0 .935.047 1.383.137l-1.383 2.408-1.383-2.408c.448-.09.91-.137 1.383-.137zM7.24 5.428L8.9 7.615l-2.855.476c.305-.99.82-1.883 1.496-2.663h-.301zm9.52 0h-.001c.676.78 1.19 1.673 1.496 2.663L15.4 7.615l1.36-2.187zm-9.9 3.66l2.58-.43.986 2.444-2.23 1.433-1.336-3.447zm10.28 0l-1.336 3.447-2.23-1.433.986-2.444 2.58.43zM12 9.54l1.797 1.155L12 13.623l-1.797-2.928L12 9.54zm-5.07 3.17l1.83 1.178-.7 2.68-3.036-1.953.02-.023c.349-.71.845-1.334 1.437-1.851l.449-.031zm10.14 0l.449.031c.592.517 1.088 1.141 1.437 1.851l.02.023-3.036 1.953-.7-2.68 1.83-1.178zM12 14.635l1.35 2.2H10.65l1.35-2.2zm-4.153.87l.64 2.453-2.143-1.38c.42-.434.916-.803 1.473-1.088l.03.015zm8.306 0l.03-.015c.557.285 1.053.654 1.473 1.088l-2.143 1.38.64-2.453zm-5.676 2.827h2.046l1.023 1.776c-.637.25-1.328.392-2.046.392s-1.409-.142-2.046-.392l1.023-1.776z"/></svg>
+                    <span class="text-sm font-medium">Puppeteer</span>
+                </div>
+                <div class="flex items-center gap-2 text-gray-400">
+                    <svg class="h-8 w-8" viewBox="0 0 24 24" fill="currentColor"><path d="M11.998 2C6.477 2 2 6.477 2 11.998s4.477 9.998 9.998 9.998 9.998-4.477 9.998-9.998S17.519 2 11.998 2zm-.003 1.5c4.69 0 8.498 3.808 8.498 8.498s-3.808 8.498-8.498 8.498-8.498-3.808-8.498-8.498 3.808-8.498 8.498-8.498zm-.004 2.496a2.25 2.25 0 100 4.5 2.25 2.25 0 000-4.5zm-3.746 5.25a2.25 2.25 0 100 4.5 2.25 2.25 0 000-4.5zm7.492 0a2.25 2.25 0 100 4.5 2.25 2.25 0 000-4.5z"/></svg>
+                    <span class="text-sm font-medium">Playwright</span>
+                </div>
+                <div class="flex items-center gap-2 text-gray-400">
+                    <svg class="h-8 w-8" viewBox="0 0 24 24" fill="currentColor"><path d="M12.001 0C6.174 0 1.448 4.957 1.448 11.074c0 4.903 3.013 9.084 7.229 10.466.528.098.72-.229.72-.509 0-.251-.009-.918-.014-1.803-2.94.64-3.561-1.418-3.561-1.418-.48-1.22-1.173-1.545-1.173-1.545-.959-.655.073-.642.073-.642 1.06.075 1.618 1.089 1.618 1.089.943 1.615 2.474 1.149 3.078.878.096-.683.369-1.149.671-1.413-2.348-.267-4.817-1.174-4.817-5.226 0-1.155.412-2.099 1.088-2.839-.109-.267-.472-1.343.104-2.8 0 0 .887-.284 2.906 1.085a10.14 10.14 0 012.65-.357c.9.004 1.805.122 2.651.357 2.018-1.369 2.904-1.085 2.904-1.085.577 1.457.214 2.533.105 2.8.678.74 1.086 1.684 1.086 2.839 0 4.064-2.474 4.955-4.83 5.216.38.328.718.975.718 1.965 0 1.419-.013 2.563-.013 2.912 0 .283.19.613.726.509 4.212-1.385 7.221-5.563 7.221-10.466C22.554 4.957 17.828 0 12.001 0z"/></svg>
+                    <span class="text-sm font-medium">Scrapy</span>
+                </div>
+                <div class="flex items-center gap-2 text-gray-400">
+                    <svg class="h-8 w-8" viewBox="0 0 24 24" fill="currentColor"><path d="M11.99 0C5.388 0 0 5.388 0 11.99c0 5.305 3.458 9.8 8.247 11.387.602.11.82-.261.82-.58 0-.287-.01-1.045-.016-2.052-3.353.729-4.062-1.617-4.062-1.617-.549-1.394-1.34-1.765-1.34-1.765-1.095-.748.083-.733.083-.733 1.211.085 1.849 1.243 1.849 1.243 1.076 1.843 2.823 1.31 3.512 1.002.109-.78.42-1.311.764-1.612-2.677-.304-5.493-1.338-5.493-5.957 0-1.316.47-2.392 1.241-3.234-.125-.304-.538-1.53.117-3.189 0 0 1.012-.324 3.315 1.235a11.57 11.57 0 013.019-.406c1.024.005 2.055.138 3.019.406 2.3-1.559 3.31-1.235 3.31-1.235.657 1.659.244 2.885.119 3.189.773.842 1.239 1.918 1.239 3.234 0 4.63-2.82 5.649-5.506 5.946.433.372.818 1.107.818 2.232 0 1.611-.015 2.911-.015 3.307 0 .322.216.697.825.578C20.545 21.785 24 17.29 24 11.99 24 5.388 18.612 0 11.99 0z"/></svg>
+                    <span class="text-sm font-medium">requests</span>
+                </div>
+                <div class="flex items-center gap-2 text-gray-400">
+                    <svg class="h-6 w-6" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+                    <span class="text-sm font-medium">Any HTTP Client</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Stats -->
+    <section class="py-16 bg-gray-800 bg-opacity-50">
+        <div class="max-w-6xl mx-auto px-4">
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
+                <div>
+                    <div class="text-4xl font-bold text-primary">195+</div>
+                    <div class="text-gray-400">Countries</div>
+                </div>
+                <div>
+                    <div class="text-4xl font-bold text-primary">10M+</div>
+                    <div class="text-gray-400">IPs Available</div>
+                </div>
+                <div>
+                    <div class="text-4xl font-bold text-primary">99.9%</div>
+                    <div class="text-gray-400">Uptime</div>
+                </div>
+                <div>
+                    <div class="text-4xl font-bold text-primary">&lt;200ms</div>
+                    <div class="text-gray-400">Avg Response</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features -->
+    <section id="features" class="py-20 px-4">
+        <div class="max-w-6xl mx-auto">
+            <div class="text-center mb-16">
+                <h2 class="text-3xl md:text-4xl font-bold mb-4">Why Choose IPLoop?</h2>
+                <p class="text-xl text-gray-400">Built different. Real residential IPs from ethically-sourced mobile devices.</p>
+            </div>
+            <div class="grid md:grid-cols-3 gap-8">
+                <div class="bg-gray-800 bg-opacity-50 rounded-xl p-6 border border-gray-700 hover:border-primary transition">
+                    <div class="p-3 bg-green-900 bg-opacity-30 rounded-lg w-fit mb-4">
+                        <svg class="h-6 w-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"/>
+                        </svg>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-2">Real Mobile IPs</h3>
+                    <p class="text-gray-400">Traffic routes through actual mobile devices with genuine residential IPs. Completely undetectable.</p>
+                </div>
+                <div class="bg-gray-800 bg-opacity-50 rounded-xl p-6 border border-gray-700 hover:border-primary transition">
+                    <div class="p-3 bg-green-900 bg-opacity-30 rounded-lg w-fit mb-4">
+                        <svg class="h-6 w-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-2">Global Coverage</h3>
+                    <p class="text-gray-400">Access IPs from 195+ countries and thousands of cities. Target any location with precision.</p>
+                </div>
+                <div class="bg-gray-800 bg-opacity-50 rounded-xl p-6 border border-gray-700 hover:border-primary transition">
+                    <div class="p-3 bg-green-900 bg-opacity-30 rounded-lg w-fit mb-4">
+                        <svg class="h-6 w-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                        </svg>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-2">Lightning Fast</h3>
+                    <p class="text-gray-400">Optimized routing for minimal latency. Average response times under 200ms globally.</p>
+                </div>
+                <div class="bg-gray-800 bg-opacity-50 rounded-xl p-6 border border-gray-700 hover:border-primary transition">
+                    <div class="p-3 bg-green-900 bg-opacity-30 rounded-lg w-fit mb-4">
+                        <svg class="h-6 w-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+                        </svg>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-2">100% Ethical</h3>
+                    <p class="text-gray-400">All device owners opt-in and are compensated. Fully compliant and transparent.</p>
+                </div>
+                <div class="bg-gray-800 bg-opacity-50 rounded-xl p-6 border border-gray-700 hover:border-primary transition">
+                    <div class="p-3 bg-green-900 bg-opacity-30 rounded-lg w-fit mb-4">
+                        <svg class="h-6 w-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/>
+                        </svg>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-2">Easy Integration</h3>
+                    <p class="text-gray-400">SDKs for Python, Node.js, and any HTTP client. Get started in minutes.</p>
+                </div>
+                <div class="bg-gray-800 bg-opacity-50 rounded-xl p-6 border border-gray-700 hover:border-primary transition">
+                    <div class="p-3 bg-green-900 bg-opacity-30 rounded-lg w-fit mb-4">
+                        <svg class="h-6 w-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                        </svg>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-2">Real-time Analytics</h3>
+                    <p class="text-gray-400">Monitor usage, success rates, and performance. Full visibility into your traffic.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Use Cases -->
+    <section id="use-cases" class="py-20 px-4 bg-gray-800 bg-opacity-30">
+        <div class="max-w-6xl mx-auto">
+            <div class="text-center mb-16">
+                <h2 class="text-3xl md:text-4xl font-bold mb-4">Use Cases</h2>
+                <p class="text-xl text-gray-400">Powering businesses across industries</p>
+            </div>
+            <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div class="bg-gray-900 rounded-xl p-6 border border-gray-700">
+                    <div class="text-3xl mb-3">🔍</div>
+                    <h3 class="text-lg font-semibold mb-2">Web Scraping</h3>
+                    <p class="text-sm text-gray-400">Collect data at scale without blocks. Real IPs pass captchas and bot detection.</p>
+                </div>
+                <div class="bg-gray-900 rounded-xl p-6 border border-gray-700">
+                    <div class="text-3xl mb-3">📊</div>
+                    <h3 class="text-lg font-semibold mb-2">Market Research</h3>
+                    <p class="text-sm text-gray-400">Monitor competitors, track prices, and gather market intelligence globally.</p>
+                </div>
+                <div class="bg-gray-900 rounded-xl p-6 border border-gray-700">
+                    <div class="text-3xl mb-3">✅</div>
+                    <h3 class="text-lg font-semibold mb-2">Ad Verification</h3>
+                    <p class="text-sm text-gray-400">Verify ad placements and detect fraud from real user perspectives.</p>
+                </div>
+                <div class="bg-gray-900 rounded-xl p-6 border border-gray-700">
+                    <div class="text-3xl mb-3">🌐</div>
+                    <h3 class="text-lg font-semibold mb-2">SEO Monitoring</h3>
+                    <p class="text-sm text-gray-400">Track rankings from any location. See what real users see.</p>
+                </div>
+                <div class="bg-gray-900 rounded-xl p-6 border border-gray-700">
+                    <div class="text-3xl mb-3">🛍️</div>
+                    <h3 class="text-lg font-semibold mb-2">E-commerce</h3>
+                    <p class="text-sm text-gray-400">Price intelligence, inventory monitoring, and competitive analysis.</p>
+                </div>
+                <div class="bg-gray-900 rounded-xl p-6 border border-gray-700">
+                    <div class="text-3xl mb-3">📱</div>
+                    <h3 class="text-lg font-semibold mb-2">App Testing</h3>
+                    <p class="text-sm text-gray-400">Test your apps from real mobile IPs in target markets.</p>
+                </div>
+                <div class="bg-gray-900 rounded-xl p-6 border border-gray-700">
+                    <div class="text-3xl mb-3">🔐</div>
+                    <h3 class="text-lg font-semibold mb-2">Brand Protection</h3>
+                    <p class="text-sm text-gray-400">Monitor marketplaces for counterfeits and unauthorized sellers.</p>
+                </div>
+                <div class="bg-gray-900 rounded-xl p-6 border border-gray-700">
+                    <div class="text-3xl mb-3">📈</div>
+                    <h3 class="text-lg font-semibold mb-2">Social Media</h3>
+                    <p class="text-sm text-gray-400">Manage accounts and monitor trends without restrictions.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- How it Works -->
+    <section class="py-20 px-4">
+        <div class="max-w-4xl mx-auto">
+            <div class="text-center mb-16">
+                <h2 class="text-3xl md:text-4xl font-bold mb-4">How It Works</h2>
+                <p class="text-xl text-gray-400">Simple integration, powerful results</p>
+            </div>
+            <div class="space-y-8">
+                <div class="flex items-start gap-6">
+                    <div class="flex-shrink-0 w-12 h-12 bg-primary rounded-full flex items-center justify-center text-xl font-bold">1</div>
+                    <div>
+                        <h3 class="text-xl font-semibold mb-2">Create Your Account</h3>
+                        <p class="text-gray-400">Sign up and get your API key in seconds. No credit card required for the free trial.</p>
+                    </div>
+                </div>
+                <div class="flex items-start gap-6">
+                    <div class="flex-shrink-0 w-12 h-12 bg-primary rounded-full flex items-center justify-center text-xl font-bold">2</div>
+                    <div>
+                        <h3 class="text-xl font-semibold mb-2">Configure Your Proxy</h3>
+                        <p class="text-gray-400">Use our proxy endpoint with your API key. Select country, city, or let us auto-rotate.</p>
+                    </div>
+                </div>
+                <div class="flex items-start gap-6">
+                    <div class="flex-shrink-0 w-12 h-12 bg-primary rounded-full flex items-center justify-center text-xl font-bold">3</div>
+                    <div>
+                        <h3 class="text-xl font-semibold mb-2">Start Routing Traffic</h3>
+                        <p class="text-gray-400">Your requests are routed through real mobile devices with residential IPs. That's it!</p>
+                    </div>
+                </div>
+            </div>
+            <div class="mt-12 bg-gray-900 rounded-xl p-6 border border-gray-700">
+                <div class="flex items-center justify-between mb-3">
+                    <p class="text-sm text-gray-400">Quick Start Example:</p>
+                    <button onclick="navigator.clipboard.writeText('curl -x http://user:YOUR_API_KEY-country-US@proxy.iploop.io:7777 https://httpbin.org/ip')" class="text-xs text-primary hover:text-green-400 transition">Copy</button>
+                </div>
+                <pre class="bg-gray-800 p-4 rounded-lg overflow-x-auto text-sm text-green-400"><code>curl -x http://user:YOUR_API_KEY-country-US@proxy.iploop.io:7777 \
+     https://httpbin.org/ip
+
+# Response: {"origin": "73.162.xxx.xxx"}  ← US Residential IP</code></pre>
+            </div>
+        </div>
+    </section>
+
+    <!-- Pricing -->
+    <section id="pricing" class="py-20 px-4 bg-gray-800 bg-opacity-30">
+        <div class="max-w-5xl mx-auto">
+            <div class="text-center mb-16">
+                <h2 class="text-3xl md:text-4xl font-bold mb-4">Simple, Transparent Pricing</h2>
+                <p class="text-xl text-gray-400">Pay only for what you use. No hidden fees.</p>
+            </div>
+            <div class="grid md:grid-cols-3 gap-8">
+                <div class="bg-gray-800 bg-opacity-50 rounded-xl p-6 border border-gray-700 hover:border-gray-600 transition">
+                    <h3 class="text-xl font-semibold">Starter</h3>
+                    <p class="text-gray-400 text-sm mb-4">For small projects</p>
+                    <div class="mb-6">
+                        <span class="text-4xl font-bold">$15</span>
+                        <span class="text-gray-400">/GB</span>
+                    </div>
+                    <ul class="space-y-3 text-sm mb-6">
+                        <li class="flex items-center gap-2"><svg class="h-4 w-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> Pay as you go</li>
+                        <li class="flex items-center gap-2"><svg class="h-4 w-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> All countries</li>
+                        <li class="flex items-center gap-2"><svg class="h-4 w-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> HTTP & SOCKS5</li>
+                        <li class="flex items-center gap-2"><svg class="h-4 w-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> Email support</li>
+                    </ul>
+                    <a href="https://dashboard.iploop.io/login?signup=true" class="block w-full text-center border border-gray-600 hover:border-gray-500 py-2 rounded-lg transition">Get Started</a>
+                </div>
+                <div class="bg-gray-800 bg-opacity-50 rounded-xl p-6 border-2 border-primary relative transform md:scale-105">
+                    <div class="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary text-white px-3 py-1 rounded-full text-xs font-medium">Most Popular</div>
+                    <h3 class="text-xl font-semibold">Growth</h3>
+                    <p class="text-gray-400 text-sm mb-4">For growing teams</p>
+                    <div class="mb-6">
+                        <span class="text-4xl font-bold">$10</span>
+                        <span class="text-gray-400">/GB</span>
+                    </div>
+                    <ul class="space-y-3 text-sm mb-6">
+                        <li class="flex items-center gap-2"><svg class="h-4 w-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> 50GB minimum</li>
+                        <li class="flex items-center gap-2"><svg class="h-4 w-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> City targeting</li>
+                        <li class="flex items-center gap-2"><svg class="h-4 w-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> Sticky sessions</li>
+                        <li class="flex items-center gap-2"><svg class="h-4 w-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> Priority support</li>
+                    </ul>
+                    <a href="https://dashboard.iploop.io/login?signup=true" class="block w-full text-center bg-primary hover:bg-primary-dark py-2 rounded-lg transition">Get Started</a>
+                </div>
+                <div class="bg-gray-800 bg-opacity-50 rounded-xl p-6 border border-gray-700 hover:border-gray-600 transition">
+                    <h3 class="text-xl font-semibold">Enterprise</h3>
+                    <p class="text-gray-400 text-sm mb-4">For large scale</p>
+                    <div class="mb-6">
+                        <span class="text-4xl font-bold">Custom</span>
+                    </div>
+                    <ul class="space-y-3 text-sm mb-6">
+                        <li class="flex items-center gap-2"><svg class="h-4 w-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> Volume discounts</li>
+                        <li class="flex items-center gap-2"><svg class="h-4 w-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> Dedicated IPs</li>
+                        <li class="flex items-center gap-2"><svg class="h-4 w-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> SLA guarantee</li>
+                        <li class="flex items-center gap-2"><svg class="h-4 w-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> 24/7 support</li>
+                    </ul>
+                    <a href="mailto:sales@iploop.io" class="block w-full text-center border border-gray-600 hover:border-gray-500 py-2 rounded-lg transition">Contact Sales</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- FAQ -->
+    <section id="faq" class="py-20 px-4">
+        <div class="max-w-3xl mx-auto">
+            <div class="text-center mb-16">
+                <h2 class="text-3xl md:text-4xl font-bold mb-4">Frequently Asked Questions</h2>
+                <p class="text-xl text-gray-400">Everything you need to know</p>
+            </div>
+            <div class="space-y-4">
+                <div class="bg-gray-800 bg-opacity-50 rounded-xl border border-gray-700">
+                    <button class="faq-toggle w-full p-6 text-left flex items-center justify-between" onclick="this.nextElementSibling.classList.toggle('open')">
+                        <span class="font-semibold">What makes IPLoop different from other proxy providers?</span>
+                        <svg class="h-5 w-5 text-gray-400 transform transition" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                    </button>
+                    <div class="faq-content px-6 pb-6 text-gray-400">
+                        IPLoop uses real mobile devices as proxy nodes, not datacenter IPs or shared residential networks. This means traffic appears genuinely residential because it IS residential. Device owners opt-in and are compensated, making our network 100% ethical and compliant.
+                    </div>
+                </div>
+                <div class="bg-gray-800 bg-opacity-50 rounded-xl border border-gray-700">
+                    <button class="faq-toggle w-full p-6 text-left flex items-center justify-between" onclick="this.nextElementSibling.classList.toggle('open')">
+                        <span class="font-semibold">How does the free trial work?</span>
+                        <svg class="h-5 w-5 text-gray-400 transform transition" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                    </button>
+                    <div class="faq-content px-6 pb-6 text-gray-400">
+                        Sign up and get 1GB of traffic free, no credit card required. Test all features including geo-targeting, sticky sessions, and rotation. When you're ready to scale, add a payment method and choose a plan.
+                    </div>
+                </div>
+                <div class="bg-gray-800 bg-opacity-50 rounded-xl border border-gray-700">
+                    <button class="faq-toggle w-full p-6 text-left flex items-center justify-between" onclick="this.nextElementSibling.classList.toggle('open')">
+                        <span class="font-semibold">What protocols do you support?</span>
+                        <svg class="h-5 w-5 text-gray-400 transform transition" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                    </button>
+                    <div class="faq-content px-6 pb-6 text-gray-400">
+                        We support HTTP, HTTPS, and SOCKS5 protocols. Our proxy works with any HTTP client, browser automation tool (Puppeteer, Playwright, Selenium), or programming language (Python, Node.js, Go, etc.).
+                    </div>
+                </div>
+                <div class="bg-gray-800 bg-opacity-50 rounded-xl border border-gray-700">
+                    <button class="faq-toggle w-full p-6 text-left flex items-center justify-between" onclick="this.nextElementSibling.classList.toggle('open')">
+                        <span class="font-semibold">Can I target specific countries or cities?</span>
+                        <svg class="h-5 w-5 text-gray-400 transform transition" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                    </button>
+                    <div class="faq-content px-6 pb-6 text-gray-400">
+                        Yes! Target any of 195+ countries by adding the country code to your credentials (e.g., -country-US, -country-DE). Growth and Enterprise plans include city-level targeting for even more precision.
+                    </div>
+                </div>
+                <div class="bg-gray-800 bg-opacity-50 rounded-xl border border-gray-700">
+                    <button class="faq-toggle w-full p-6 text-left flex items-center justify-between" onclick="this.nextElementSibling.classList.toggle('open')">
+                        <span class="font-semibold">What are sticky sessions?</span>
+                        <svg class="h-5 w-5 text-gray-400 transform transition" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                    </button>
+                    <div class="faq-content px-6 pb-6 text-gray-400">
+                        Sticky sessions let you maintain the same IP address for a period of time (up to 30 minutes). This is useful for multi-step operations like logging in, shopping carts, or any workflow that requires session persistence.
+                    </div>
+                </div>
+                <div class="bg-gray-800 bg-opacity-50 rounded-xl border border-gray-700">
+                    <button class="faq-toggle w-full p-6 text-left flex items-center justify-between" onclick="this.nextElementSibling.classList.toggle('open')">
+                        <span class="font-semibold">Is IPLoop legal and ethical?</span>
+                        <svg class="h-5 w-5 text-gray-400 transform transition" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                    </button>
+                    <div class="faq-content px-6 pb-6 text-gray-400">
+                        Absolutely. All device owners explicitly opt-in to share their bandwidth and are compensated fairly. We have clear terms of service, transparent practices, and full compliance with applicable laws. We prohibit illegal activities on our network.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA -->
+    <section class="py-20 px-4 bg-primary">
+        <div class="max-w-2xl mx-auto text-center">
+            <h2 class="text-3xl md:text-4xl font-bold mb-4">Ready to Get Started?</h2>
+            <p class="text-xl opacity-90 mb-8">Join thousands of developers using IPLoop for reliable residential proxies.</p>
+            <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
+                <a href="https://dashboard.iploop.io/login?signup=true" class="inline-flex items-center gap-2 bg-white text-gray-900 text-lg px-8 py-3 rounded-lg font-medium hover:bg-gray-100 transition">
+                    Start Your Free Trial 
+                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/>
+                    </svg>
+                </a>
+                <a href="mailto:sales@iploop.io" class="text-white border-2 border-white border-opacity-50 hover:border-opacity-100 px-8 py-3 rounded-lg font-medium transition">
+                    Contact Sales
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="py-12 px-4 border-t border-gray-800">
+        <div class="max-w-6xl mx-auto">
+            <div class="grid md:grid-cols-4 gap-8">
+                <div>
+                    <div class="flex items-center gap-2 mb-4">
+                        <div class="p-2 bg-primary rounded-lg">
+                            <svg class="h-5 w-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+                            </svg>
+                        </div>
+                        <span class="text-xl font-bold">IPLoop</span>
+                    </div>
+                    <p class="text-sm text-gray-400">Premium residential proxies powered by real mobile devices.</p>
+                </div>
+                <div>
+                    <h4 class="font-semibold mb-4">Product</h4>
+                    <ul class="space-y-2 text-sm text-gray-400">
+                        <li><a href="#features" class="hover:text-white transition">Features</a></li>
+                        <li><a href="#pricing" class="hover:text-white transition">Pricing</a></li>
+                        <li><a href="#use-cases" class="hover:text-white transition">Use Cases</a></li>
+                        <li><a href="#faq" class="hover:text-white transition">FAQ</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="font-semibold mb-4">Company</h4>
+                    <ul class="space-y-2 text-sm text-gray-400">
+                        <li><a href="#" class="hover:text-white transition">About</a></li>
+                        <li><a href="#" class="hover:text-white transition">Blog</a></li>
+                        <li><a href="mailto:support@iploop.io" class="hover:text-white transition">Contact</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="font-semibold mb-4">Legal</h4>
+                    <ul class="space-y-2 text-sm text-gray-400">
+                        <li><a href="#" class="hover:text-white transition">Privacy Policy</a></li>
+                        <li><a href="#" class="hover:text-white transition">Terms of Service</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="mt-8 pt-8 border-t border-gray-800 flex flex-col md:flex-row items-center justify-between gap-4">
+                <p class="text-sm text-gray-400">© 2026 IPLoop. All rights reserved.</p>
+                <div class="flex items-center gap-4 text-gray-400">
+                    <a href="#" class="hover:text-white transition">
+                        <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 24 24"><path d="M24 4.557c-.883.392-1.832.656-2.828.775 1.017-.609 1.798-1.574 2.165-2.724-.951.564-2.005.974-3.127 1.195-.897-.957-2.178-1.555-3.594-1.555-3.179 0-5.515 2.966-4.797 6.045-4.091-.205-7.719-2.165-10.148-5.144-1.29 2.213-.669 5.108 1.523 6.574-.806-.026-1.566-.247-2.229-.616-.054 2.281 1.581 4.415 3.949 4.89-.693.188-1.452.232-2.224.084.626 1.956 2.444 3.379 4.6 3.419-2.07 1.623-4.678 2.348-7.29 2.04 2.179 1.397 4.768 2.212 7.548 2.212 9.142 0 14.307-7.721 13.995-14.646.962-.695 1.797-1.562 2.457-2.549z"/></svg>
+                    </a>
+                    <a href="#" class="hover:text-white transition">
+                        <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>

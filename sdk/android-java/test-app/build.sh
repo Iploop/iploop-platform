@@ -21,15 +21,22 @@ if [ -d "$APP_DIR/res" ]; then
     $AAPT package -f -m -J "$BUILD_DIR/gen" -M "$APP_DIR/AndroidManifest.xml" -S "$APP_DIR/res" -I "$ANDROID_JAR"
 fi
 
+# Extract SDK v1.0.20 classes
+SDK_JAR="/root/clawd-secure/iploop-platform/sdk/android-java/build/iploop-sdk-1.0.20-pure.jar"
+echo "Extracting SDK classes..."
+cd "$BUILD_DIR/classes"
+jar xf "$SDK_JAR"
+cd "$APP_DIR"
+
 # Compile Java
-echo "Compiling Java..."
+echo "Compiling Java with SDK v1.0.20..."
 JAVA_FILES="$APP_DIR/src/com/iploop/test/"*.java
 if [ -f "$BUILD_DIR/gen/com/iploop/test/R.java" ]; then
     JAVA_FILES="$JAVA_FILES $BUILD_DIR/gen/com/iploop/test/R.java"
 fi
 javac -source 1.8 -target 1.8 \
     -bootclasspath "$ANDROID_JAR" \
-    -cp "$ANDROID_JAR" \
+    -cp "$ANDROID_JAR:$SDK_JAR" \
     -d "$BUILD_DIR/classes" \
     $JAVA_FILES
 

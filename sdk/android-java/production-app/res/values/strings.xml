@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">IPLoop Enterprise</string>
+    <string name="app_description">Enterprise Proxy Solution for Samsung Galaxy A17</string>
+    <string name="sdk_version">v1.0.20</string>
+</resources>

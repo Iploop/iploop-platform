@@ -162,14 +162,34 @@ services:
       - NEXT_PUBLIC_PROXY_ENDPOINT=${PROXY_ENDPOINT}
       - NEXT_PUBLIC_PROXY_HTTP_PORT=${PROXY_GATEWAY_HTTP_PORT}
       - NEXT_PUBLIC_PROXY_SOCKS_PORT=${PROXY_GATEWAY_SOCKS_PORT}
-    ports:
-      - "${DASHBOARD_PORT}:3000"
+    # Port exposed via nginx-proxy, not directly
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "node", "-e", "require('http').get('http://localhost:3000/', (r) => process.exit(r.statusCode === 200 || r.statusCode === 302 ? 0 : 1)).on('error', () => process.exit(1))"]
       interval: 30s
       timeout: 10s
       retries: 3
+
+  # Home Page (static landing)
+  home-page:
+    build:
+      context: ./home-page
+      dockerfile: Dockerfile
+    container_name: iploop-home-page
+    restart: unless-stopped
+
+  # Nginx Proxy - routes / to home-page, everything else to dashboard
+  nginx-proxy:
+    build:
+      context: ./nginx-proxy
+      dockerfile: Dockerfile
+    container_name: iploop-nginx-proxy
+    ports:
+      - "${DASHBOARD_PORT}:3000"
+    depends_on:
+      - dashboard
+      - home-page
+    restart: unless-stopped
 
   # Optional: Monitoring
   prometheus:

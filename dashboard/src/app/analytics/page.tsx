@@ -43,11 +43,12 @@ export default function AnalyticsPage() {
       const token = localStorage.getItem('token')
       const headers = token ? { Authorization: `Bearer ${token}` } : {}
 
-      const [summaryRes, dailyRes, countryRes] = await Promise.all([
+      const results = await Promise.all([
         fetch(`/api/usage/summary?days=${period}`, { headers }),
         fetch(`/api/usage/daily?days=${period}`, { headers }),
         fetch(`/api/usage/by-country?days=${period}`, { headers })
       ])
+      const [summaryRes, dailyRes, countryRes] = results
 
       const summary = summaryRes.ok ? (await summaryRes.json()).stats : null
       const daily = dailyRes.ok ? (await dailyRes.json()).daily : []

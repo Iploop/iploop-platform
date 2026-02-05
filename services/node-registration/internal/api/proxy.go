@@ -35,6 +35,7 @@ type ProxyRequestPayload struct {
 	Headers   map[string]string `json:"headers,omitempty"`
 	Body      string            `json:"body,omitempty"` // Base64 encoded
 	TimeoutMs int               `json:"timeout_ms"`
+	Profile   string            `json:"profile,omitempty"` // Browser profile for User-Agent
 }
 
 // ProxyResponsePayload is the response body for proxy requests
@@ -84,6 +85,7 @@ func (h *ProxyHandler) HandleProxyRequest(w http.ResponseWriter, r *http.Request
 		Headers: payload.Headers,
 		Body:    payload.Body,
 		Timeout: timeout,
+		Profile: payload.Profile,
 	}
 
 	// Create context with timeout

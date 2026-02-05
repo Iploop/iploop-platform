@@ -21,6 +21,7 @@ type ProxyRequest struct {
 	Headers   map[string]string `json:"headers,omitempty"`
 	Body      string `json:"body,omitempty"` // Base64 encoded
 	Timeout   int    `json:"timeout_ms"`
+	Profile   string `json:"profile,omitempty"` // Browser profile for User-Agent
 }
 
 // ProxyResponse represents the response from a proxied request

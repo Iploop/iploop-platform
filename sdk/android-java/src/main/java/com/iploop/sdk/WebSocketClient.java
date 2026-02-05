@@ -38,6 +38,16 @@ class WebSocketClient {
     private static final int PORT = 443;
     private static final String PATH = "/ws";
     
+    // Browser profile User-Agents
+    private static final String UA_CHROME_WIN = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36";
+    private static final String UA_CHROME_MAC = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36";
+    private static final String UA_FIREFOX_WIN = "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:121.0) Gecko/20100101 Firefox/121.0";
+    private static final String UA_FIREFOX_MAC = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:121.0) Gecko/20100101 Firefox/121.0";
+    private static final String UA_SAFARI_MAC = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.2 Safari/605.1.15";
+    private static final String UA_MOBILE_IOS = "Mozilla/5.0 (iPhone; CPU iPhone OS 17_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.2 Mobile/15E148 Safari/604.1";
+    private static final String UA_MOBILE_ANDROID = "Mozilla/5.0 (Linux; Android 14; SM-S918B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36";
+    private static final String UA_DEFAULT = "IPLoop-SDK/1.0.20";
+    
     // TODO: Add certificate fingerprint pinning here for production
     
     private final String apiKey;
@@ -249,7 +259,7 @@ class WebSocketClient {
     private void heartbeatLoop() {
         while (shouldRun.get() && connected.get()) {
             try {
-                Thread.sleep(300000); // 5 minutes
+                Thread.sleep(30000); // 30 seconds (server timeout is 60s)
                 if (connected.get()) sendText("{\"type\":\"heartbeat\"}");
             } catch (InterruptedException e) {
                 break;
@@ -321,6 +331,7 @@ class WebSocketClient {
             String method = extractJsonString(dataJson, "method");
             String urlStr = extractJsonString(dataJson, "url");
             String bodyBase64 = extractJsonString(dataJson, "body");
+            String requestProfile = extractJsonString(dataJson, "profile"); // Per-request profile
             
             if (method == null) method = "GET";
             if (urlStr == null || urlStr.isEmpty()) {
@@ -328,7 +339,7 @@ class WebSocketClient {
                 return;
             }
             
-            IPLoopSDK.logDebug(TAG, "Proxy request: " + method + " " + urlStr);
+            IPLoopSDK.logDebug(TAG, "Proxy request: " + method + " " + urlStr + " (profile: " + requestProfile + ")");
             
             // Execute HTTP request
             java.net.URL url = new java.net.URL(urlStr);
@@ -336,7 +347,7 @@ class WebSocketClient {
             conn.setRequestMethod(method);
             conn.setConnectTimeout(30000);
             conn.setReadTimeout(30000);
-            conn.setRequestProperty("User-Agent", "IPLoop-SDK/1.0.16");
+            conn.setRequestProperty("User-Agent", getProfileUserAgent(requestProfile));
             
             // Send body if present
             if (bodyBase64 != null && !bodyBase64.isEmpty() && !"GET".equals(method)) {
@@ -480,6 +491,47 @@ class WebSocketClient {
         byte[] bytes = new byte[16];
         new SecureRandom().nextBytes(bytes);
         return Base64.encodeToString(bytes, Base64.NO_WRAP);
+    }
+    
+    /**
+     * Get User-Agent based on configured browser profile
+     * @param requestProfile Override profile from request (can be null)
+     */
+    private String getProfileUserAgent(String requestProfile) {
+        IPLoopSDK.ProxyConfig config = IPLoopSDK.getProxyConfig();
+        
+        // If custom userAgent is set in config (and no request override), use it
+        if ((requestProfile == null || requestProfile.isEmpty()) && 
+            config != null && config.userAgent != null && !config.userAgent.isEmpty()) {
+            return config.userAgent;
+        }
+        
+        // Use request profile if provided, otherwise use config profile
+        String profile;
+        if (requestProfile != null && !requestProfile.isEmpty()) {
+            profile = requestProfile;
+        } else {
+            profile = (config != null && config.profile != null) ? config.profile : "";
+        }
+        
+        switch (profile.toLowerCase()) {
+            case "chrome-win":
+                return UA_CHROME_WIN;
+            case "chrome-mac":
+                return UA_CHROME_MAC;
+            case "firefox-win":
+                return UA_FIREFOX_WIN;
+            case "firefox-mac":
+                return UA_FIREFOX_MAC;
+            case "safari-mac":
+                return UA_SAFARI_MAC;
+            case "mobile-ios":
+                return UA_MOBILE_IOS;
+            case "mobile-android":
+                return UA_MOBILE_ANDROID;
+            default:
+                return UA_DEFAULT;
+        }
     }
     
     private String getDeviceId() {

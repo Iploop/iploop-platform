@@ -164,7 +164,7 @@ export default function AdminNodesPage() {
     return `${Math.floor(seconds / 86400)}d ago`;
   };
 
-  const uniqueCountries = [...new Set(nodes.map(n => n.country))].sort();
+  const uniqueCountries = Array.from(new Set(nodes.map(n => n.country))).sort();
 
   return (
     <div className="p-6 space-y-6">

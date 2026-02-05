@@ -379,14 +379,14 @@ func (sm *SessionManager) scheduleCleanup(sessionKey string, lifetime time.Durat
 }
 
 func (sm *SessionManager) copySession(session *Session) *Session {
-	copy := *session
-	copy.Headers = make(map[string]string)
+	sessionCopy := *session
+	sessionCopy.Headers = make(map[string]string)
 	for k, v := range session.Headers {
-		copy.Headers[k] = v
+		sessionCopy.Headers[k] = v
 	}
-	copy.NodeHistory = make([]NodeAssignment, len(session.NodeHistory))
-	copy(copy.NodeHistory, session.NodeHistory)
-	return &copy
+	sessionCopy.NodeHistory = make([]NodeAssignment, len(session.NodeHistory))
+	copy(sessionCopy.NodeHistory, session.NodeHistory)
+	return &sessionCopy
 }
 
 // Cleanup runs periodically to remove expired sessions

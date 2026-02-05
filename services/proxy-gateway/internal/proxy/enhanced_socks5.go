@@ -43,6 +43,26 @@ type ConnectionContext struct {
 	Target        string
 }
 
+// CustomResolver implements socks5.NameResolver interface
+type CustomResolver struct {
+	proxy *EnhancedSOCKS5Proxy
+}
+
+func (r *CustomResolver) Resolve(ctx context.Context, name string) (context.Context, net.IP, error) {
+	// Custom DNS resolution through nodes if needed
+	// For now, use standard resolution
+	ips, err := net.LookupIP(name)
+	if err != nil {
+		return ctx, nil, err
+	}
+	
+	if len(ips) == 0 {
+		return ctx, nil, fmt.Errorf("no IPs found for %s", name)
+	}
+	
+	return ctx, ips[0], nil
+}
+
 func NewEnhancedSOCKS5Proxy(
 	authenticator *auth.Authenticator,
 	nodePool *nodepool.NodePool,
@@ -73,7 +93,7 @@ func NewEnhancedSOCKS5Proxy(
 			&socks5.NoAuthAuthenticator{}, // For IP whitelist auth
 		},
 		Dial:     proxy.dialThroughNode,
-		Resolver: proxy.customResolver,
+		Resolver: &CustomResolver{proxy: proxy},
 	}
 	
 	server, err := socks5.New(conf)
@@ -201,21 +221,6 @@ func (p *EnhancedSOCKS5Proxy) connectDirectly(nodeIP, host, port string) (net.Co
 	}
 	
 	return conn, nil
-}
-
-func (p *EnhancedSOCKS5Proxy) customResolver(ctx context.Context, name string) (context.Context, net.IP, error) {
-	// Custom DNS resolution through nodes if needed
-	// For now, use standard resolution
-	ips, err := net.LookupIP(name)
-	if err != nil {
-		return ctx, nil, err
-	}
-	
-	if len(ips) == 0 {
-		return ctx, nil, fmt.Errorf("no IPs found for %s", name)
-	}
-	
-	return ctx, ips[0], nil
 }
 
 func (p *EnhancedSOCKS5Proxy) checkLimits(connCtx *ConnectionContext) error {

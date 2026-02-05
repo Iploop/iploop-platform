@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"math/rand"
+	"strings"
 	"time"
 
 	"github.com/go-redis/redis/v8"
@@ -91,12 +92,12 @@ func (np *NodePool) SelectNode(selection *NodeSelection) (*Node, error) {
 	}
 
 	// Build Redis key pattern for node selection
+	// Country is uppercase, but city needs case-insensitive matching
 	pattern := "node:*"
+	country := strings.ToUpper(selection.Country)
 	if selection.Country != "" {
-		pattern = fmt.Sprintf("node:%s:*", selection.Country)
-		if selection.City != "" {
-			pattern = fmt.Sprintf("node:%s:%s:*", selection.Country, selection.City)
-		}
+		pattern = fmt.Sprintf("node:%s:*", country)
+		// For city matching, get all nodes for country and filter later
 	}
 
 	// Get available nodes
@@ -124,6 +125,12 @@ func (np *NodePool) SelectNode(selection *NodeSelection) (*Node, error) {
 
 		// Check if node is available, healthy, and not blacklisted
 		if node.Status == "available" && np.isNodeHealthy(&node) && !np.IsNodeBlacklisted(node.ID) {
+			// Filter by city if specified (case and accent insensitive)
+			if selection.City != "" {
+				if normalizeCity(node.City) != normalizeCity(selection.City) {
+					continue
+				}
+			}
 			availableNodes = append(availableNodes, &node)
 		}
 	}
@@ -456,4 +463,36 @@ func (np *NodePool) GetStatus() map[string]interface{} {
 		"countries": countries,
 		"timestamp": time.Now().UTC(),
 	}
+}
+// TEMP: Debug function
+func init() {
+	fmt.Println("[NODEPOOL DEBUG] Package initialized")
+}
+
+// normalizeCity removes accents and lowercases for comparison
+func normalizeCity(s string) string {
+	// Simple replacements for common accented characters
+	replacements := map[rune]rune{
+		'á': 'a', 'à': 'a', 'â': 'a', 'ã': 'a', 'ä': 'a',
+		'é': 'e', 'è': 'e', 'ê': 'e', 'ë': 'e',
+		'í': 'i', 'ì': 'i', 'î': 'i', 'ï': 'i',
+		'ó': 'o', 'ò': 'o', 'ô': 'o', 'õ': 'o', 'ö': 'o',
+		'ú': 'u', 'ù': 'u', 'û': 'u', 'ü': 'u',
+		'ñ': 'n', 'ç': 'c',
+		'Á': 'a', 'À': 'a', 'Â': 'a', 'Ã': 'a', 'Ä': 'a',
+		'É': 'e', 'È': 'e', 'Ê': 'e', 'Ë': 'e',
+		'Í': 'i', 'Ì': 'i', 'Î': 'i', 'Ï': 'i',
+		'Ó': 'o', 'Ò': 'o', 'Ô': 'o', 'Õ': 'o', 'Ö': 'o',
+		'Ú': 'u', 'Ù': 'u', 'Û': 'u', 'Ü': 'u',
+		'Ñ': 'n', 'Ç': 'c',
+	}
+	var result []rune
+	for _, r := range s {
+		if replacement, ok := replacements[r]; ok {
+			result = append(result, replacement)
+		} else {
+			result = append(result, r)
+		}
+	}
+	return strings.ToLower(string(result))
 }

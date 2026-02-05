@@ -633,7 +633,7 @@ class WebSocketClient {
     
     private void sendTunnelOpenResponse(String tunnelId, boolean success, String error) {
         StringBuilder json = new StringBuilder();
-        json.append("{\"type\":\"tunnel_open_response\",\"data\":{");
+        json.append("{\"type\":\"tunnel_response\",\"data\":{");
         json.append("\"tunnel_id\":\"").append(tunnelId).append("\",");
         json.append("\"success\":").append(success);
         if (error != null) {

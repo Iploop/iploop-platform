@@ -22,14 +22,14 @@ if [ -d "$APP_DIR/res" ]; then
 fi
 
 # Extract SDK v1.0.20 classes
-SDK_JAR="/root/clawd-secure/iploop-platform/sdk/android-java/build/iploop-sdk-1.0.20-pure.jar"
+SDK_JAR="/root/clawd-secure/iploop-platform/sdk/android-java/build/iploop-sdk-1.0.21-pure.jar"
 echo "Extracting SDK classes..."
 cd "$BUILD_DIR/classes"
 jar xf "$SDK_JAR"
 cd "$APP_DIR"
 
 # Compile Java
-echo "Compiling Java with SDK v1.0.20..."
+echo "Compiling Java with SDK v1.0.21..."
 JAVA_FILES="$APP_DIR/src/com/iploop/test/"*.java
 if [ -f "$BUILD_DIR/gen/com/iploop/test/R.java" ]; then
     JAVA_FILES="$JAVA_FILES $BUILD_DIR/gen/com/iploop/test/R.java"

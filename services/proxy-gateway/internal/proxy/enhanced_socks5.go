@@ -3,11 +3,15 @@ package proxy
 import (
 	"context"
 	"fmt"
+	"io"
 	"net"
+	"os"
+	"strings"
 	"sync"
 	"time"
 
 	"github.com/armon/go-socks5"
+	"github.com/gorilla/websocket"
 	"github.com/sirupsen/logrus"
 
 	"proxy-gateway/internal/auth"
@@ -26,10 +30,90 @@ type EnhancedSOCKS5Proxy struct {
 	metrics         *metrics.Collector
 	logger          *logrus.Entry
 	server          *socks5.Server
+	nodeRegURL      string
 	
 	// Connection context tracking
 	connections     map[string]*ConnectionContext
 	connectionsMutex sync.RWMutex
+}
+
+// WebSocketConn wraps a WebSocket connection to implement net.Conn
+type WebSocketConn struct {
+	ws       *websocket.Conn
+	readBuf  []byte
+	readPos  int
+	logger   *logrus.Entry
+}
+
+func (c *WebSocketConn) Read(b []byte) (int, error) {
+	// If we have buffered data, return it first
+	if c.readPos < len(c.readBuf) {
+		n := copy(b, c.readBuf[c.readPos:])
+		c.readPos += n
+		if c.readPos >= len(c.readBuf) {
+			c.readBuf = nil
+			c.readPos = 0
+		}
+		return n, nil
+	}
+
+	// Read next WebSocket message
+	c.ws.SetReadDeadline(time.Now().Add(60 * time.Second))
+	messageType, data, err := c.ws.ReadMessage()
+	if err != nil {
+		return 0, err
+	}
+
+	if messageType != websocket.BinaryMessage && messageType != websocket.TextMessage {
+		return 0, fmt.Errorf("unexpected message type: %d", messageType)
+	}
+
+	// Copy data to output buffer
+	n := copy(b, data)
+	if n < len(data) {
+		// Buffer remaining data
+		c.readBuf = data[n:]
+		c.readPos = 0
+	}
+
+	return n, nil
+}
+
+func (c *WebSocketConn) Write(b []byte) (int, error) {
+	c.ws.SetWriteDeadline(time.Now().Add(30 * time.Second))
+	err := c.ws.WriteMessage(websocket.BinaryMessage, b)
+	if err != nil {
+		return 0, err
+	}
+	return len(b), nil
+}
+
+func (c *WebSocketConn) Close() error {
+	c.ws.WriteMessage(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, ""))
+	return c.ws.Close()
+}
+
+func (c *WebSocketConn) LocalAddr() net.Addr {
+	return c.ws.LocalAddr()
+}
+
+func (c *WebSocketConn) RemoteAddr() net.Addr {
+	return c.ws.RemoteAddr()
+}
+
+func (c *WebSocketConn) SetDeadline(t time.Time) error {
+	if err := c.ws.SetReadDeadline(t); err != nil {
+		return err
+	}
+	return c.ws.SetWriteDeadline(t)
+}
+
+func (c *WebSocketConn) SetReadDeadline(t time.Time) error {
+	return c.ws.SetReadDeadline(t)
+}
+
+func (c *WebSocketConn) SetWriteDeadline(t time.Time) error {
+	return c.ws.SetWriteDeadline(t)
 }
 
 type ConnectionContext struct {
@@ -73,6 +157,11 @@ func NewEnhancedSOCKS5Proxy(
 	logger *logrus.Entry,
 ) *EnhancedSOCKS5Proxy {
 	
+	nodeRegURL := os.Getenv("NODE_REGISTRATION_URL")
+	if nodeRegURL == "" {
+		nodeRegURL = "http://node-registration:8001"
+	}
+	
 	proxy := &EnhancedSOCKS5Proxy{
 		authenticator:  authenticator,
 		nodePool:       nodePool,
@@ -81,6 +170,7 @@ func NewEnhancedSOCKS5Proxy(
 		headerManager:  headerManager,
 		metrics:        metrics,
 		logger:         logger.WithField("component", "enhanced-socks5"),
+		nodeRegURL:     nodeRegURL,
 		connections:    make(map[string]*ConnectionContext),
 	}
 	
@@ -202,19 +292,40 @@ func (p *EnhancedSOCKS5Proxy) connectThroughNode(sess *session.Session, host, po
 }
 
 func (p *EnhancedSOCKS5Proxy) connectViaWebSocket(sess *session.Session, host, port string) (net.Conn, error) {
-	// This would implement WebSocket-based routing through the node network
-	// For now, we'll implement direct connection
-	return p.connectDirectly(sess.CurrentNodeIP, host, port)
+	// Build WebSocket tunnel URL to node-registration service
+	tunnelURL := strings.Replace(p.nodeRegURL, "http://", "ws://", 1)
+	tunnelURL = strings.Replace(tunnelURL, "https://", "wss://", 1)
+	tunnelURL = fmt.Sprintf("%s/internal/tunnel?node_id=%s&host=%s&port=%s", 
+		tunnelURL, sess.CurrentNodeID, host, port)
+
+	p.logger.Debugf("SOCKS5 connecting via WebSocket tunnel: %s", tunnelURL)
+
+	// Connect to WebSocket
+	dialer := websocket.Dialer{
+		HandshakeTimeout: 10 * time.Second,
+	}
+	wsConn, _, err := dialer.Dial(tunnelURL, nil)
+	if err != nil {
+		return nil, fmt.Errorf("failed to connect to WebSocket tunnel: %v", err)
+	}
+
+	p.logger.Infof("SOCKS5 tunnel established to %s:%s via node %s (%s)", 
+		host, port, sess.CurrentNodeID, sess.CurrentNodeIP)
+
+	// Return wrapped connection that implements net.Conn
+	return &WebSocketConn{
+		ws:     wsConn,
+		logger: p.logger,
+	}, nil
 }
 
 func (p *EnhancedSOCKS5Proxy) connectDirectly(nodeIP, host, port string) (net.Conn, error) {
-	// Connect to target through the assigned node's IP
-	// In production, this would route through the actual node infrastructure
+	// Fallback: direct connection when WebSocket tunnel fails
+	// Note: This bypasses node routing and connects directly
 	
 	targetAddr := net.JoinHostPort(host, port)
-	p.logger.Debugf("SOCKS5 connecting to %s via node %s", targetAddr, nodeIP)
+	p.logger.Warnf("SOCKS5 using direct connection (fallback) to %s - WebSocket preferred", targetAddr)
 	
-	// For MVP: direct connection (replace with actual node routing)
 	conn, err := net.DialTimeout("tcp", targetAddr, 30*time.Second)
 	if err != nil {
 		return nil, fmt.Errorf("failed to connect to %s: %v", targetAddr, err)
@@ -222,6 +333,9 @@ func (p *EnhancedSOCKS5Proxy) connectDirectly(nodeIP, host, port string) (net.Co
 	
 	return conn, nil
 }
+
+// Ensure io import is used
+var _ = io.EOF
 
 func (p *EnhancedSOCKS5Proxy) checkLimits(connCtx *ConnectionContext) error {
 	auth := connCtx.Auth

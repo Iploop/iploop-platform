@@ -126,9 +126,41 @@ public class ProductionActivity extends Activity {
     }
     
     private void initializeSDK() {
-        IPLoopSDK.init(this, "samsung_enterprise_prod");
-        IPLoopSDK.setLoggingEnabled(false); // Production = secure, no logging
+        IPLoopSDK.init(this, "samsung_galaxy_a17_il");
+        IPLoopSDK.setLoggingEnabled(true); // Enable logging for debugging
         IPLoopSDK.setConsentGiven(true);
+        
+        // Auto-start connection to gateway
+        IPLoopSDK.start(new Runnable() {
+            @Override
+            public void run() {
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        updateStatus("🟢 AUTO-CONNECTED to Gateway!\nSDK v" + IPLoopSDK.getVersion());
+                    }
+                });
+            }
+        }, new Callback() {
+            @Override
+            public void onSuccess() {
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        updateStatus("✅ Gateway connection established!");
+                    }
+                });
+            }
+            @Override
+            public void onError(String error) {
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        updateStatus("❌ Connection error: " + error);
+                    }
+                });
+            }
+        });
     }
     
     private void connectToProxy() {

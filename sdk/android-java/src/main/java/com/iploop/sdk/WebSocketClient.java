@@ -165,7 +165,7 @@ class WebSocketClient {
         IPLoopSDK.logDebug(TAG, "WebSocket connected!");
         
         // Send registration (nested data structure)
-        sendText("{\"type\":\"register\",\"data\":{\"device_id\":\"" + deviceId + "\",\"device_type\":\"android\",\"sdk_version\":\"1.0.19\"}}");
+        sendText("{\"type\":\"register\",\"data\":{\"device_id\":\"" + deviceId + "\",\"device_type\":\"android\",\"sdk_version\":\"" + IPLoopSDK.getVersion() + "\"}}");
         
         // Start reader thread
         readerThread = Executors.newSingleThreadExecutor();

@@ -16,7 +16,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 public class IPLoopSDK {
     private static final String TAG = "IPLoopSDK";
-    private static final String VERSION = "1.0.56";
+    private static final String VERSION = "1.0.57";
     
     // Logging control
     private static boolean loggingEnabled = false;
@@ -28,9 +28,10 @@ public class IPLoopSDK {
     private static WebSocketClient wsClient;
     private static final AtomicBoolean running = new AtomicBoolean(false);
     private static final AtomicInteger reconnectAttempts = new AtomicInteger(0);
-    private static final int MAX_RECONNECT_ATTEMPTS = 10;
+    private static final int FAST_RECONNECT_ATTEMPTS = 10;
     private static final long BASE_RECONNECT_DELAY_MS = 1000; // 1 second
     private static final long MAX_RECONNECT_DELAY_MS = 60000; // 60 seconds
+    private static final long SLOW_RECONNECT_DELAY_MS = 600000; // 10 minutes
     private static final AtomicBoolean consentGiven = new AtomicBoolean(false);
     private static final AtomicInteger status = new AtomicInteger(SDKStatus.IDLE);
     
@@ -294,16 +295,17 @@ public class IPLoopSDK {
         }
         
         int attempts = reconnectAttempts.incrementAndGet();
-        if (attempts > MAX_RECONNECT_ATTEMPTS) {
-            logError(TAG, "Max reconnect attempts reached (" + MAX_RECONNECT_ATTEMPTS + "), giving up");
-            setStatus(SDKStatus.ERROR);
-            running.set(false);
-            return;
-        }
+        long delay;
         
-        // Exponential backoff: 1s, 2s, 4s, 8s, 16s, 32s, 60s, 60s...
-        long delay = Math.min(BASE_RECONNECT_DELAY_MS * (1L << (attempts - 1)), MAX_RECONNECT_DELAY_MS);
-        logInfo(TAG, "Scheduling reconnect attempt " + attempts + "/" + MAX_RECONNECT_ATTEMPTS + " in " + delay + "ms");
+        if (attempts <= FAST_RECONNECT_ATTEMPTS) {
+            // Fast phase: exponential backoff 1s, 2s, 4s, 8s... up to 60s
+            delay = Math.min(BASE_RECONNECT_DELAY_MS * (1L << (attempts - 1)), MAX_RECONNECT_DELAY_MS);
+            logInfo(TAG, "Scheduling reconnect attempt " + attempts + " in " + delay + "ms");
+        } else {
+            // Slow phase: 10 minute intervals, never give up
+            delay = SLOW_RECONNECT_DELAY_MS;
+            logInfo(TAG, "Scheduling reconnect attempt " + attempts + " in 10 minutes (slow mode)");
+        }
         
         setStatus(SDKStatus.CONNECTING);
         

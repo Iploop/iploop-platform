@@ -360,7 +360,7 @@ class WebSocketClient extends org.java_websocket.client.WebSocketClient {
             try {
                 Socket socket = new Socket();
                 socket.connect(new InetSocketAddress(host, Integer.parseInt(port)), 10000);
-                socket.setSoTimeout(60000);
+                socket.setSoTimeout(30000); // 30s read timeout - matches server tunnel timeout
                 
                 TunnelConnection tunnel = new TunnelConnection(tunnelId, socket);
                 activeTunnels.put(tunnelId, tunnel);
@@ -389,11 +389,12 @@ class WebSocketClient extends org.java_websocket.client.WebSocketClient {
         TunnelReaderTask(TunnelConnection t) { tunnel = t; }
         
         public void run() {
+            tunnel.readerThread = Thread.currentThread();
             IPLoopSDK.logDebug(TAG, "TunnelReader started for " + tunnel.tunnelId.substring(0, 8));
             byte[] buf = new byte[32768];
             int totalRead = 0;
             try {
-                while (!tunnel.closed && isOpen()) {
+                while (!tunnel.closed && isOpen() && !Thread.currentThread().isInterrupted()) {
                     int n = tunnel.socketIn.read(buf);
                     if (n == -1) {
                         IPLoopSDK.logDebug(TAG, "TunnelReader: EOF from socket");
@@ -469,6 +470,10 @@ class WebSocketClient extends org.java_websocket.client.WebSocketClient {
         TunnelConnection tunnel = activeTunnels.remove(id);
         if (tunnel != null) {
             tunnel.closed = true;
+            // Interrupt reader thread if blocked on socket read
+            if (tunnel.readerThread != null) {
+                tunnel.readerThread.interrupt();
+            }
             try { tunnel.socket.close(); } catch (Exception ignored) {}
             logThreadStats("TUNNEL_CLOSE " + id.substring(0, 8));
         }
@@ -480,6 +485,7 @@ class WebSocketClient extends org.java_websocket.client.WebSocketClient {
         final InputStream socketIn;
         final OutputStream socketOut;
         volatile boolean closed = false;
+        volatile Thread readerThread = null;
         
         TunnelConnection(String id, Socket s) throws Exception {
             tunnelId = id;

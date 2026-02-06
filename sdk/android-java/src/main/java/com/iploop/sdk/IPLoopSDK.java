@@ -16,7 +16,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 public class IPLoopSDK {
     private static final String TAG = "IPLoopSDK";
-    private static final String VERSION = "1.0.55";
+    private static final String VERSION = "1.0.56";
     
     // Logging control
     private static boolean loggingEnabled = false;
@@ -27,6 +27,10 @@ public class IPLoopSDK {
     private static Handler mainHandler;
     private static WebSocketClient wsClient;
     private static final AtomicBoolean running = new AtomicBoolean(false);
+    private static final AtomicInteger reconnectAttempts = new AtomicInteger(0);
+    private static final int MAX_RECONNECT_ATTEMPTS = 10;
+    private static final long BASE_RECONNECT_DELAY_MS = 1000; // 1 second
+    private static final long MAX_RECONNECT_DELAY_MS = 60000; // 60 seconds
     private static final AtomicBoolean consentGiven = new AtomicBoolean(false);
     private static final AtomicInteger status = new AtomicInteger(SDKStatus.IDLE);
     
@@ -251,6 +255,12 @@ public class IPLoopSDK {
                     
                     // Connect to WebSocket (blocking to ensure connection succeeds)
                     wsClient = new WebSocketClient(apiKey, appContext);
+                    wsClient.setOnDisconnectCallback(new Runnable() {
+                        @Override
+                        public void run() {
+                            scheduleReconnect();
+                        }
+                    });
                     wsClient.connectBlocking();
                     
                     setStatus(SDKStatus.RUNNING);
@@ -272,6 +282,80 @@ public class IPLoopSDK {
                 }
             }
         });
+    }
+    
+    /**
+     * Schedule a reconnection attempt with exponential backoff
+     */
+    private static void scheduleReconnect() {
+        if (!running.get()) {
+            logDebug(TAG, "Not running, skipping reconnect");
+            return;
+        }
+        
+        int attempts = reconnectAttempts.incrementAndGet();
+        if (attempts > MAX_RECONNECT_ATTEMPTS) {
+            logError(TAG, "Max reconnect attempts reached (" + MAX_RECONNECT_ATTEMPTS + "), giving up");
+            setStatus(SDKStatus.ERROR);
+            running.set(false);
+            return;
+        }
+        
+        // Exponential backoff: 1s, 2s, 4s, 8s, 16s, 32s, 60s, 60s...
+        long delay = Math.min(BASE_RECONNECT_DELAY_MS * (1L << (attempts - 1)), MAX_RECONNECT_DELAY_MS);
+        logInfo(TAG, "Scheduling reconnect attempt " + attempts + "/" + MAX_RECONNECT_ATTEMPTS + " in " + delay + "ms");
+        
+        setStatus(SDKStatus.CONNECTING);
+        
+        executor.submit(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    Thread.sleep(delay);
+                    doReconnect();
+                } catch (InterruptedException e) {
+                    logDebug(TAG, "Reconnect interrupted");
+                }
+            }
+        });
+    }
+    
+    /**
+     * Perform the actual reconnection
+     */
+    private static void doReconnect() {
+        if (!running.get()) {
+            logDebug(TAG, "Not running, aborting reconnect");
+            return;
+        }
+        
+        logInfo(TAG, "Attempting reconnect...");
+        
+        try {
+            // Close old client if exists
+            if (wsClient != null) {
+                try { wsClient.closeBlocking(); } catch (Exception ignored) {}
+            }
+            
+            // Create new client
+            wsClient = new WebSocketClient(apiKey, appContext);
+            wsClient.setOnDisconnectCallback(new Runnable() {
+                @Override
+                public void run() {
+                    scheduleReconnect();
+                }
+            });
+            wsClient.connectBlocking();
+            
+            // Success!
+            reconnectAttempts.set(0);
+            setStatus(SDKStatus.RUNNING);
+            logInfo(TAG, "Reconnected successfully!");
+            
+        } catch (Exception e) {
+            logError(TAG, "Reconnect failed: " + e.getMessage());
+            scheduleReconnect();
+        }
     }
     
     /**

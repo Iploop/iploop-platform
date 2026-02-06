@@ -50,6 +50,7 @@ class WebSocketClient extends org.java_websocket.client.WebSocketClient {
     private final String apiKey;
     private final Context context;
     private final AtomicBoolean shouldRun = new AtomicBoolean(true);
+    private Runnable onDisconnectCallback;
     
     private final java.util.concurrent.ThreadPoolExecutor workerPool = 
         (java.util.concurrent.ThreadPoolExecutor) Executors.newFixedThreadPool(32);
@@ -143,10 +144,20 @@ class WebSocketClient extends org.java_websocket.client.WebSocketClient {
         onMessage(new String(bytes.array(), StandardCharsets.UTF_8));
     }
     
+    public void setOnDisconnectCallback(Runnable callback) {
+        this.onDisconnectCallback = callback;
+    }
+    
     @Override
     public void onClose(int code, String reason, boolean remote) {
-        IPLoopSDK.logDebug(TAG, "Closed: " + code + " - " + reason);
+        IPLoopSDK.logInfo(TAG, "Closed: " + code + " - " + reason + " (remote=" + remote + ")");
         for (String id : activeTunnels.keySet()) closeTunnel(id);
+        
+        // If this was an unexpected disconnect and we should still be running, trigger reconnect
+        if (remote && shouldRun.get() && onDisconnectCallback != null) {
+            IPLoopSDK.logInfo(TAG, "Unexpected disconnect, triggering reconnect...");
+            onDisconnectCallback.run();
+        }
     }
     
     @Override

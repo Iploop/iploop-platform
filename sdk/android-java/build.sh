@@ -4,7 +4,7 @@ set -e
 SDK_DIR="$(cd "$(dirname "$0")" && pwd)"
 SRC_DIR="$SDK_DIR/src/main/java"
 BUILD_DIR="$SDK_DIR/build"
-VERSION="1.0.55"
+VERSION="1.0.56"
 OUTPUT="$BUILD_DIR/iploop-sdk-${VERSION}.jar"
 DEX_OUTPUT="$BUILD_DIR/iploop-sdk-${VERSION}-bundle.jar"
 

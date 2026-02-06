@@ -16,7 +16,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 public class IPLoopSDK {
     private static final String TAG = "IPLoopSDK";
-    private static final String VERSION = "1.0.52";
+    private static final String VERSION = "1.0.53";
     
     // Logging control
     private static boolean loggingEnabled = false;

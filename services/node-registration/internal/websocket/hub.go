@@ -234,7 +234,7 @@ func (c *Client) readPump() {
 		c.conn.Close()
 	}()
 
-	c.conn.SetReadLimit(65536) // 64KB - enough for registration messages
+	c.conn.SetReadLimit(524288) // 512KB - for proxy responses with base64 payload
 	c.conn.SetReadDeadline(time.Now().Add(60 * time.Second))
 	c.conn.SetPongHandler(func(string) error {
 		c.conn.SetReadDeadline(time.Now().Add(60 * time.Second))

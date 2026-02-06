@@ -1,6 +1,7 @@
 package proxy
 
 import (
+	"bufio"
 	"bytes"
 	"encoding/base64"
 	"encoding/json"
@@ -207,7 +208,7 @@ func (p *HTTPProxy) handleConnect(w http.ResponseWriter, r *http.Request, node *
 }
 
 func (p *HTTPProxy) handleHTTP(w http.ResponseWriter, r *http.Request, node *nodepool.Node, auth *auth.ProxyAuth) {
-	// Use internal HTTP API to node-registration (no WebSocket per request)
+	// Use WebSocket tunnel (same as CONNECT) - raw TCP streaming, no base64
 	targetURL := r.URL
 	if !targetURL.IsAbs() {
 		http.Error(w, "Absolute URL required", http.StatusBadRequest)
@@ -217,98 +218,137 @@ func (p *HTTPProxy) handleHTTP(w http.ResponseWriter, r *http.Request, node *nod
 	host := targetURL.Hostname()
 	port := targetURL.Port()
 	if port == "" {
-		if targetURL.Scheme == "https" {
-			port = "443"
-		} else {
-			port = "80"
-		}
+		port = "80"
 	}
 
-	p.logger.Infof("HTTP request to %s via node %s (%s)", targetURL.String(), node.ID, node.IPAddress)
+	p.logger.Infof("HTTP tunnel request to %s via node %s (%s)", targetURL.String(), node.ID, node.IPAddress)
 
-	// Read request body
-	var bodyBytes []byte
-	if r.Body != nil {
-		bodyBytes, _ = io.ReadAll(r.Body)
+	// Connect to node-registration tunnel WebSocket
+	tunnelURL := strings.Replace(p.nodeRegURL, "http://", "ws://", 1)
+	tunnelURL = strings.Replace(tunnelURL, "https://", "wss://", 1)
+	tunnelURL = fmt.Sprintf("%s/internal/tunnel?node_id=%s&host=%s&port=%s", tunnelURL, node.ID, host, port)
+
+	dialer := websocket.Dialer{
+		HandshakeTimeout: 10 * time.Second,
 	}
+	wsConn, _, err := dialer.Dial(tunnelURL, nil)
+	if err != nil {
+		p.logger.Errorf("Failed to connect to tunnel WebSocket: %v", err)
+		http.Error(w, "Failed to establish tunnel", http.StatusBadGateway)
+		return
+	}
+	defer wsConn.Close()
 
-	// Build headers map (exclude proxy-specific)
-	headers := make(map[string]string)
+	// Build raw HTTP request
+	var reqBuf bytes.Buffer
+	
+	// Request line: GET /path HTTP/1.1
+	path := targetURL.RequestURI()
+	if path == "" {
+		path = "/"
+	}
+	reqBuf.WriteString(fmt.Sprintf("%s %s HTTP/1.1\r\n", r.Method, path))
+	
+	// Host header
+	reqBuf.WriteString(fmt.Sprintf("Host: %s\r\n", targetURL.Host))
+	
+	// Copy other headers (excluding proxy-specific)
 	for name, values := range r.Header {
 		lowerName := strings.ToLower(name)
 		if lowerName == "proxy-authorization" || lowerName == "proxy-connection" {
 			continue
 		}
-		if len(values) > 0 {
-			headers[name] = values[0]
+		for _, v := range values {
+			reqBuf.WriteString(fmt.Sprintf("%s: %s\r\n", name, v))
 		}
 	}
-	headers["Host"] = targetURL.Host
-
-	// Build internal proxy request
-	proxyReq := ProxyRequestPayload{
-		NodeID:    node.ID,
-		Host:      host,
-		Port:      port,
-		Method:    r.Method,
-		URL:       targetURL.String(),
-		Headers:   headers,
-		TimeoutMs: 30000,
-	}
-	if len(bodyBytes) > 0 {
-		proxyReq.Body = base64.StdEncoding.EncodeToString(bodyBytes)
-	}
-
-	// Call node-registration internal API
-	reqJSON, _ := json.Marshal(proxyReq)
-	apiURL := p.nodeRegURL + "/internal/proxy"
 	
-	resp, err := p.httpClient.Post(apiURL, "application/json", bytes.NewReader(reqJSON))
+	// Read request body
+	var bodyBytes []byte
+	if r.Body != nil {
+		bodyBytes, _ = io.ReadAll(r.Body)
+	}
+	
+	// Add Content-Length if body exists
+	if len(bodyBytes) > 0 {
+		reqBuf.WriteString(fmt.Sprintf("Content-Length: %d\r\n", len(bodyBytes)))
+	}
+	
+	// End headers
+	reqBuf.WriteString("\r\n")
+	
+	// Add body
+	if len(bodyBytes) > 0 {
+		reqBuf.Write(bodyBytes)
+	}
+
+	// Send raw HTTP request through tunnel
+	if err := wsConn.WriteMessage(websocket.BinaryMessage, reqBuf.Bytes()); err != nil {
+		p.logger.Errorf("Failed to send request through tunnel: %v", err)
+		http.Error(w, "Failed to send request", http.StatusBadGateway)
+		return
+	}
+	
+	bytesUp := int64(reqBuf.Len())
+
+	// Read response from tunnel
+	var respBuf bytes.Buffer
+	bytesDown := int64(0)
+	
+	for {
+		wsConn.SetReadDeadline(time.Now().Add(60 * time.Second))
+		messageType, data, err := wsConn.ReadMessage()
+		if err != nil {
+			if websocket.IsCloseError(err, websocket.CloseNormalClosure, websocket.CloseGoingAway) {
+				break
+			}
+			if respBuf.Len() == 0 {
+				p.logger.Errorf("Failed to read response from tunnel: %v", err)
+				http.Error(w, "Failed to read response", http.StatusBadGateway)
+				return
+			}
+			break
+		}
+		if messageType == websocket.CloseMessage {
+			break
+		}
+		if messageType == websocket.BinaryMessage || messageType == websocket.TextMessage {
+			respBuf.Write(data)
+			bytesDown += int64(len(data))
+		}
+	}
+
+	// Parse HTTP response
+	respReader := bufio.NewReader(&respBuf)
+	httpResp, err := http.ReadResponse(respReader, r)
 	if err != nil {
-		p.logger.Errorf("Internal proxy API call failed: %v", err)
-		http.Error(w, "Failed to route request", http.StatusBadGateway)
+		p.logger.Errorf("Failed to parse HTTP response: %v", err)
+		// Fallback: write raw response
+		w.WriteHeader(http.StatusBadGateway)
+		w.Write(respBuf.Bytes())
 		return
 	}
-	defer resp.Body.Close()
-
-	// Parse response
-	var proxyResp ProxyResponsePayload
-	if err := json.NewDecoder(resp.Body).Decode(&proxyResp); err != nil {
-		p.logger.Errorf("Failed to decode proxy response: %v", err)
-		http.Error(w, "Invalid proxy response", http.StatusBadGateway)
-		return
-	}
-
-	if !proxyResp.Success {
-		p.logger.Warnf("Proxy request failed: %s", proxyResp.Error)
-		http.Error(w, proxyResp.Error, http.StatusBadGateway)
-		return
-	}
+	defer httpResp.Body.Close()
 
 	// Copy response headers
-	for name, value := range proxyResp.Headers {
-		w.Header().Set(name, value)
+	for name, values := range httpResp.Header {
+		for _, v := range values {
+			w.Header().Add(name, v)
+		}
 	}
 
 	// Write status code
-	if proxyResp.StatusCode > 0 {
-		w.WriteHeader(proxyResp.StatusCode)
-	}
+	w.WriteHeader(httpResp.StatusCode)
 
-	// Write response body
-	if proxyResp.Body != "" {
-		bodyData, err := base64.StdEncoding.DecodeString(proxyResp.Body)
-		if err == nil {
-			w.Write(bodyData)
-		}
-	}
+	// Copy response body
+	bodyWritten, _ := io.Copy(w, httpResp.Body)
 
 	// Record usage
-	totalBytes := int64(len(reqJSON)) + proxyResp.BytesRead + proxyResp.BytesWrite
+	totalBytes := bytesUp + bytesDown
 	p.authenticator.RecordUsage(auth.Customer.ID, totalBytes, node.ID, true)
 
-	p.logger.Infof("HTTP request completed: %s via node %s, status=%d, latency=%dms", 
-		targetURL.String(), node.ID, proxyResp.StatusCode, proxyResp.LatencyMs)
+	p.logger.Infof("HTTP tunnel completed: %s via node %s, status=%d, bytes: up=%d down=%d body=%d", 
+		targetURL.String(), node.ID, httpResp.StatusCode, bytesUp, bytesDown, bodyWritten)
 }
 
 // ProxyRequestPayload for internal proxy API

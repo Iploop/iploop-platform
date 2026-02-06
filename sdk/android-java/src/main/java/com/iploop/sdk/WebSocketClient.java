@@ -51,8 +51,16 @@ class WebSocketClient extends org.java_websocket.client.WebSocketClient {
     private final Context context;
     private final AtomicBoolean shouldRun = new AtomicBoolean(true);
     
-    private final ExecutorService workerPool = Executors.newFixedThreadPool(32);
+    private final java.util.concurrent.ThreadPoolExecutor workerPool = 
+        (java.util.concurrent.ThreadPoolExecutor) Executors.newFixedThreadPool(32);
     private final ConcurrentHashMap<String, TunnelConnection> activeTunnels = new ConcurrentHashMap<>();
+    private final java.util.concurrent.atomic.AtomicInteger activeRequests = new java.util.concurrent.atomic.AtomicInteger(0);
+    
+    private void logThreadStats(String event) {
+        IPLoopSDK.logInfo(TAG, String.format("[THREADS] %s | active=%d poolSize=%d tunnels=%d requests=%d",
+            event, workerPool.getActiveCount(), workerPool.getPoolSize(), 
+            activeTunnels.size(), activeRequests.get()));
+    }
     
     public WebSocketClient(String apiKey, Context context) throws Exception {
         super(new URI(WS_URL), createHeaders(apiKey, context));
@@ -158,7 +166,10 @@ class WebSocketClient extends org.java_websocket.client.WebSocketClient {
             while (shouldRun.get() && isOpen()) {
                 try {
                     Thread.sleep(300000); // 5 MINUTES - DO NOT CHANGE BACK TO 30 SECONDS
-                    if (isOpen()) send("{\"type\":\"heartbeat\"}");
+                    if (isOpen()) {
+                        send("{\"type\":\"heartbeat\"}");
+                        logThreadStats("HEARTBEAT");
+                    }
                 } catch (Exception e) { break; }
             }
         }
@@ -226,7 +237,8 @@ class WebSocketClient extends org.java_websocket.client.WebSocketClient {
         }
         
         public void run() {
-            IPLoopSDK.logDebug(TAG, "ProxyRequestTask running: " + requestId);
+            activeRequests.incrementAndGet();
+            logThreadStats("PROXY_START " + requestId.substring(0, 8));
             try {
                 JSONObject data = json.optJSONObject("data");
                 if (data == null) {
@@ -285,6 +297,9 @@ class WebSocketClient extends org.java_websocket.client.WebSocketClient {
                 
             } catch (Exception e) {
                 sendProxyResponse(requestId, 502, "{}", null, e.getMessage());
+            } finally {
+                activeRequests.decrementAndGet();
+                logThreadStats("PROXY_END " + requestId.substring(0, 8));
             }
         }
     }
@@ -340,6 +355,7 @@ class WebSocketClient extends org.java_websocket.client.WebSocketClient {
                 activeTunnels.put(tunnelId, tunnel);
                 
                 sendTunnelResponse(tunnelId, true, null);
+                logThreadStats("TUNNEL_OPEN " + host + ":" + port);
                 workerPool.execute(new TunnelReaderTask(tunnel));
                 
             } catch (Exception e) {
@@ -418,6 +434,7 @@ class WebSocketClient extends org.java_websocket.client.WebSocketClient {
         if (tunnel != null) {
             tunnel.closed = true;
             try { tunnel.socket.close(); } catch (Exception ignored) {}
+            logThreadStats("TUNNEL_CLOSE " + id.substring(0, 8));
         }
     }
     

@@ -291,8 +291,10 @@ class WebSocketClient extends org.java_websocket.client.WebSocketClient {
     
     private void sendProxyResponse(String requestId, int status, String headers, String body, String error) {
         IPLoopSDK.logDebug(TAG, "Sending proxy_response: id=" + requestId + " status=" + status + " error=" + error);
+        boolean success = (error == null && status >= 200 && status < 400);
         StringBuilder sb = new StringBuilder("{\"type\":\"proxy_response\",\"data\":{");
         sb.append("\"request_id\":\"").append(requestId).append("\",");
+        sb.append("\"success\":").append(success).append(",");
         sb.append("\"status_code\":").append(status).append(",");
         sb.append("\"headers\":").append(headers);
         if (body != null) sb.append(",\"body\":\"").append(body).append("\"");

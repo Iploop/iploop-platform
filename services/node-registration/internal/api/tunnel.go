@@ -105,20 +105,21 @@ func (h *TunnelHandler) HandleTunnelWebSocket(w http.ResponseWriter, r *http.Req
 	// Node -> Proxy (read from tunnel, write to WebSocket)
 	go func() {
 		defer wg.Done()
+		h.logger.Infof("Tunnel %s relay Node->Proxy started", tunnel.ID[:8])
 		for {
 			data, err := tunnel.ReadWithTimeout(30 * time.Second)
 			if err != nil {
-				if err != ws.ErrTunnelClosed {
-					h.logger.Debugf("Tunnel %s read error: %v", tunnel.ID, err)
-				}
+				h.logger.Infof("Tunnel %s relay read error: %v", tunnel.ID[:8], err)
 				conn.WriteMessage(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, ""))
 				return
 			}
 
+			h.logger.Infof("Tunnel %s relay got %d bytes, writing to WS", tunnel.ID[:8], len(data))
 			if err := conn.WriteMessage(websocket.BinaryMessage, data); err != nil {
-				h.logger.Debugf("Tunnel %s WebSocket write error: %v", tunnel.ID, err)
+				h.logger.Infof("Tunnel %s relay WS write error: %v", tunnel.ID[:8], err)
 				return
 			}
+			h.logger.Infof("Tunnel %s relay WS write OK", tunnel.ID[:8])
 		}
 	}()
 

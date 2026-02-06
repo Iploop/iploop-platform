@@ -378,39 +378,60 @@ class WebSocketClient extends org.java_websocket.client.WebSocketClient {
         TunnelReaderTask(TunnelConnection t) { tunnel = t; }
         
         public void run() {
+            IPLoopSDK.logDebug(TAG, "TunnelReader started for " + tunnel.tunnelId.substring(0, 8));
             byte[] buf = new byte[32768];
+            int totalRead = 0;
             try {
                 while (!tunnel.closed && isOpen()) {
                     int n = tunnel.socketIn.read(buf);
-                    if (n == -1) break;
+                    if (n == -1) {
+                        IPLoopSDK.logDebug(TAG, "TunnelReader: EOF from socket");
+                        break;
+                    }
                     if (n > 0) {
+                        totalRead += n;
+                        IPLoopSDK.logDebug(TAG, "TunnelReader: read " + n + " bytes, total=" + totalRead);
                         byte[] data = new byte[n];
                         System.arraycopy(buf, 0, data, 0, n);
                         sendTunnelData(tunnel.tunnelId, data, false);
                     }
                 }
-            } catch (Exception ignored) {}
+            } catch (Exception e) {
+                IPLoopSDK.logDebug(TAG, "TunnelReader exception: " + e.getMessage());
+            }
+            IPLoopSDK.logDebug(TAG, "TunnelReader done, total=" + totalRead);
             sendTunnelData(tunnel.tunnelId, new byte[0], true);
             closeTunnel(tunnel.tunnelId);
         }
     }
     
     private void sendTunnelData(String id, byte[] data, boolean eof) {
+        IPLoopSDK.logDebug(TAG, "sendTunnelData: id=" + id.substring(0,8) + " bytes=" + data.length + " eof=" + eof);
         StringBuilder sb = new StringBuilder("{\"type\":\"tunnel_data\",\"data\":{");
         sb.append("\"tunnel_id\":\"").append(id).append("\",");
         if (data.length > 0) sb.append("\"data\":\"").append(Base64.encodeToString(data, Base64.NO_WRAP)).append("\",");
         sb.append("\"eof\":").append(eof).append("}}");
-        try { send(sb.toString()); } catch (Exception ignored) {}
+        try { 
+            send(sb.toString()); 
+            IPLoopSDK.logDebug(TAG, "sendTunnelData: sent OK, msgLen=" + sb.length());
+        } catch (Exception e) {
+            IPLoopSDK.logError(TAG, "sendTunnelData FAILED: " + e.getMessage());
+        }
     }
     
     private void handleTunnelData(JSONObject json) {
         try {
             JSONObject data = json.getJSONObject("data");
             String id = data.getString("tunnel_id");
+            IPLoopSDK.logDebug(TAG, "tunnel_data received for " + id.substring(0, 8));
             TunnelConnection tunnel = activeTunnels.get(id);
-            if (tunnel == null || tunnel.closed) return;
+            if (tunnel == null || tunnel.closed) {
+                IPLoopSDK.logDebug(TAG, "tunnel_data: tunnel not found or closed");
+                return;
+            }
             
             if (data.optBoolean("eof", false)) {
+                IPLoopSDK.logDebug(TAG, "tunnel_data: EOF received");
                 closeTunnel(id);
                 return;
             }
@@ -418,10 +439,14 @@ class WebSocketClient extends org.java_websocket.client.WebSocketClient {
             String b64 = data.optString("data", "");
             if (!b64.isEmpty()) {
                 byte[] bytes = Base64.decode(b64, Base64.NO_WRAP);
+                IPLoopSDK.logDebug(TAG, "tunnel_data: writing " + bytes.length + " bytes to socket");
                 tunnel.socketOut.write(bytes);
                 tunnel.socketOut.flush();
+                IPLoopSDK.logDebug(TAG, "tunnel_data: write complete");
             }
-        } catch (Exception ignored) {}
+        } catch (Exception e) {
+            IPLoopSDK.logError(TAG, "tunnel_data error: " + e.getMessage());
+        }
     }
     
     private void handleTunnelClose(JSONObject json) {

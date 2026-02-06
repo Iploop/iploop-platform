@@ -291,23 +291,29 @@ func (p *HTTPProxy) handleHTTP(w http.ResponseWriter, r *http.Request, node *nod
 	
 	bytesUp := int64(reqBuf.Len())
 
-	// Read response from tunnel
+	// Read response from tunnel - for HTTP we expect a single response chunk
 	var respBuf bytes.Buffer
 	bytesDown := int64(0)
 	
+	// First read - wait for response with longer timeout
+	wsConn.SetReadDeadline(time.Now().Add(60 * time.Second))
+	messageType, data, err := wsConn.ReadMessage()
+	if err != nil {
+		p.logger.Errorf("Failed to read response from tunnel: %v", err)
+		http.Error(w, "Failed to read response", http.StatusBadGateway)
+		return
+	}
+	if messageType == websocket.BinaryMessage || messageType == websocket.TextMessage {
+		respBuf.Write(data)
+		bytesDown += int64(len(data))
+	}
+
+	// Try to read more with short timeout (for chunked responses)
 	for {
-		wsConn.SetReadDeadline(time.Now().Add(60 * time.Second))
+		wsConn.SetReadDeadline(time.Now().Add(500 * time.Millisecond))
 		messageType, data, err := wsConn.ReadMessage()
 		if err != nil {
-			if websocket.IsCloseError(err, websocket.CloseNormalClosure, websocket.CloseGoingAway) {
-				break
-			}
-			if respBuf.Len() == 0 {
-				p.logger.Errorf("Failed to read response from tunnel: %v", err)
-				http.Error(w, "Failed to read response", http.StatusBadGateway)
-				return
-			}
-			break
+			break // Timeout or close - we have enough data
 		}
 		if messageType == websocket.CloseMessage {
 			break

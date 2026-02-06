@@ -215,6 +215,7 @@ func (tm *TunnelManager) HandleTunnelResponse(resp *TunnelOpenResponse) {
 
 // HandleTunnelData handles incoming data from node
 func (tm *TunnelManager) HandleTunnelData(data *TunnelDataMessage) {
+	tm.logger.Infof("HandleTunnelData: tunnel=%s eof=%v dataLen=%d", data.TunnelID[:8], data.EOF, len(data.Data))
 	tunnel := tm.GetTunnel(data.TunnelID)
 	if tunnel == nil {
 		tm.logger.Warnf("Received data for unknown tunnel: %s", data.TunnelID)
@@ -234,11 +235,12 @@ func (tm *TunnelManager) HandleTunnelData(data *TunnelDataMessage) {
 		return
 	}
 
-	tm.logger.Debugf("Tunnel %s received %d bytes from SDK", data.TunnelID, len(decoded))
+	tm.logger.Infof("Tunnel %s decoded %d bytes from SDK", data.TunnelID[:8], len(decoded))
 
 	// Non-blocking send to data channel
 	select {
 	case tunnel.DataCh <- decoded:
+		tm.logger.Infof("Tunnel %s forwarded to DataCh OK", data.TunnelID[:8])
 		tm.logger.Debugf("Tunnel %s forwarded %d bytes to DataCh", data.TunnelID, len(decoded))
 	default:
 		tm.logger.Warnf("Tunnel %s data channel full, dropping %d bytes", data.TunnelID, len(decoded))

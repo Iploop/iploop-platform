@@ -360,7 +360,7 @@ class WebSocketClient extends org.java_websocket.client.WebSocketClient {
             try {
                 Socket socket = new Socket();
                 socket.connect(new InetSocketAddress(host, Integer.parseInt(port)), 10000);
-                socket.setSoTimeout(30000); // 30s read timeout - matches server tunnel timeout
+                socket.setSoTimeout(15000); // 15s read timeout - quick dead connection detection
                 
                 TunnelConnection tunnel = new TunnelConnection(tunnelId, socket);
                 activeTunnels.put(tunnelId, tunnel);

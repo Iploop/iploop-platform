@@ -1,0 +1,33 @@
+{
+  "lastUpdated": "2026-02-05",
+  "overview": {
+    "totalRevenue": 938324.73,
+    "totalPaid": 463877.21,
+    "pending": 5285.15,
+    "weeklyEarnings": 8266.51
+  },
+  "partners": [
+    {"name": "HoneyGain", "nodes": 40035, "status": "active", "monthlyRevenue": 12500},
+    {"name": "BarakTv", "nodes": 38035, "status": "active", "monthlyRevenue": 11200},
+    {"name": "SOAX", "nodes": 37629, "status": "active", "monthlyRevenue": 1813, "lastPayment": "2026-02-05", "currency": "EUR"},
+    {"name": "PacketSDK", "nodes": 21116, "status": "active", "monthlyRevenue": 6800},
+    {"name": "Infatica", "nodes": 16146, "status": "active", "monthlyRevenue": 5200},
+    {"name": "BigMama", "nodes": 13243, "status": "pending", "monthlyRevenue": 3925, "pendingPayment": true},
+    {"name": "ProxiesGG", "nodes": 6330, "status": "active", "monthlyRevenue": 2100},
+    {"name": "IPGoGo", "nodes": 148, "status": "active", "monthlyRevenue": 50}
+  ],
+  "infrastructure": {
+    "desktopOnline": 118620,
+    "windowsOnline": 74203,
+    "macOnline": 44417,
+    "androidOnline": 111980,
+    "sdkTotal": 172682,
+    "bigmamaTotal": 256227
+  },
+  "recentPayments": [
+    {"date": "2026-02-05", "partner": "SOAX", "amount": 1813, "currency": "EUR", "status": "paid"},
+    {"date": "2026-01-19", "partner": "BigMama", "amount": 3925, "currency": "USD", "status": "pending"},
+    {"date": "2026-01-15", "partner": "HoneyGain", "amount": 12500, "currency": "USD", "status": "paid"},
+    {"date": "2026-01-10", "partner": "Infatica", "amount": 5200, "currency": "USD", "status": "paid"}
+  ]
+}

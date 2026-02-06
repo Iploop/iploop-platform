@@ -16,7 +16,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 public class IPLoopSDK {
     private static final String TAG = "IPLoopSDK";
-    private static final String VERSION = "1.0.21";
+    private static final String VERSION = "1.0.52";
     
     // Logging control
     private static boolean loggingEnabled = false;
@@ -249,9 +249,9 @@ public class IPLoopSDK {
                     running.set(true);
                     setStatus(SDKStatus.CONNECTING);
                     
-                    // Connect to WebSocket
+                    // Connect to WebSocket (blocking to ensure connection succeeds)
                     wsClient = new WebSocketClient(apiKey, appContext);
-                    wsClient.connect();
+                    wsClient.connectBlocking();
                     
                     setStatus(SDKStatus.RUNNING);
                     logInfo(TAG, "SDK started successfully");
@@ -546,6 +546,37 @@ public class IPLoopSDK {
                     callback.onError(error);
                 }
             });
+        }
+    }
+    
+    /**
+     * Get the current thread count for this app's process.
+     * Useful for detecting thread leaks.
+     */
+    public static int getThreadCount() {
+        ThreadGroup rootGroup = Thread.currentThread().getThreadGroup();
+        while (rootGroup.getParent() != null) {
+            rootGroup = rootGroup.getParent();
+        }
+        return rootGroup.activeCount();
+    }
+    
+    /**
+     * Log the current thread count with a label.
+     * Always logs regardless of loggingEnabled setting (for diagnostics).
+     */
+    public static void logThreadCount(String label) {
+        int count = getThreadCount();
+        Log.i(TAG, "[THREADS] " + label + ": " + count + " active threads");
+    }
+    
+    /**
+     * Log thread count only if logging is enabled.
+     */
+    static void logThreadCountDebug(String label) {
+        if (loggingEnabled) {
+            int count = getThreadCount();
+            Log.d(TAG, "[THREADS] " + label + ": " + count + " active threads");
         }
     }
 }

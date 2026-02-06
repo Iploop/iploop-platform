@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ultron System - IPLoop</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            primary: '#6366f1',
+            accent: '#4f46e5',
+            card: '#1f2937',
+            border: '#374151',
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body { font-family: 'Inter', -apple-system, sans-serif; }
+    .sidebar { width: 256px; transition: transform 0.3s ease; position: fixed; z-index: 50; transform: translateX(-256px); }
+    .sidebar.open { transform: translateX(0); }
+    .main-content { margin-left: 0; transition: margin-left 0.3s ease; }
+    .stat-card { transition: all 0.2s; }
+    .stat-card:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(0,0,0,0.3); }
+    .gradient-text { background: linear-gradient(135deg, #6366f1, #8b5cf6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .pulse-dot { animation: pulse 2s infinite; }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+    .menu-toggle { display: flex; position: fixed; top: 16px; left: 16px; z-index: 60; }
+    .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 40; }
+    .overlay.active { display: block; }
+    
+    @media (min-width: 1024px) {
+      .sidebar { transform: translateX(0); }
+      .main-content { margin-left: 256px; }
+      .menu-toggle { display: none; }
+    }
+    
+    @media (max-width: 768px) {
+      .grid-cols-4 { grid-template-columns: repeat(2, 1fr) !important; }
+      .grid-cols-3 { grid-template-columns: repeat(1, 1fr) !important; }
+      .grid-cols-2 { grid-template-columns: repeat(1, 1fr) !important; }
+      .main-content > div { padding: 16px !important; padding-top: 60px !important; }
+    }
+  </style>
+</head>
+<body class="bg-gray-900 text-gray-100 min-h-screen">
+  <!-- Mobile Menu Toggle -->
+  <button onclick="toggleSidebar()" class="menu-toggle items-center justify-center w-10 h-10 bg-gray-800 rounded-lg border border-gray-700">
+    <i class="fas fa-bars text-gray-300"></i>
+  </button>
+  
+  <!-- Overlay -->
+  <div class="overlay" id="overlay" onclick="toggleSidebar()"></div>
+  
+  <!-- Sidebar -->
+  <aside class="sidebar fixed inset-y-0 left-0 bg-gray-800 border-r border-gray-700 flex flex-col z-50" id="sidebar">
+    <div class="flex items-center justify-between px-4 py-5 border-b border-gray-700">
+      <div class="flex items-center">
+        <i class="fas fa-robot text-primary text-2xl"></i>
+        <span class="ml-3 text-xl font-bold">Ultron</span>
+      </div>
+      <button onclick="toggleSidebar()" class="lg:hidden w-8 h-8 flex items-center justify-center text-gray-400 hover:text-white">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+    
+    <nav class="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
+      <a href="/" class="flex items-center px-3 py-2 text-sm font-medium rounded-lg text-gray-300 hover:bg-gray-700">
+        <i class="fas fa-chart-line w-5 mr-3"></i> Test Dashboard
+      </a>
+      <a href="/ultron.html" class="flex items-center px-3 py-2 text-sm font-medium rounded-lg bg-primary text-white">
+        <i class="fas fa-microchip w-5 mr-3"></i> System Specs
+      </a>
+      <a href="#skills" class="flex items-center px-3 py-2 text-sm font-medium rounded-lg text-gray-300 hover:bg-gray-700">
+        <i class="fas fa-wand-magic-sparkles w-5 mr-3"></i> Skills
+      </a>
+      <a href="#integrations" class="flex items-center px-3 py-2 text-sm font-medium rounded-lg text-gray-300 hover:bg-gray-700">
+        <i class="fas fa-plug w-5 mr-3"></i> Integrations
+      </a>
+      <a href="#recommendations" class="flex items-center px-3 py-2 text-sm font-medium rounded-lg text-gray-300 hover:bg-gray-700">
+        <i class="fas fa-lightbulb w-5 mr-3"></i> Recommendations
+      </a>
+    </nav>
+    
+    <div class="px-4 py-4 border-t border-gray-700">
+      <div class="flex items-center">
+        <div class="w-3 h-3 rounded-full bg-green-500 pulse-dot mr-2"></div>
+        <span class="text-sm text-green-400">System Online</span>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="main-content min-h-screen">
+    <div class="p-4 md:p-8 pt-16 md:pt-8">
+      <!-- Header -->
+      <div class="flex justify-between items-start mb-8">
+        <div>
+          <h1 class="text-3xl font-bold gradient-text">Ultron System</h1>
+          <p class="text-gray-400 mt-2">AI Agent Infrastructure & Capabilities Overview</p>
+        </div>
+        <div class="text-right">
+          <p class="text-sm text-gray-400">Last Updated</p>
+          <p class="text-sm font-medium" id="lastUpdate">--</p>
+        </div>
+      </div>
+
+      <!-- Model Specs Section -->
+      <section class="mb-10">
+        <h2 class="text-xl font-semibold mb-4 flex items-center">
+          <i class="fas fa-brain text-purple-400 mr-3"></i> Model Specifications
+        </h2>
+        <div class="grid grid-cols-4 gap-4">
+          <div class="stat-card bg-gray-800 rounded-xl p-5 border border-gray-700">
+            <div class="flex items-center justify-between mb-3">
+              <span class="text-gray-400 text-sm">Model</span>
+              <i class="fas fa-microchip text-purple-400"></i>
+            </div>
+            <p class="text-xl font-bold">Claude Opus 4.5</p>
+            <p class="text-xs text-gray-500 mt-1">anthropic/claude-opus-4-5</p>
+          </div>
+          <div class="stat-card bg-gray-800 rounded-xl p-5 border border-gray-700">
+            <div class="flex items-center justify-between mb-3">
+              <span class="text-gray-400 text-sm">Context Window</span>
+              <i class="fas fa-memory text-blue-400"></i>
+            </div>
+            <p class="text-xl font-bold">200K</p>
+            <p class="text-xs text-gray-500 mt-1">tokens max context</p>
+          </div>
+          <div class="stat-card bg-gray-800 rounded-xl p-5 border border-gray-700">
+            <div class="flex items-center justify-between mb-3">
+              <span class="text-gray-400 text-sm">Thinking Mode</span>
+              <i class="fas fa-lightbulb text-yellow-400"></i>
+            </div>
+            <p class="text-xl font-bold">Low</p>
+            <p class="text-xs text-gray-500 mt-1">Extended reasoning available</p>
+          </div>
+          <div class="stat-card bg-gray-800 rounded-xl p-5 border border-gray-700">
+            <div class="flex items-center justify-between mb-3">
+              <span class="text-gray-400 text-sm">Runtime</span>
+              <i class="fas fa-server text-green-400"></i>
+            </div>
+            <p class="text-xl font-bold">Clawdbot</p>
+            <p class="text-xs text-gray-500 mt-1">Gateway-based agent</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Hardware Section -->
+      <section class="mb-10">
+        <h2 class="text-xl font-semibold mb-4 flex items-center">
+          <i class="fas fa-server text-blue-400 mr-3"></i> Hardware Infrastructure
+        </h2>
+        <div class="grid grid-cols-3 gap-4">
+          <div class="stat-card bg-gray-800 rounded-xl p-5 border border-gray-700">
+            <div class="flex items-center justify-between mb-3">
+              <span class="text-gray-400 text-sm">Host</span>
+              <i class="fas fa-cloud text-cyan-400"></i>
+            </div>
+            <p class="text-lg font-bold" id="hostname">--</p>
+            <p class="text-xs text-gray-500 mt-1">DigitalOcean Droplet</p>
+          </div>
+          <div class="stat-card bg-gray-800 rounded-xl p-5 border border-gray-700">
+            <div class="flex items-center justify-between mb-3">
+              <span class="text-gray-400 text-sm">Operating System</span>
+              <i class="fab fa-linux text-orange-400"></i>
+            </div>
+            <p class="text-lg font-bold" id="os">--</p>
+            <p class="text-xs text-gray-500 mt-1" id="kernel">--</p>
+          </div>
+          <div class="stat-card bg-gray-800 rounded-xl p-5 border border-gray-700">
+            <div class="flex items-center justify-between mb-3">
+              <span class="text-gray-400 text-sm">Node.js</span>
+              <i class="fab fa-node-js text-green-400"></i>
+            </div>
+            <p class="text-lg font-bold" id="nodeVersion">--</p>
+            <p class="text-xs text-gray-500 mt-1">Runtime environment</p>
+          </div>
+        </div>
+        
+        <!-- Resource Usage -->
+        <div class="grid grid-cols-3 gap-4 mt-4">
+          <div class="bg-gray-800 rounded-xl p-5 border border-gray-700">
+            <div class="flex justify-between items-center mb-2">
+              <span class="text-gray-400 text-sm">CPU Usage</span>
+              <span class="text-lg font-bold" id="cpuUsage">--%</span>
+            </div>
+            <div class="w-full bg-gray-700 rounded-full h-2">
+              <div id="cpuBar" class="bg-blue-500 h-2 rounded-full" style="width: 0%"></div>
+            </div>
+          </div>
+          <div class="bg-gray-800 rounded-xl p-5 border border-gray-700">
+            <div class="flex justify-between items-center mb-2">
+              <span class="text-gray-400 text-sm">Memory Usage</span>
+              <span class="text-lg font-bold" id="memUsage">--%</span>
+            </div>
+            <div class="w-full bg-gray-700 rounded-full h-2">
+              <div id="memBar" class="bg-purple-500 h-2 rounded-full" style="width: 0%"></div>
+            </div>
+          </div>
+          <div class="bg-gray-800 rounded-xl p-5 border border-gray-700">
+            <div class="flex justify-between items-center mb-2">
+              <span class="text-gray-400 text-sm">Disk Usage</span>
+              <span class="text-lg font-bold" id="diskUsage">--%</span>
+            </div>
+            <div class="w-full bg-gray-700 rounded-full h-2">
+              <div id="diskBar" class="bg-green-500 h-2 rounded-full" style="width: 0%"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Skills Section -->
+      <section id="skills" class="mb-10">
+        <h2 class="text-xl font-semibold mb-4 flex items-center">
+          <i class="fas fa-wand-magic-sparkles text-pink-400 mr-3"></i> Available Skills
+        </h2>
+        <div class="grid grid-cols-2 gap-4" id="skillsGrid">
+          <!-- Populated by JS -->
+        </div>
+      </section>
+
+      <!-- Versions Section -->
+      <section class="mb-10">
+        <h2 class="text-xl font-semibold mb-4 flex items-center">
+          <i class="fas fa-code-branch text-cyan-400 mr-3"></i> Software Versions
+        </h2>
+        <div class="bg-gray-800 rounded-xl border border-gray-700 overflow-hidden">
+          <table class="w-full">
+            <thead class="bg-gray-900/50">
+              <tr>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase">Component</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase">Version</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase">Status</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase">Last Updated</th>
+              </tr>
+            </thead>
+            <tbody id="versionsTable" class="divide-y divide-gray-700">
+              <!-- Populated by JS -->
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Integrations Section -->
+      <section id="integrations" class="mb-10">
+        <h2 class="text-xl font-semibold mb-4 flex items-center">
+          <i class="fas fa-plug text-green-400 mr-3"></i> Active Integrations
+        </h2>
+        <div class="grid grid-cols-4 gap-4" id="integrationsGrid">
+          <!-- Populated by JS -->
+        </div>
+      </section>
+
+      <!-- Recommendations Section -->
+      <section id="recommendations" class="mb-10">
+        <h2 class="text-xl font-semibold mb-4 flex items-center">
+          <i class="fas fa-lightbulb text-yellow-400 mr-3"></i> Recommendations
+        </h2>
+        <div class="space-y-4" id="recommendationsList">
+          <!-- Populated by JS -->
+        </div>
+      </section>
+
+    </div>
+  </main>
+
+  <script>
+    // Sidebar toggle
+    function toggleSidebar() {
+      const sidebar = document.getElementById('sidebar');
+      const overlay = document.getElementById('overlay');
+      sidebar.classList.toggle('open');
+      overlay.classList.toggle('active');
+    }
+
+    // System data
+    const systemData = {
+      skills: [
+        { name: 'Bird (X/Twitter)', icon: 'fab fa-twitter', color: 'blue', desc: 'Read, search, post, engage via cookies', status: 'active' },
+        { name: 'GitHub', icon: 'fab fa-github', color: 'gray', desc: 'Issues, PRs, CI runs via gh CLI', status: 'active' },
+        { name: 'Notion', icon: 'fas fa-book', color: 'white', desc: 'Create/manage pages, databases, blocks', status: 'active' },
+        { name: 'OpenAI Image Gen', icon: 'fas fa-image', color: 'green', desc: 'Batch image generation with gallery', status: 'active' },
+        { name: 'OpenAI Whisper', icon: 'fas fa-microphone', color: 'red', desc: 'Audio transcription via API', status: 'active' },
+        { name: 'Slack', icon: 'fab fa-slack', color: 'purple', desc: 'Messaging, reactions, channel control', status: 'active' },
+        { name: 'Weather', icon: 'fas fa-cloud-sun', color: 'cyan', desc: 'Current weather & forecasts', status: 'active' },
+        { name: 'Agent Browser', icon: 'fas fa-globe', color: 'indigo', desc: 'Headless browser automation', status: 'active' },
+        { name: 'Video Frames', icon: 'fas fa-video', color: 'pink', desc: 'Extract frames/clips with ffmpeg', status: 'active' },
+        { name: 'Tmux Control', icon: 'fas fa-terminal', color: 'green', desc: 'Remote-control interactive CLIs', status: 'active' },
+        { name: 'Coding Agent', icon: 'fas fa-code', color: 'yellow', desc: 'Run Codex/Claude Code via PTY', status: 'active' },
+        { name: 'Self-Improvement', icon: 'fas fa-brain', color: 'purple', desc: 'Capture learnings & corrections', status: 'active' },
+      ],
+      versions: [
+        { name: 'Clawdbot Gateway', version: 'Latest (git)', status: 'active', updated: '2026-02-05' },
+        { name: 'IPLoop SDK', version: '1.0.21', status: 'active', updated: '2026-02-05' },
+        { name: 'IPLoop Gateway', version: '1.0.0', status: 'active', updated: '2026-02-05' },
+        { name: 'Node.js', version: 'v22.22.0', status: 'active', updated: '2026-02-01' },
+        { name: 'Docker', version: '27.5.1', status: 'active', updated: '2026-01-15' },
+        { name: 'Go', version: '1.23.x', status: 'active', updated: '2026-01-20' },
+        { name: 'Cloudflared', version: 'Latest', status: 'active', updated: '2026-02-03' },
+      ],
+      integrations: [
+        { name: 'Telegram', icon: 'fab fa-telegram', color: 'blue', status: 'active', desc: 'Primary messaging channel' },
+        { name: 'Cloudflare', icon: 'fas fa-cloud', color: 'orange', status: 'active', desc: 'Tunnel & DNS management' },
+        { name: 'DigitalOcean', icon: 'fab fa-digital-ocean', color: 'blue', status: 'active', desc: 'Hosting infrastructure' },
+        { name: 'PostgreSQL', icon: 'fas fa-database', color: 'blue', status: 'active', desc: 'Primary database' },
+        { name: 'Redis', icon: 'fas fa-bolt', color: 'red', status: 'active', desc: 'Cache & session store' },
+        { name: 'Grafana', icon: 'fas fa-chart-area', color: 'orange', status: 'active', desc: 'Metrics visualization' },
+        { name: 'Prometheus', icon: 'fas fa-fire', color: 'orange', status: 'warning', desc: 'Metrics collection' },
+        { name: 'Docker', icon: 'fab fa-docker', color: 'blue', status: 'active', desc: 'Container orchestration' },
+      ],
+      recommendations: [
+        { priority: 'high', title: 'Add Prometheus Alert Rules', desc: 'Configure alerting for proxy failures, high latency, and node disconnections', category: 'Monitoring' },
+        { priority: 'high', title: 'Implement Rate Limiting Dashboard', desc: 'Add real-time visualization of rate limits per customer/API key', category: 'Dashboard' },
+        { priority: 'medium', title: 'Add Slack Integration', desc: 'Send test failure alerts to Slack channel for faster response', category: 'Alerting' },
+        { priority: 'medium', title: 'Geographic Heatmap', desc: 'Visualize proxy node distribution and request origins on world map', category: 'Dashboard' },
+        { priority: 'medium', title: 'Add A/B Testing Support', desc: 'Compare proxy performance across different configurations', category: 'Testing' },
+        { priority: 'low', title: 'Customer Usage Reports', desc: 'Automated weekly/monthly usage reports per customer', category: 'Reporting' },
+        { priority: 'low', title: 'Node Health Scoring', desc: 'ML-based health scoring for predictive maintenance', category: 'AI/ML' },
+        { priority: 'low', title: 'Mobile App Dashboard', desc: 'React Native companion app for monitoring on-the-go', category: 'Mobile' },
+      ]
+    };
+
+    function renderSkills() {
+      const grid = document.getElementById('skillsGrid');
+      grid.innerHTML = systemData.skills.map(s => `
+        <div class="bg-gray-800 rounded-xl p-4 border border-gray-700 flex items-start">
+          <div class="w-10 h-10 rounded-lg bg-${s.color}-500/20 flex items-center justify-center mr-4 flex-shrink-0">
+            <i class="${s.icon} text-${s.color}-400"></i>
+          </div>
+          <div class="flex-1">
+            <div class="flex items-center justify-between">
+              <p class="font-medium">${s.name}</p>
+              <span class="px-2 py-0.5 text-xs rounded-full ${s.status === 'active' ? 'bg-green-500/20 text-green-400' : 'bg-yellow-500/20 text-yellow-400'}">
+                ${s.status}
+              </span>
+            </div>
+            <p class="text-sm text-gray-400 mt-1">${s.desc}</p>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function renderVersions() {
+      const table = document.getElementById('versionsTable');
+      table.innerHTML = systemData.versions.map(v => `
+        <tr class="hover:bg-gray-700/50">
+          <td class="px-6 py-4 font-medium">${v.name}</td>
+          <td class="px-6 py-4"><code class="px-2 py-1 bg-gray-700 rounded text-sm">${v.version}</code></td>
+          <td class="px-6 py-4">
+            <span class="px-2 py-1 text-xs rounded-full ${v.status === 'active' ? 'bg-green-500/20 text-green-400' : 'bg-yellow-500/20 text-yellow-400'}">
+              <i class="fas fa-circle text-[6px] mr-1"></i>${v.status}
+            </span>
+          </td>
+          <td class="px-6 py-4 text-gray-400">${v.updated}</td>
+        </tr>
+      `).join('');
+    }
+
+    function renderIntegrations() {
+      const grid = document.getElementById('integrationsGrid');
+      grid.innerHTML = systemData.integrations.map(i => `
+        <div class="stat-card bg-gray-800 rounded-xl p-4 border border-gray-700">
+          <div class="flex items-center justify-between mb-2">
+            <div class="w-10 h-10 rounded-lg bg-${i.color}-500/20 flex items-center justify-center">
+              <i class="${i.icon} text-${i.color}-400"></i>
+            </div>
+            <span class="w-2 h-2 rounded-full ${i.status === 'active' ? 'bg-green-500' : 'bg-yellow-500'} pulse-dot"></span>
+          </div>
+          <p class="font-medium">${i.name}</p>
+          <p class="text-xs text-gray-400 mt-1">${i.desc}</p>
+        </div>
+      `).join('');
+    }
+
+    function renderRecommendations() {
+      const list = document.getElementById('recommendationsList');
+      const priorityColors = { high: 'red', medium: 'yellow', low: 'blue' };
+      const priorityIcons = { high: 'exclamation-circle', medium: 'info-circle', low: 'arrow-circle-up' };
+      
+      list.innerHTML = systemData.recommendations.map(r => `
+        <div class="bg-gray-800 rounded-xl p-5 border border-gray-700 flex items-start">
+          <div class="w-10 h-10 rounded-lg bg-${priorityColors[r.priority]}-500/20 flex items-center justify-center mr-4 flex-shrink-0">
+            <i class="fas fa-${priorityIcons[r.priority]} text-${priorityColors[r.priority]}-400"></i>
+          </div>
+          <div class="flex-1">
+            <div class="flex items-center justify-between">
+              <p class="font-medium">${r.title}</p>
+              <div class="flex items-center space-x-2">
+                <span class="px-2 py-0.5 text-xs rounded bg-gray-700">${r.category}</span>
+                <span class="px-2 py-0.5 text-xs rounded-full bg-${priorityColors[r.priority]}-500/20 text-${priorityColors[r.priority]}-400">
+                  ${r.priority}
+                </span>
+              </div>
+            </div>
+            <p class="text-sm text-gray-400 mt-1">${r.desc}</p>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    async function fetchSystemInfo() {
+      try {
+        const res = await fetch('/api/system');
+        const data = await res.json();
+        
+        document.getElementById('hostname').textContent = data.hostname || 'ubuntu-s-1vcpu-1gb-35gb-intel-lon1-01';
+        document.getElementById('os').textContent = data.os || 'Ubuntu 24.04 LTS';
+        document.getElementById('kernel').textContent = data.kernel || 'Linux 6.8.0-90-generic (x64)';
+        document.getElementById('nodeVersion').textContent = data.nodeVersion || 'v22.22.0';
+        
+        if (data.cpu) {
+          document.getElementById('cpuUsage').textContent = data.cpu + '%';
+          document.getElementById('cpuBar').style.width = data.cpu + '%';
+        }
+        if (data.memory) {
+          document.getElementById('memUsage').textContent = data.memory + '%';
+          document.getElementById('memBar').style.width = data.memory + '%';
+        }
+        if (data.disk) {
+          document.getElementById('diskUsage').textContent = data.disk + '%';
+          document.getElementById('diskBar').style.width = data.disk + '%';
+        }
+      } catch (e) {
+        console.log('System info fetch failed, using defaults');
+      }
+      
+      document.getElementById('lastUpdate').textContent = new Date().toLocaleString();
+    }
+
+    // Initialize
+    renderSkills();
+    renderVersions();
+    renderIntegrations();
+    renderRecommendations();
+    fetchSystemInfo();
+    setInterval(fetchSystemInfo, 30000);
+  </script>
+</body>
+</html>

@@ -1,0 +1,128 @@
+{
+  "projects": [
+    {
+      "id": "proj-001",
+      "name": "IPLoop Platform",
+      "type": "web",
+      "description": "Main proxy gateway and customer dashboard",
+      "status": "active",
+      "progress": 85,
+      "tech": ["Go", "React", "PostgreSQL", "Redis"],
+      "repo": "https://github.com/iploop/platform",
+      "liveUrl": "https://iploop.io",
+      "lastUpdated": "2026-02-05",
+      "tasks": {
+        "total": 45,
+        "completed": 38,
+        "inProgress": 5,
+        "pending": 2
+      }
+    },
+    {
+      "id": "proj-002",
+      "name": "IPLoop Android SDK",
+      "type": "mobile",
+      "description": "Pure Java SDK for Android integration",
+      "status": "active",
+      "progress": 100,
+      "tech": ["Java", "Android"],
+      "repo": "https://github.com/iploop/android-sdk",
+      "version": "1.0.21",
+      "lastUpdated": "2026-02-05",
+      "tasks": {
+        "total": 20,
+        "completed": 20,
+        "inProgress": 0,
+        "pending": 0
+      }
+    },
+    {
+      "id": "proj-003",
+      "name": "Verso App",
+      "type": "mobile",
+      "description": "Book reading app with AI features",
+      "status": "active",
+      "progress": 75,
+      "tech": ["Kotlin", "Jetpack Compose", "Room"],
+      "repo": "https://github.com/verso/app",
+      "version": "2.1",
+      "lastUpdated": "2026-02-05",
+      "tasks": {
+        "total": 30,
+        "completed": 22,
+        "inProgress": 5,
+        "pending": 3
+      }
+    },
+    {
+      "id": "proj-004",
+      "name": "readverso.com",
+      "type": "web",
+      "description": "Marketing website for Verso app",
+      "status": "active",
+      "progress": 95,
+      "tech": ["HTML", "CSS", "JavaScript"],
+      "liveUrl": "https://readverso.com",
+      "lastUpdated": "2026-02-05",
+      "tasks": {
+        "total": 15,
+        "completed": 14,
+        "inProgress": 1,
+        "pending": 0
+      }
+    },
+    {
+      "id": "proj-005",
+      "name": "Weathero App",
+      "type": "mobile",
+      "description": "Weather app for Android and Smart TV",
+      "status": "maintenance",
+      "progress": 100,
+      "tech": ["Kotlin", "Android TV"],
+      "liveUrl": "https://weathero.io",
+      "lastUpdated": "2026-02-03",
+      "tasks": {
+        "total": 25,
+        "completed": 25,
+        "inProgress": 0,
+        "pending": 0
+      }
+    },
+    {
+      "id": "proj-006",
+      "name": "SoftZero",
+      "type": "desktop",
+      "description": "Windows uninstaller utility",
+      "status": "maintenance",
+      "progress": 100,
+      "tech": ["C#", ".NET", "WPF"],
+      "liveUrl": "https://softzero.io",
+      "lastUpdated": "2026-01-28",
+      "tasks": {
+        "total": 18,
+        "completed": 18,
+        "inProgress": 0,
+        "pending": 0
+      }
+    },
+    {
+      "id": "proj-007",
+      "name": "Ultron Dashboard",
+      "type": "web",
+      "description": "AI management and company operations platform",
+      "status": "active",
+      "progress": 60,
+      "tech": ["HTML", "Tailwind", "Chart.js"],
+      "liveUrl": "https://test-dashboard.iploop.io/app",
+      "lastUpdated": "2026-02-05",
+      "tasks": {
+        "total": 40,
+        "completed": 24,
+        "inProgress": 10,
+        "pending": 6
+      }
+    }
+  ],
+  "statuses": ["planning", "active", "maintenance", "paused", "complete"],
+  "types": ["web", "mobile", "desktop", "cli", "api"]
+}

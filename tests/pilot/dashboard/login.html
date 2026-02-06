@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login - Ultron Management Platform</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700&family=Inter:wght@300;400;500;600&display=swap');
+    
+    body {
+      font-family: 'Inter', sans-serif;
+      background: linear-gradient(135deg, #0a0a1a 0%, #1a1a3a 50%, #0a0a2a 100%);
+      min-height: 100vh;
+    }
+    
+    .orbitron { font-family: 'Orbitron', sans-serif; }
+    
+    .login-card {
+      background: rgba(31, 41, 55, 0.8);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(99, 102, 241, 0.2);
+    }
+    
+    .input-field {
+      background: rgba(0, 0, 0, 0.3);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      transition: all 0.3s ease;
+    }
+    
+    .input-field:focus {
+      border-color: #6366f1;
+      box-shadow: 0 0 20px rgba(99, 102, 241, 0.2);
+      outline: none;
+    }
+    
+    .btn-login {
+      background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+      transition: all 0.3s ease;
+    }
+    
+    .btn-login:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 40px rgba(99, 102, 241, 0.4);
+    }
+    
+    .btn-login:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+  </style>
+</head>
+<body class="flex items-center justify-center p-6 text-white">
+  
+  <div class="login-card rounded-2xl p-8 w-full max-w-md">
+    
+    <!-- Logo -->
+    <div class="text-center mb-8">
+      <div class="inline-flex items-center justify-center w-16 h-16 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 mb-4 shadow-lg shadow-indigo-500/30">
+        <i class="fas fa-robot text-3xl"></i>
+      </div>
+      <h1 class="orbitron text-2xl font-bold text-white">ULTRON</h1>
+      <p class="text-gray-400 text-sm mt-1">Management Platform</p>
+    </div>
+    
+    <!-- Login Form -->
+    <form id="loginForm" onsubmit="handleLogin(event)">
+      
+      <div class="mb-4">
+        <label class="block text-sm text-gray-400 mb-2">Email</label>
+        <div class="relative">
+          <i class="fas fa-envelope absolute left-4 top-1/2 -translate-y-1/2 text-gray-500"></i>
+          <input type="email" id="email" required
+                 class="input-field w-full pl-12 pr-4 py-3 rounded-xl text-white placeholder-gray-500"
+                 placeholder="Enter your email">
+        </div>
+      </div>
+      
+      <div class="mb-6">
+        <label class="block text-sm text-gray-400 mb-2">Password</label>
+        <div class="relative">
+          <i class="fas fa-lock absolute left-4 top-1/2 -translate-y-1/2 text-gray-500"></i>
+          <input type="password" id="password" required
+                 class="input-field w-full pl-12 pr-12 py-3 rounded-xl text-white placeholder-gray-500"
+                 placeholder="Enter your password">
+          <button type="button" onclick="togglePassword()" class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300">
+            <i class="fas fa-eye" id="eyeIcon"></i>
+          </button>
+        </div>
+      </div>
+      
+      <!-- Error Message -->
+      <div id="errorMsg" class="hidden mb-4 p-3 bg-red-500/20 border border-red-500/30 rounded-lg text-red-400 text-sm">
+        <i class="fas fa-exclamation-circle mr-2"></i>
+        <span id="errorText"></span>
+      </div>
+      
+      <button type="submit" id="submitBtn" class="btn-login w-full py-4 rounded-xl font-semibold orbitron tracking-wider">
+        <span id="btnText">Access Platform</span>
+        <i class="fas fa-spinner fa-spin ml-2 hidden" id="btnSpinner"></i>
+      </button>
+      
+    </form>
+    
+    <!-- Back Link -->
+    <div class="text-center mt-6">
+      <a href="welcome.html" class="text-gray-500 hover:text-indigo-400 text-sm">
+        <i class="fas fa-arrow-left mr-2"></i>Back to Welcome
+      </a>
+    </div>
+    
+    <!-- Security Note -->
+    <div class="mt-8 pt-6 border-t border-gray-700/50 text-center">
+      <p class="text-gray-600 text-xs">
+        <i class="fas fa-shield-halved mr-1"></i>
+        Secure access · Authorized personnel only
+      </p>
+    </div>
+    
+  </div>
+  
+  <script>
+    // Valid credentials
+    const VALID_CREDENTIALS = {
+      email: 'Furhmanmika@gmail.com',
+      password: 'Ultron2026!'
+    };
+    
+    function togglePassword() {
+      const input = document.getElementById('password');
+      const icon = document.getElementById('eyeIcon');
+      if (input.type === 'password') {
+        input.type = 'text';
+        icon.classList.remove('fa-eye');
+        icon.classList.add('fa-eye-slash');
+      } else {
+        input.type = 'password';
+        icon.classList.remove('fa-eye-slash');
+        icon.classList.add('fa-eye');
+      }
+    }
+    
+    function handleLogin(e) {
+      e.preventDefault();
+      
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+      const errorMsg = document.getElementById('errorMsg');
+      const errorText = document.getElementById('errorText');
+      const btnText = document.getElementById('btnText');
+      const btnSpinner = document.getElementById('btnSpinner');
+      const submitBtn = document.getElementById('submitBtn');
+      
+      // Show loading
+      btnText.textContent = 'Authenticating...';
+      btnSpinner.classList.remove('hidden');
+      submitBtn.disabled = true;
+      errorMsg.classList.add('hidden');
+      
+      // Simulate authentication delay
+      setTimeout(() => {
+        if (email.toLowerCase() === VALID_CREDENTIALS.email.toLowerCase() && 
+            password === VALID_CREDENTIALS.password) {
+          // Success - store auth and redirect
+          localStorage.setItem('ultron_auth', JSON.stringify({
+            email: email,
+            loginTime: Date.now()
+          }));
+          window.location.href = 'app.html';
+        } else {
+          // Failed
+          errorText.textContent = 'Invalid email or password';
+          errorMsg.classList.remove('hidden');
+          btnText.textContent = 'Access Platform';
+          btnSpinner.classList.add('hidden');
+          submitBtn.disabled = false;
+        }
+      }, 1000);
+    }
+    
+    // Check if already logged in
+    const auth = localStorage.getItem('ultron_auth');
+    if (auth) {
+      const authData = JSON.parse(auth);
+      // Check if login is less than 24 hours old
+      if (Date.now() - authData.loginTime < 24 * 60 * 60 * 1000) {
+        window.location.href = 'app.html';
+      } else {
+        localStorage.removeItem('ultron_auth');
+      }
+    }
+  </script>
+  
+</body>
+</html>

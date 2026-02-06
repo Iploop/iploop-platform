@@ -1,0 +1,807 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Teams Architecture - IPLoop</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            primary: '#6366f1',
+            accent: '#4f46e5',
+            card: '#1f2937',
+            border: '#374151',
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body { font-family: 'Inter', -apple-system, sans-serif; }
+    .sidebar { width: 256px; transition: transform 0.3s ease; position: fixed; z-index: 50; transform: translateX(-256px); }
+    .sidebar.open { transform: translateX(0); }
+    .main-content { margin-left: 0; transition: margin-left 0.3s ease; }
+    .gradient-text { background: linear-gradient(135deg, #6366f1, #8b5cf6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .menu-toggle { display: flex; position: fixed; top: 16px; left: 16px; z-index: 60; }
+    .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 40; }
+    .overlay.active { display: block; }
+    .dept-card { transition: all 0.3s; border-left: 4px solid transparent; }
+    .dept-card:hover { transform: translateX(4px); }
+    .agent-badge { transition: all 0.2s; }
+    .agent-badge:hover { transform: scale(1.05); }
+    .connection-line { stroke-dasharray: 5; animation: dash 20s linear infinite; }
+    @keyframes dash { to { stroke-dashoffset: -1000; } }
+    
+    @media (min-width: 1024px) {
+      .sidebar { transform: translateX(0); }
+      .main-content { margin-left: 256px; }
+      .menu-toggle { display: none; }
+    }
+    
+    @media (max-width: 768px) {
+      .grid-cols-6 { grid-template-columns: repeat(2, 1fr) !important; }
+      .grid-cols-4 { grid-template-columns: repeat(2, 1fr) !important; }
+      .grid-cols-3 { grid-template-columns: repeat(1, 1fr) !important; }
+      .grid-cols-2 { grid-template-columns: repeat(1, 1fr) !important; }
+      .main-content > div { padding: 16px !important; padding-top: 60px !important; }
+      .dept-card:hover { transform: none; }
+    }
+  </style>
+</head>
+<body class="bg-gray-900 text-gray-100 min-h-screen">
+  <!-- Mobile Menu Toggle -->
+  <button onclick="toggleSidebar()" class="menu-toggle items-center justify-center w-10 h-10 bg-gray-800 rounded-lg border border-gray-700">
+    <i class="fas fa-bars text-gray-300"></i>
+  </button>
+  
+  <!-- Overlay -->
+  <div class="overlay" id="overlay" onclick="toggleSidebar()"></div>
+  
+  <!-- Sidebar -->
+  <aside class="sidebar fixed inset-y-0 left-0 bg-gray-800 border-r border-gray-700 flex flex-col z-50" id="sidebar">
+    <div class="flex items-center justify-between px-4 py-5 border-b border-gray-700">
+      <div class="flex items-center">
+        <i class="fas fa-sitemap text-primary text-2xl"></i>
+        <span class="ml-3 text-xl font-bold">AI Teams</span>
+      </div>
+      <button onclick="toggleSidebar()" class="lg:hidden w-8 h-8 flex items-center justify-center text-gray-400 hover:text-white">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+    
+    <nav class="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
+      <a href="/" class="flex items-center px-3 py-2 text-sm font-medium rounded-lg text-gray-300 hover:bg-gray-700">
+        <i class="fas fa-chart-line w-5 mr-3"></i> Test Dashboard
+      </a>
+      <a href="/ultron.html" class="flex items-center px-3 py-2 text-sm font-medium rounded-lg text-gray-300 hover:bg-gray-700">
+        <i class="fas fa-microchip w-5 mr-3"></i> System Specs
+      </a>
+      <a href="/ai-teams.html" class="flex items-center px-3 py-2 text-sm font-medium rounded-lg bg-primary text-white">
+        <i class="fas fa-sitemap w-5 mr-3"></i> AI Teams
+      </a>
+      <div class="pt-4 pb-2">
+        <p class="px-3 text-xs font-semibold text-gray-500 uppercase">Departments</p>
+      </div>
+      <a href="#sales" class="flex items-center px-3 py-2 text-sm font-medium rounded-lg text-gray-300 hover:bg-gray-700">
+        <i class="fas fa-handshake w-5 mr-3 text-green-400"></i> Sales
+      </a>
+      <a href="#marketing" class="flex items-center px-3 py-2 text-sm font-medium rounded-lg text-gray-300 hover:bg-gray-700">
+        <i class="fas fa-bullhorn w-5 mr-3 text-purple-400"></i> Marketing
+      </a>
+      <a href="#development" class="flex items-center px-3 py-2 text-sm font-medium rounded-lg text-gray-300 hover:bg-gray-700">
+        <i class="fas fa-code w-5 mr-3 text-blue-400"></i> Development
+      </a>
+      <a href="#partners" class="flex items-center px-3 py-2 text-sm font-medium rounded-lg text-gray-300 hover:bg-gray-700">
+        <i class="fas fa-users w-5 mr-3 text-cyan-400"></i> Partners
+      </a>
+      <a href="#finance" class="flex items-center px-3 py-2 text-sm font-medium rounded-lg text-gray-300 hover:bg-gray-700">
+        <i class="fas fa-coins w-5 mr-3 text-yellow-400"></i> Finance
+      </a>
+    </nav>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="main-content min-h-screen">
+    <div class="p-4 md:p-8 pt-16 md:pt-8">
+      <!-- Header -->
+      <div class="mb-8">
+        <h1 class="text-3xl font-bold gradient-text">Autonomous AI Teams Architecture</h1>
+        <p class="text-gray-400 mt-2">Building fully autonomous departments with specialized sub-agents</p>
+      </div>
+
+      <!-- Master Architecture Diagram -->
+      <section class="mb-10">
+        <h2 class="text-xl font-semibold mb-4 flex items-center">
+          <i class="fas fa-diagram-project text-indigo-400 mr-3"></i> Complete System Architecture
+        </h2>
+        <div class="bg-gray-800 rounded-xl border border-gray-700 p-4 md:p-6 overflow-x-auto -mx-4 md:mx-0">
+          <svg viewBox="0 0 1200 800" class="w-[1200px] md:w-full h-auto" style="min-width: 800px;">
+            <defs>
+              <linearGradient id="primaryGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" style="stop-color:#6366f1"/>
+                <stop offset="100%" style="stop-color:#8b5cf6"/>
+              </linearGradient>
+              <filter id="glow">
+                <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
+                <feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge>
+              </filter>
+            </defs>
+            
+            <!-- Central Orchestrator -->
+            <g filter="url(#glow)">
+              <circle cx="600" cy="80" r="55" fill="url(#primaryGrad)"/>
+              <text x="600" y="72" text-anchor="middle" fill="white" font-weight="bold" font-size="16">🤖 ULTRON</text>
+              <text x="600" y="92" text-anchor="middle" fill="white" font-size="11">Central Orchestrator</text>
+            </g>
+            
+            <!-- Connection Lines -->
+            <path class="connection-line" d="M 545 120 Q 300 180 180 220" stroke="#22c55e" stroke-width="2" fill="none"/>
+            <path class="connection-line" d="M 570 130 Q 400 180 360 220" stroke="#a855f7" stroke-width="2" fill="none"/>
+            <path class="connection-line" d="M 600 135 L 600 220" stroke="#3b82f6" stroke-width="2" fill="none"/>
+            <path class="connection-line" d="M 630 130 Q 800 180 840 220" stroke="#06b6d4" stroke-width="2" fill="none"/>
+            <path class="connection-line" d="M 655 120 Q 900 180 1020 220" stroke="#eab308" stroke-width="2" fill="none"/>
+            
+            <!-- SALES DEPARTMENT -->
+            <g id="sales">
+              <rect x="80" y="220" width="200" height="60" rx="8" fill="#1f2937" stroke="#22c55e" stroke-width="2"/>
+              <text x="180" y="248" text-anchor="middle" fill="#22c55e" font-weight="bold" font-size="14">🤝 SALES TEAM</text>
+              <text x="180" y="266" text-anchor="middle" fill="#9ca3af" font-size="10">3 Sub-Agents</text>
+              
+              <!-- Sales Sub-Agents -->
+              <rect x="40" y="310" width="130" height="55" rx="6" fill="#1f2937" stroke="#22c55e" stroke-width="1"/>
+              <text x="105" y="332" text-anchor="middle" fill="#22c55e" font-size="11">🔍 Researcher</text>
+              <text x="105" y="348" text-anchor="middle" fill="#6b7280" font-size="9">Find companies</text>
+              <text x="105" y="360" text-anchor="middle" fill="#4b5563" font-size="8">LinkedIn, Apollo</text>
+              
+              <rect x="40" y="375" width="130" height="55" rx="6" fill="#1f2937" stroke="#22c55e" stroke-width="1"/>
+              <text x="105" y="397" text-anchor="middle" fill="#22c55e" font-size="11">📊 Lead Manager</text>
+              <text x="105" y="413" text-anchor="middle" fill="#6b7280" font-size="9">Manage pipeline</text>
+              <text x="105" y="425" text-anchor="middle" fill="#4b5563" font-size="8">CRM, Scoring</text>
+              
+              <rect x="40" y="440" width="130" height="55" rx="6" fill="#1f2937" stroke="#22c55e" stroke-width="1"/>
+              <text x="105" y="462" text-anchor="middle" fill="#22c55e" font-size="11">📧 Email Manager</text>
+              <text x="105" y="478" text-anchor="middle" fill="#6b7280" font-size="9">Outreach & follow-up</text>
+              <text x="105" y="490" text-anchor="middle" fill="#4b5563" font-size="8">Gmail, Sequences</text>
+            </g>
+            
+            <!-- MARKETING DEPARTMENT -->
+            <g id="marketing">
+              <rect x="260" y="220" width="200" height="60" rx="8" fill="#1f2937" stroke="#a855f7" stroke-width="2"/>
+              <text x="360" y="248" text-anchor="middle" fill="#a855f7" font-weight="bold" font-size="14">📣 MARKETING TEAM</text>
+              <text x="360" y="266" text-anchor="middle" fill="#9ca3af" font-size="10">3 Sub-Agents</text>
+              
+              <!-- Marketing Sub-Agents -->
+              <rect x="200" y="310" width="130" height="55" rx="6" fill="#1f2937" stroke="#a855f7" stroke-width="1"/>
+              <text x="265" y="332" text-anchor="middle" fill="#a855f7" font-size="11">✍️ Content Writer</text>
+              <text x="265" y="348" text-anchor="middle" fill="#6b7280" font-size="9">Marketing copy</text>
+              <text x="265" y="360" text-anchor="middle" fill="#4b5563" font-size="8">Blogs, Ads, Landing</text>
+              
+              <rect x="200" y="375" width="130" height="55" rx="6" fill="#1f2937" stroke="#a855f7" stroke-width="1"/>
+              <text x="265" y="397" text-anchor="middle" fill="#a855f7" font-size="11">📱 Social Manager</text>
+              <text x="265" y="413" text-anchor="middle" fill="#6b7280" font-size="9">Social media</text>
+              <text x="265" y="425" text-anchor="middle" fill="#4b5563" font-size="8">Twitter, LinkedIn</text>
+              
+              <rect x="200" y="440" width="130" height="55" rx="6" fill="#1f2937" stroke="#a855f7" stroke-width="1"/>
+              <text x="265" y="462" text-anchor="middle" fill="#a855f7" font-size="11">🎨 Branding Manager</text>
+              <text x="265" y="478" text-anchor="middle" fill="#6b7280" font-size="9">Brand consistency</text>
+              <text x="265" y="490" text-anchor="middle" fill="#4b5563" font-size="8">Design, Guidelines</text>
+            </g>
+            
+            <!-- DEVELOPMENT DEPARTMENT -->
+            <g id="development">
+              <rect x="500" y="220" width="200" height="60" rx="8" fill="#1f2937" stroke="#3b82f6" stroke-width="2"/>
+              <text x="600" y="248" text-anchor="middle" fill="#3b82f6" font-weight="bold" font-size="14">⚙️ DEVELOPMENT TEAM</text>
+              <text x="600" y="266" text-anchor="middle" fill="#9ca3af" font-size="10">4 Sub-Agents</text>
+              
+              <!-- Dev Sub-Agents -->
+              <rect x="430" y="310" width="110" height="55" rx="6" fill="#1f2937" stroke="#3b82f6" stroke-width="1"/>
+              <text x="485" y="332" text-anchor="middle" fill="#3b82f6" font-size="11">💻 CLI Developer</text>
+              <text x="485" y="348" text-anchor="middle" fill="#6b7280" font-size="9">Command tools</text>
+              <text x="485" y="360" text-anchor="middle" fill="#4b5563" font-size="8">Go, Rust, Node</text>
+              
+              <rect x="550" y="310" width="110" height="55" rx="6" fill="#1f2937" stroke="#3b82f6" stroke-width="1"/>
+              <text x="605" y="332" text-anchor="middle" fill="#3b82f6" font-size="11">📱 App Developer</text>
+              <text x="605" y="348" text-anchor="middle" fill="#6b7280" font-size="9">Mobile apps</text>
+              <text x="605" y="360" text-anchor="middle" fill="#4b5563" font-size="8">Android, iOS</text>
+              
+              <rect x="430" y="375" width="110" height="55" rx="6" fill="#1f2937" stroke="#3b82f6" stroke-width="1"/>
+              <text x="485" y="397" text-anchor="middle" fill="#3b82f6" font-size="11">🌐 Web Developer</text>
+              <text x="485" y="413" text-anchor="middle" fill="#6b7280" font-size="9">Websites & apps</text>
+              <text x="485" y="425" text-anchor="middle" fill="#4b5563" font-size="8">React, Next.js</text>
+              
+              <rect x="550" y="375" width="110" height="55" rx="6" fill="#1f2937" stroke="#3b82f6" stroke-width="1"/>
+              <text x="605" y="397" text-anchor="middle" fill="#3b82f6" font-size="11">🧪 QA Manager</text>
+              <text x="605" y="413" text-anchor="middle" fill="#6b7280" font-size="9">Testing & quality</text>
+              <text x="605" y="425" text-anchor="middle" fill="#4b5563" font-size="8">Automated tests</text>
+            </g>
+            
+            <!-- PARTNERS DEPARTMENT -->
+            <g id="partners">
+              <rect x="740" y="220" width="200" height="60" rx="8" fill="#1f2937" stroke="#06b6d4" stroke-width="2"/>
+              <text x="840" y="248" text-anchor="middle" fill="#06b6d4" font-weight="bold" font-size="14">🤝 PARTNERS TEAM</text>
+              <text x="840" y="266" text-anchor="middle" fill="#9ca3af" font-size="10">3 Sub-Agents</text>
+              
+              <!-- Partners Sub-Agents -->
+              <rect x="700" y="310" width="130" height="55" rx="6" fill="#1f2937" stroke="#06b6d4" stroke-width="1"/>
+              <text x="765" y="332" text-anchor="middle" fill="#06b6d4" font-size="11">👔 Account Manager</text>
+              <text x="765" y="348" text-anchor="middle" fill="#6b7280" font-size="9">Partner relations</text>
+              <text x="765" y="360" text-anchor="middle" fill="#4b5563" font-size="8">Onboard, Nurture</text>
+              
+              <rect x="700" y="375" width="130" height="55" rx="6" fill="#1f2937" stroke="#06b6d4" stroke-width="1"/>
+              <text x="765" y="397" text-anchor="middle" fill="#06b6d4" font-size="11">🎧 Customer Support</text>
+              <text x="765" y="413" text-anchor="middle" fill="#6b7280" font-size="9">Help & tickets</text>
+              <text x="765" y="425" text-anchor="middle" fill="#4b5563" font-size="8">Chat, Email, Docs</text>
+              
+              <rect x="700" y="440" width="130" height="55" rx="6" fill="#1f2937" stroke="#06b6d4" stroke-width="1"/>
+              <text x="765" y="462" text-anchor="middle" fill="#06b6d4" font-size="11">📡 Monitoring</text>
+              <text x="765" y="478" text-anchor="middle" fill="#6b7280" font-size="9">Track partner health</text>
+              <text x="765" y="490" text-anchor="middle" fill="#4b5563" font-size="8">Alerts, Reports</text>
+            </g>
+            
+            <!-- FINANCE DEPARTMENT -->
+            <g id="finance">
+              <rect x="920" y="220" width="200" height="60" rx="8" fill="#1f2937" stroke="#eab308" stroke-width="2"/>
+              <text x="1020" y="248" text-anchor="middle" fill="#eab308" font-weight="bold" font-size="14">💰 FINANCE TEAM</text>
+              <text x="1020" y="266" text-anchor="middle" fill="#9ca3af" font-size="10">3 Sub-Agents</text>
+              
+              <!-- Finance Sub-Agents -->
+              <rect x="940" y="310" width="130" height="55" rx="6" fill="#1f2937" stroke="#eab308" stroke-width="1"/>
+              <text x="1005" y="332" text-anchor="middle" fill="#eab308" font-size="11">📊 Data Scraper</text>
+              <text x="1005" y="348" text-anchor="middle" fill="#6b7280" font-size="9">Financial data</text>
+              <text x="1005" y="360" text-anchor="middle" fill="#4b5563" font-size="8">Markets, Reports</text>
+              
+              <rect x="940" y="375" width="130" height="55" rx="6" fill="#1f2937" stroke="#eab308" stroke-width="1"/>
+              <text x="1005" y="397" text-anchor="middle" fill="#eab308" font-size="11">📒 Accountant</text>
+              <text x="1005" y="413" text-anchor="middle" fill="#6b7280" font-size="9">Books & records</text>
+              <text x="1005" y="425" text-anchor="middle" fill="#4b5563" font-size="8">Invoices, P&L</text>
+              
+              <rect x="940" y="440" width="130" height="55" rx="6" fill="#1f2937" stroke="#eab308" stroke-width="1"/>
+              <text x="1005" y="462" text-anchor="middle" fill="#eab308" font-size="11">💳 Payment Manager</text>
+              <text x="1005" y="478" text-anchor="middle" fill="#6b7280" font-size="9">Process payments</text>
+              <text x="1005" y="490" text-anchor="middle" fill="#4b5563" font-size="8">Stripe, Invoicing</text>
+            </g>
+            
+            <!-- Shared Resources Box -->
+            <rect x="350" y="550" width="500" height="100" rx="10" fill="#1f2937" stroke="#6366f1" stroke-width="2" stroke-dasharray="5"/>
+            <text x="600" y="580" text-anchor="middle" fill="#6366f1" font-weight="bold" font-size="14">🔗 SHARED RESOURCES</text>
+            <text x="430" y="610" text-anchor="middle" fill="#9ca3af" font-size="11">📁 Memory Files</text>
+            <text x="530" y="610" text-anchor="middle" fill="#9ca3af" font-size="11">🗄️ Database</text>
+            <text x="630" y="610" text-anchor="middle" fill="#9ca3af" font-size="11">📨 Messaging</text>
+            <text x="740" y="610" text-anchor="middle" fill="#9ca3af" font-size="11">⏰ Scheduler</text>
+            <text x="600" y="635" text-anchor="middle" fill="#6b7280" font-size="10">All agents share context via workspace files and can communicate via sessions_send</text>
+            
+            <!-- Legend -->
+            <g transform="translate(80, 700)">
+              <text x="0" y="0" fill="#6b7280" font-size="11" font-weight="bold">LEGEND:</text>
+              <circle cx="80" cy="-4" r="8" fill="url(#primaryGrad)"/>
+              <text x="95" y="0" fill="#9ca3af" font-size="10">Orchestrator</text>
+              <rect x="170" y="-10" width="16" height="16" rx="3" fill="#1f2937" stroke="#22c55e" stroke-width="2"/>
+              <text x="195" y="0" fill="#9ca3af" font-size="10">Department</text>
+              <rect x="280" y="-10" width="16" height="16" rx="3" fill="#1f2937" stroke="#6b7280"/>
+              <text x="305" y="0" fill="#9ca3af" font-size="10">Sub-Agent</text>
+              <line x1="380" y1="-4" x2="420" y2="-4" stroke="#6366f1" stroke-width="2" stroke-dasharray="5"/>
+              <text x="430" y="0" fill="#9ca3af" font-size="10">Data Flow</text>
+            </g>
+          </svg>
+        </div>
+      </section>
+
+      <!-- Department Details -->
+      
+      <!-- SALES -->
+      <section id="sales" class="mb-10">
+        <div class="dept-card bg-gray-800 rounded-xl border border-gray-700 p-6" style="border-left-color: #22c55e;">
+          <div class="flex items-center justify-between mb-6">
+            <h2 class="text-xl font-semibold flex items-center">
+              <div class="w-12 h-12 rounded-xl bg-green-500/20 flex items-center justify-center mr-4">
+                <i class="fas fa-handshake text-green-400 text-xl"></i>
+              </div>
+              <div>
+                <span class="text-green-400">Sales Department</span>
+                <p class="text-sm text-gray-400 font-normal">Lead generation, outreach & pipeline management</p>
+              </div>
+            </h2>
+            <span class="px-3 py-1 text-sm bg-green-500/20 text-green-400 rounded-full">3 Agents</span>
+          </div>
+          
+          <div class="grid grid-cols-3 gap-4">
+            <div class="agent-badge bg-gray-900 rounded-lg p-4 border border-green-500/30">
+              <div class="flex items-center mb-3">
+                <div class="w-10 h-10 rounded-lg bg-green-500/20 flex items-center justify-center mr-3">
+                  <i class="fas fa-search text-green-400"></i>
+                </div>
+                <div>
+                  <p class="font-semibold text-green-400">Lead Researcher</p>
+                  <p class="text-xs text-gray-500">Finding new opportunities</p>
+                </div>
+              </div>
+              <ul class="text-sm text-gray-400 space-y-1">
+                <li>• Find companies matching ICP</li>
+                <li>• Scrape LinkedIn for contacts</li>
+                <li>• Enrich data via Apollo/Hunter</li>
+                <li>• Score leads based on criteria</li>
+              </ul>
+              <div class="mt-3 flex flex-wrap gap-1">
+                <span class="px-2 py-0.5 text-xs bg-gray-800 rounded">LinkedIn</span>
+                <span class="px-2 py-0.5 text-xs bg-gray-800 rounded">Apollo</span>
+                <span class="px-2 py-0.5 text-xs bg-gray-800 rounded">Browser</span>
+              </div>
+            </div>
+            
+            <div class="agent-badge bg-gray-900 rounded-lg p-4 border border-green-500/30">
+              <div class="flex items-center mb-3">
+                <div class="w-10 h-10 rounded-lg bg-green-500/20 flex items-center justify-center mr-3">
+                  <i class="fas fa-users-gear text-green-400"></i>
+                </div>
+                <div>
+                  <p class="font-semibold text-green-400">Lead Manager</p>
+                  <p class="text-xs text-gray-500">Pipeline orchestration</p>
+                </div>
+              </div>
+              <ul class="text-sm text-gray-400 space-y-1">
+                <li>• Manage lead pipeline</li>
+                <li>• Assign & prioritize leads</li>
+                <li>• Track conversion stages</li>
+                <li>• Generate pipeline reports</li>
+              </ul>
+              <div class="mt-3 flex flex-wrap gap-1">
+                <span class="px-2 py-0.5 text-xs bg-gray-800 rounded">HubSpot</span>
+                <span class="px-2 py-0.5 text-xs bg-gray-800 rounded">Notion</span>
+                <span class="px-2 py-0.5 text-xs bg-gray-800 rounded">Sheets</span>
+              </div>
+            </div>
+            
+            <div class="agent-badge bg-gray-900 rounded-lg p-4 border border-green-500/30">
+              <div class="flex items-center mb-3">
+                <div class="w-10 h-10 rounded-lg bg-green-500/20 flex items-center justify-center mr-3">
+                  <i class="fas fa-envelope text-green-400"></i>
+                </div>
+                <div>
+                  <p class="font-semibold text-green-400">Email Manager</p>
+                  <p class="text-xs text-gray-500">Outreach automation</p>
+                </div>
+              </div>
+              <ul class="text-sm text-gray-400 space-y-1">
+                <li>• Send personalized emails</li>
+                <li>• Manage follow-up sequences</li>
+                <li>• Track opens & replies</li>
+                <li>• Handle responses & qualify</li>
+              </ul>
+              <div class="mt-3 flex flex-wrap gap-1">
+                <span class="px-2 py-0.5 text-xs bg-gray-800 rounded">Gmail</span>
+                <span class="px-2 py-0.5 text-xs bg-gray-800 rounded">SendGrid</span>
+                <span class="px-2 py-0.5 text-xs bg-gray-800 rounded">Lemlist</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- MARKETING -->
+      <section id="marketing" class="mb-10">
+        <div class="dept-card bg-gray-800 rounded-xl border border-gray-700 p-6" style="border-left-color: #a855f7;">
+          <div class="flex items-center justify-between mb-6">
+            <h2 class="text-xl font-semibold flex items-center">
+              <div class="w-12 h-12 rounded-xl bg-purple-500/20 flex items-center justify-center mr-4">
+                <i class="fas fa-bullhorn text-purple-400 text-xl"></i>
+              </div>
+              <div>
+                <span class="text-purple-400">Marketing Department</span>
+                <p class="text-sm text-gray-400 font-normal">Content, social media & brand management</p>
+              </div>
+            </h2>
+            <span class="px-3 py-1 text-sm bg-purple-500/20 text-purple-400 rounded-full">3 Agents</span>
+          </div>
+          
+          <div class="grid grid-cols-3 gap-4">
+            <div class="agent-badge bg-gray-900 rounded-lg p-4 border border-purple-500/30">
+              <div class="flex items-center mb-3">
+                <div class="w-10 h-10 rounded-lg bg-purple-500/20 flex items-center justify-center mr-3">
+                  <i class="fas fa-pen-fancy text-purple-400"></i>
+                </div>
+                <div>
+                  <p class="font-semibold text-purple-400">Content Writer</p>
+                  <p class="text-xs text-gray-500">Marketing copywriter</p>
+                </div>
+              </div>
+              <ul class="text-sm text-gray-400 space-y-1">
+                <li>• Write blog posts & articles</li>
+                <li>• Create ad copy & CTAs</li>
+                <li>• Landing page content</li>
+                <li>• Email marketing copy</li>
+              </ul>
+              <div class="mt-3 flex flex-wrap gap-1">
+                <span class="px-2 py-0.5 text-xs bg-gray-800 rounded">GPT-4</span>
+                <span class="px-2 py-0.5 text-xs bg-gray-800 rounded">Notion</span>
+                <span class="px-2 py-0.5 text-xs bg-gray-800 rounded">WordPress</span>
+              </div>
+            </div>
+            
+            <div class="agent-badge bg-gray-900 rounded-lg p-4 border border-purple-500/30">
+              <div class="flex items-center mb-3">
+                <div class="w-10 h-10 rounded-lg bg-purple-500/20 flex items-center justify-center mr-3">
+                  <i class="fas fa-share-nodes text-purple-400"></i>
+                </div>
+                <div>
+                  <p class="font-semibold text-purple-400">Social Manager</p>
+                  <p class="text-xs text-gray-500">Social media automation</p>
+                </div>
+              </div>
+              <ul class="text-sm text-gray-400 space-y-1">
+                <li>• Schedule & post content</li>
+                <li>• Engage with followers</li>
+                <li>• Monitor mentions</li>
+                <li>• Track analytics</li>
+              </ul>
+              <div class="mt-3 flex flex-wrap gap-1">
+                <span class="px-2 py-0.5 text-xs bg-gray-800 rounded">Twitter/X</span>
+                <span class="px-2 py-0.5 text-xs bg-gray-800 rounded">LinkedIn</span>
+                <span class="px-2 py-0.5 text-xs bg-gray-800 rounded">Buffer</span>
+              </div>
+            </div>
+            
+            <div class="agent-badge bg-gray-900 rounded-lg p-4 border border-purple-500/30">
+              <div class="flex items-center mb-3">
+                <div class="w-10 h-10 rounded-lg bg-purple-500/20 flex items-center justify-center mr-3">
+                  <i class="fas fa-palette text-purple-400"></i>
+                </div>
+                <div>
+                  <p class="font-semibold text-purple-400">Branding Manager</p>
+                  <p class="text-xs text-gray-500">Brand consistency</p>
+                </div>
+              </div>
+              <ul class="text-sm text-gray-400 space-y-1">
+                <li>• Maintain brand guidelines</li>
+                <li>• Generate design assets</li>
+                <li>• Review brand consistency</li>
+                <li>• Create visual content</li>
+              </ul>
+              <div class="mt-3 flex flex-wrap gap-1">
+                <span class="px-2 py-0.5 text-xs bg-gray-800 rounded">DALL-E</span>
+                <span class="px-2 py-0.5 text-xs bg-gray-800 rounded">Canva</span>
+                <span class="px-2 py-0.5 text-xs bg-gray-800 rounded">Figma</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- DEVELOPMENT -->
+      <section id="development" class="mb-10">
+        <div class="dept-card bg-gray-800 rounded-xl border border-gray-700 p-6" style="border-left-color: #3b82f6;">
+          <div class="flex items-center justify-between mb-6">
+            <h2 class="text-xl font-semibold flex items-center">
+              <div class="w-12 h-12 rounded-xl bg-blue-500/20 flex items-center justify-center mr-4">
+                <i class="fas fa-code text-blue-400 text-xl"></i>
+              </div>
+              <div>
+                <span class="text-blue-400">Development Department</span>
+                <p class="text-sm text-gray-400 font-normal">CLI, mobile, web development & QA</p>
+              </div>
+            </h2>
+            <span class="px-3 py-1 text-sm bg-blue-500/20 text-blue-400 rounded-full">4 Agents</span>
+          </div>
+          
+          <div class="grid grid-cols-4 gap-4">
+            <div class="agent-badge bg-gray-900 rounded-lg p-4 border border-blue-500/30">
+              <div class="flex items-center mb-3">
+                <div class="w-10 h-10 rounded-lg bg-blue-500/20 flex items-center justify-center mr-3">
+                  <i class="fas fa-terminal text-blue-400"></i>
+                </div>
+                <div>
+                  <p class="font-semibold text-blue-400">CLI Developer</p>
+                  <p class="text-xs text-gray-500">Command-line tools</p>
+                </div>
+              </div>
+              <ul class="text-sm text-gray-400 space-y-1">
+                <li>• Build CLI applications</li>
+                <li>• Write Go/Rust/Node tools</li>
+                <li>• Create automation scripts</li>
+              </ul>
+              <div class="mt-3 flex flex-wrap gap-1">
+                <span class="px-2 py-0.5 text-xs bg-gray-800 rounded">Go</span>
+                <span class="px-2 py-0.5 text-xs bg-gray-800 rounded">Rust</span>
+                <span class="px-2 py-0.5 text-xs bg-gray-800 rounded">Node</span>
+              </div>
+            </div>
+            
+            <div class="agent-badge bg-gray-900 rounded-lg p-4 border border-blue-500/30">
+              <div class="flex items-center mb-3">
+                <div class="w-10 h-10 rounded-lg bg-blue-500/20 flex items-center justify-center mr-3">
+                  <i class="fas fa-mobile-screen text-blue-400"></i>
+                </div>
+                <div>
+                  <p class="font-semibold text-blue-400">App Developer</p>
+                  <p class="text-xs text-gray-500">Mobile applications</p>
+                </div>
+              </div>
+              <ul class="text-sm text-gray-400 space-y-1">
+                <li>• Build Android/iOS apps</li>
+                <li>• Kotlin/Swift development</li>
+                <li>• SDK integrations</li>
+              </ul>
+              <div class="mt-3 flex flex-wrap gap-1">
+                <span class="px-2 py-0.5 text-xs bg-gray-800 rounded">Kotlin</span>
+                <span class="px-2 py-0.5 text-xs bg-gray-800 rounded">Swift</span>
+                <span class="px-2 py-0.5 text-xs bg-gray-800 rounded">Flutter</span>
+              </div>
+            </div>
+            
+            <div class="agent-badge bg-gray-900 rounded-lg p-4 border border-blue-500/30">
+              <div class="flex items-center mb-3">
+                <div class="w-10 h-10 rounded-lg bg-blue-500/20 flex items-center justify-center mr-3">
+                  <i class="fas fa-globe text-blue-400"></i>
+                </div>
+                <div>
+                  <p class="font-semibold text-blue-400">Web Developer</p>
+                  <p class="text-xs text-gray-500">Websites & web apps</p>
+                </div>
+              </div>
+              <ul class="text-sm text-gray-400 space-y-1">
+                <li>• Build websites & dashboards</li>
+                <li>• React/Next.js development</li>
+                <li>• API integrations</li>
+              </ul>
+              <div class="mt-3 flex flex-wrap gap-1">
+                <span class="px-2 py-0.5 text-xs bg-gray-800 rounded">React</span>
+                <span class="px-2 py-0.5 text-xs bg-gray-800 rounded">Next.js</span>
+                <span class="px-2 py-0.5 text-xs bg-gray-800 rounded">Tailwind</span>
+              </div>
+            </div>
+            
+            <div class="agent-badge bg-gray-900 rounded-lg p-4 border border-blue-500/30">
+              <div class="flex items-center mb-3">
+                <div class="w-10 h-10 rounded-lg bg-blue-500/20 flex items-center justify-center mr-3">
+                  <i class="fas fa-vial text-blue-400"></i>
+                </div>
+                <div>
+                  <p class="font-semibold text-blue-400">QA Manager</p>
+                  <p class="text-xs text-gray-500">Quality assurance</p>
+                </div>
+              </div>
+              <ul class="text-sm text-gray-400 space-y-1">
+                <li>• Write & run tests</li>
+                <li>• Automated testing</li>
+                <li>• Bug tracking</li>
+              </ul>
+              <div class="mt-3 flex flex-wrap gap-1">
+                <span class="px-2 py-0.5 text-xs bg-gray-800 rounded">Jest</span>
+                <span class="px-2 py-0.5 text-xs bg-gray-800 rounded">Playwright</span>
+                <span class="px-2 py-0.5 text-xs bg-gray-800 rounded">GitHub</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- PARTNERS -->
+      <section id="partners" class="mb-10">
+        <div class="dept-card bg-gray-800 rounded-xl border border-gray-700 p-6" style="border-left-color: #06b6d4;">
+          <div class="flex items-center justify-between mb-6">
+            <h2 class="text-xl font-semibold flex items-center">
+              <div class="w-12 h-12 rounded-xl bg-cyan-500/20 flex items-center justify-center mr-4">
+                <i class="fas fa-users text-cyan-400 text-xl"></i>
+              </div>
+              <div>
+                <span class="text-cyan-400">Partners Department</span>
+                <p class="text-sm text-gray-400 font-normal">Account management, support & monitoring</p>
+              </div>
+            </h2>
+            <span class="px-3 py-1 text-sm bg-cyan-500/20 text-cyan-400 rounded-full">3 Agents</span>
+          </div>
+          
+          <div class="grid grid-cols-3 gap-4">
+            <div class="agent-badge bg-gray-900 rounded-lg p-4 border border-cyan-500/30">
+              <div class="flex items-center mb-3">
+                <div class="w-10 h-10 rounded-lg bg-cyan-500/20 flex items-center justify-center mr-3">
+                  <i class="fas fa-user-tie text-cyan-400"></i>
+                </div>
+                <div>
+                  <p class="font-semibold text-cyan-400">Account Manager</p>
+                  <p class="text-xs text-gray-500">Partner relations</p>
+                </div>
+              </div>
+              <ul class="text-sm text-gray-400 space-y-1">
+                <li>• Onboard new partners</li>
+                <li>• Manage relationships</li>
+                <li>• Handle renewals</li>
+                <li>• Upsell opportunities</li>
+              </ul>
+              <div class="mt-3 flex flex-wrap gap-1">
+                <span class="px-2 py-0.5 text-xs bg-gray-800 rounded">CRM</span>
+                <span class="px-2 py-0.5 text-xs bg-gray-800 rounded">Slack</span>
+                <span class="px-2 py-0.5 text-xs bg-gray-800 rounded">Email</span>
+              </div>
+            </div>
+            
+            <div class="agent-badge bg-gray-900 rounded-lg p-4 border border-cyan-500/30">
+              <div class="flex items-center mb-3">
+                <div class="w-10 h-10 rounded-lg bg-cyan-500/20 flex items-center justify-center mr-3">
+                  <i class="fas fa-headset text-cyan-400"></i>
+                </div>
+                <div>
+                  <p class="font-semibold text-cyan-400">Customer Support</p>
+                  <p class="text-xs text-gray-500">Help & tickets</p>
+                </div>
+              </div>
+              <ul class="text-sm text-gray-400 space-y-1">
+                <li>• Answer support tickets</li>
+                <li>• Live chat assistance</li>
+                <li>• Update documentation</li>
+                <li>• Escalate complex issues</li>
+              </ul>
+              <div class="mt-3 flex flex-wrap gap-1">
+                <span class="px-2 py-0.5 text-xs bg-gray-800 rounded">Intercom</span>
+                <span class="px-2 py-0.5 text-xs bg-gray-800 rounded">Zendesk</span>
+                <span class="px-2 py-0.5 text-xs bg-gray-800 rounded">Notion</span>
+              </div>
+            </div>
+            
+            <div class="agent-badge bg-gray-900 rounded-lg p-4 border border-cyan-500/30">
+              <div class="flex items-center mb-3">
+                <div class="w-10 h-10 rounded-lg bg-cyan-500/20 flex items-center justify-center mr-3">
+                  <i class="fas fa-chart-line text-cyan-400"></i>
+                </div>
+                <div>
+                  <p class="font-semibold text-cyan-400">Monitoring Manager</p>
+                  <p class="text-xs text-gray-500">Partner health</p>
+                </div>
+              </div>
+              <ul class="text-sm text-gray-400 space-y-1">
+                <li>• Track partner usage</li>
+                <li>• Identify churn risks</li>
+                <li>• Generate health reports</li>
+                <li>• Alert on anomalies</li>
+              </ul>
+              <div class="mt-3 flex flex-wrap gap-1">
+                <span class="px-2 py-0.5 text-xs bg-gray-800 rounded">Grafana</span>
+                <span class="px-2 py-0.5 text-xs bg-gray-800 rounded">Analytics</span>
+                <span class="px-2 py-0.5 text-xs bg-gray-800 rounded">Alerts</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- FINANCE -->
+      <section id="finance" class="mb-10">
+        <div class="dept-card bg-gray-800 rounded-xl border border-gray-700 p-6" style="border-left-color: #eab308;">
+          <div class="flex items-center justify-between mb-6">
+            <h2 class="text-xl font-semibold flex items-center">
+              <div class="w-12 h-12 rounded-xl bg-yellow-500/20 flex items-center justify-center mr-4">
+                <i class="fas fa-coins text-yellow-400 text-xl"></i>
+              </div>
+              <div>
+                <span class="text-yellow-400">Finance Department</span>
+                <p class="text-sm text-gray-400 font-normal">Financial data, accounting & payments</p>
+              </div>
+            </h2>
+            <span class="px-3 py-1 text-sm bg-yellow-500/20 text-yellow-400 rounded-full">3 Agents</span>
+          </div>
+          
+          <div class="grid grid-cols-3 gap-4">
+            <div class="agent-badge bg-gray-900 rounded-lg p-4 border border-yellow-500/30">
+              <div class="flex items-center mb-3">
+                <div class="w-10 h-10 rounded-lg bg-yellow-500/20 flex items-center justify-center mr-3">
+                  <i class="fas fa-database text-yellow-400"></i>
+                </div>
+                <div>
+                  <p class="font-semibold text-yellow-400">Data Scraper</p>
+                  <p class="text-xs text-gray-500">Financial intelligence</p>
+                </div>
+              </div>
+              <ul class="text-sm text-gray-400 space-y-1">
+                <li>• Scrape financial reports</li>
+                <li>• Track market data</li>
+                <li>• Competitor pricing</li>
+                <li>• Industry benchmarks</li>
+              </ul>
+              <div class="mt-3 flex flex-wrap gap-1">
+                <span class="px-2 py-0.5 text-xs bg-gray-800 rounded">Browser</span>
+                <span class="px-2 py-0.5 text-xs bg-gray-800 rounded">APIs</span>
+                <span class="px-2 py-0.5 text-xs bg-gray-800 rounded">Sheets</span>
+              </div>
+            </div>
+            
+            <div class="agent-badge bg-gray-900 rounded-lg p-4 border border-yellow-500/30">
+              <div class="flex items-center mb-3">
+                <div class="w-10 h-10 rounded-lg bg-yellow-500/20 flex items-center justify-center mr-3">
+                  <i class="fas fa-calculator text-yellow-400"></i>
+                </div>
+                <div>
+                  <p class="font-semibold text-yellow-400">Accountant</p>
+                  <p class="text-xs text-gray-500">Books & records</p>
+                </div>
+              </div>
+              <ul class="text-sm text-gray-400 space-y-1">
+                <li>• Generate invoices</li>
+                <li>• Track expenses</li>
+                <li>• P&L reporting</li>
+                <li>• Tax preparation</li>
+              </ul>
+              <div class="mt-3 flex flex-wrap gap-1">
+                <span class="px-2 py-0.5 text-xs bg-gray-800 rounded">QuickBooks</span>
+                <span class="px-2 py-0.5 text-xs bg-gray-800 rounded">Xero</span>
+                <span class="px-2 py-0.5 text-xs bg-gray-800 rounded">Excel</span>
+              </div>
+            </div>
+            
+            <div class="agent-badge bg-gray-900 rounded-lg p-4 border border-yellow-500/30">
+              <div class="flex items-center mb-3">
+                <div class="w-10 h-10 rounded-lg bg-yellow-500/20 flex items-center justify-center mr-3">
+                  <i class="fas fa-credit-card text-yellow-400"></i>
+                </div>
+                <div>
+                  <p class="font-semibold text-yellow-400">Payment Manager</p>
+                  <p class="text-xs text-gray-500">Payment processing</p>
+                </div>
+              </div>
+              <ul class="text-sm text-gray-400 space-y-1">
+                <li>• Process payments</li>
+                <li>• Handle refunds</li>
+                <li>• Subscription billing</li>
+                <li>• Failed payment recovery</li>
+              </ul>
+              <div class="mt-3 flex flex-wrap gap-1">
+                <span class="px-2 py-0.5 text-xs bg-gray-800 rounded">Stripe</span>
+                <span class="px-2 py-0.5 text-xs bg-gray-800 rounded">PayPal</span>
+                <span class="px-2 py-0.5 text-xs bg-gray-800 rounded">Wise</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Summary Stats -->
+      <section class="mb-10">
+        <div class="bg-gradient-to-r from-indigo-500/10 to-purple-500/10 rounded-xl border border-indigo-500/30 p-6">
+          <h2 class="text-xl font-semibold mb-4 flex items-center">
+            <i class="fas fa-chart-pie text-indigo-400 mr-3"></i> Team Summary
+          </h2>
+          <div class="grid grid-cols-6 gap-4 text-center">
+            <div>
+              <p class="text-3xl font-bold text-indigo-400">5</p>
+              <p class="text-sm text-gray-400">Departments</p>
+            </div>
+            <div>
+              <p class="text-3xl font-bold text-green-400">16</p>
+              <p class="text-sm text-gray-400">Sub-Agents</p>
+            </div>
+            <div>
+              <p class="text-3xl font-bold text-purple-400">20+</p>
+              <p class="text-sm text-gray-400">Integrations</p>
+            </div>
+            <div>
+              <p class="text-3xl font-bold text-blue-400">24/7</p>
+              <p class="text-sm text-gray-400">Autonomous</p>
+            </div>
+            <div>
+              <p class="text-3xl font-bold text-cyan-400">∞</p>
+              <p class="text-sm text-gray-400">Scalable</p>
+            </div>
+            <div>
+              <p class="text-3xl font-bold text-yellow-400">1</p>
+              <p class="text-sm text-gray-400">Orchestrator</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </main>
+
+  <script>
+    function toggleSidebar() {
+      const sidebar = document.getElementById('sidebar');
+      const overlay = document.getElementById('overlay');
+      sidebar.classList.toggle('open');
+      overlay.classList.toggle('active');
+    }
+  </script>
+</body>
+</html>

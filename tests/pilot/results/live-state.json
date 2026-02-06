@@ -1,0 +1,16 @@
+{
+  "running": false,
+  "suite": "feature",
+  "description": "Feature validation",
+  "total": 3,
+  "progress": 3,
+  "currentTest": null,
+  "startTime": 1770406626443,
+  "suiteStartTime": 1770406605928,
+  "queue": [],
+  "lastTest": {
+    "name": "sticky-stress.js",
+    "passed": false,
+    "duration": 12700
+  }
+}

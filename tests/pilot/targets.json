@@ -1,0 +1,66 @@
+{
+  "endpoints": [
+    {
+      "name": "httpbin-ip",
+      "url": "https://httpbin.org/ip",
+      "description": "Returns requester IP - verify proxy working",
+      "validate": "origin",
+      "weight": 3
+    },
+    {
+      "name": "httpbin-headers",
+      "url": "https://httpbin.org/headers",
+      "description": "Returns request headers - check for leaks",
+      "validate": "headers",
+      "weight": 2
+    },
+    {
+      "name": "ipapi",
+      "url": "http://ip-api.com/json",
+      "description": "Returns IP geolocation - verify geographic targeting",
+      "validate": "geo",
+      "weight": 2
+    },
+    {
+      "name": "httpbin-delay",
+      "url": "https://httpbin.org/delay/2",
+      "description": "2 second delay - test timeout handling",
+      "validate": "origin",
+      "weight": 1
+    },
+    {
+      "name": "httpbin-bytes",
+      "url": "https://httpbin.org/bytes/10240",
+      "description": "10KB response - test bandwidth",
+      "validate": "size",
+      "expectedSize": 10240,
+      "weight": 1
+    },
+    {
+      "name": "amazon-robots",
+      "url": "https://www.amazon.com/robots.txt",
+      "description": "Real e-commerce - test against actual site",
+      "validate": "contains",
+      "expectedContent": "User-agent",
+      "weight": 1
+    }
+  ],
+  "sessionFlows": [
+    {
+      "name": "multi-page-browse",
+      "description": "Simulates browsing multiple pages - tests session stickiness",
+      "steps": [
+        "https://httpbin.org/ip",
+        "https://httpbin.org/headers",
+        "https://httpbin.org/user-agent",
+        "https://httpbin.org/ip"
+      ],
+      "expectSameIp": true
+    }
+  ],
+  "geoTargets": [
+    { "country": "US", "validateField": "countryCode" },
+    { "country": "DE", "validateField": "countryCode" },
+    { "country": "GB", "validateField": "countryCode" }
+  ]
+}

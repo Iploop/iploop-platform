@@ -171,8 +171,8 @@ export default function UsagePage() {
                     tickFormatter={selectedMetric === 'requests' ? formatRequests : formatBandwidth}
                   />
                   <Tooltip 
-                    formatter={(value: number) => [
-                      selectedMetric === 'requests' ? formatRequests(value) : formatBandwidth(value),
+                    formatter={(value) => [
+                      selectedMetric === 'requests' ? formatRequests(value as number ?? 0) : formatBandwidth(value as number ?? 0),
                       selectedMetric === 'requests' ? 'Requests' : 'Bandwidth (GB)'
                     ]}
                     labelFormatter={(value) => new Date(value).toLocaleDateString()}
@@ -204,7 +204,7 @@ export default function UsagePage() {
                     <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
                     <XAxis dataKey="hour" className="text-muted-foreground" />
                     <YAxis className="text-muted-foreground" tickFormatter={formatRequests} />
-                    <Tooltip formatter={(value: number) => [formatRequests(value), 'Requests']} />
+                    <Tooltip formatter={(value) => [formatRequests(value as number ?? 0), 'Requests']} />
                     <Bar dataKey="requests" fill="#10b981" />
                   </BarChart>
                 </ResponsiveContainer>
@@ -235,7 +235,7 @@ export default function UsagePage() {
                         <Cell key={`cell-${index}`} fill={entry.color} />
                       ))}
                     </Pie>
-                    <Tooltip formatter={(value: number) => [`${value}%`, 'Percentage']} />
+                    <Tooltip formatter={(value) => [`${value}%`, 'Percentage']} />
                   </PieChart>
                 </ResponsiveContainer>
               </div>
@@ -282,8 +282,8 @@ export default function UsagePage() {
                     className="text-muted-foreground"
                   />
                   <Tooltip 
-                    formatter={(value: number, name: string) => [
-                      name === 'success' ? `${value.toFixed(2)}%` : value,
+                    formatter={(value, name) => [
+                      name === 'success' ? `${(value as number ?? 0).toFixed(2)}%` : value,
                       name === 'success' ? 'Success Rate' : 'Errors'
                     ]}
                     labelFormatter={(value) => new Date(value).toLocaleDateString()}

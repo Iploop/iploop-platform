@@ -1,0 +1,920 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>IPLoop Test Dashboard</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/luxon@3/build/global/luxon.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-luxon@1"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            primary: '#6366f1',
+            'primary-foreground': '#ffffff',
+            card: '#1f2937',
+            'card-foreground': '#f9fafb',
+            border: '#374151',
+            muted: '#6b7280',
+            accent: '#4f46e5',
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+    .sidebar { width: 256px; transition: transform 0.3s ease; position: fixed; z-index: 50; transform: translateX(-256px); }
+    .sidebar.open { transform: translateX(0); }
+    .main-content { margin-left: 0; transition: margin-left 0.3s ease; }
+    .stat-card { transition: transform 0.2s, box-shadow 0.2s; }
+    .stat-card:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(0,0,0,0.3); }
+    .chart-container { position: relative; height: 250px; }
+    @keyframes pulse-slow { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }
+    .animate-pulse-slow { animation: pulse-slow 2s ease-in-out infinite; }
+    .scrollbar-thin::-webkit-scrollbar { width: 6px; }
+    .scrollbar-thin::-webkit-scrollbar-thumb { background: #4b5563; border-radius: 3px; }
+    .menu-toggle { display: flex; position: fixed; top: 16px; left: 16px; z-index: 60; }
+    .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 40; }
+    .overlay.active { display: block; }
+    
+    /* Desktop: show sidebar */
+    @media (min-width: 1024px) {
+      .sidebar { transform: translateX(0); }
+      .main-content { margin-left: 256px; }
+      .menu-toggle { display: none; }
+    }
+    
+    /* Mobile grid fixes */
+    @media (max-width: 768px) {
+      .grid-cols-6 { grid-template-columns: repeat(2, 1fr) !important; }
+      .grid-cols-4 { grid-template-columns: repeat(2, 1fr) !important; }
+      .grid-cols-3 { grid-template-columns: repeat(1, 1fr) !important; }
+      .grid-cols-2 { grid-template-columns: repeat(1, 1fr) !important; }
+      .chart-container { height: 200px; }
+      .main-content > div { padding: 16px !important; padding-top: 60px !important; }
+    }
+  </style>
+</head>
+<body class="bg-gray-900 text-gray-100 min-h-screen">
+  <!-- Mobile Menu Toggle -->
+  <button onclick="toggleSidebar()" class="menu-toggle items-center justify-center w-10 h-10 bg-gray-800 rounded-lg border border-gray-700">
+    <i class="fas fa-bars text-gray-300"></i>
+  </button>
+  
+  <!-- Overlay -->
+  <div class="overlay" id="overlay" onclick="toggleSidebar()"></div>
+  
+  <!-- Sidebar -->
+  <aside class="sidebar fixed inset-y-0 left-0 bg-gray-800 border-r border-gray-700 flex flex-col z-50" id="sidebar">
+    <div class="flex items-center justify-between px-4 py-5 border-b border-gray-700">
+      <div class="flex items-center">
+        <i class="fas fa-flask text-primary text-2xl"></i>
+        <span class="ml-3 text-xl font-bold">Test Dashboard</span>
+      </div>
+      <button onclick="toggleSidebar()" class="lg:hidden w-8 h-8 flex items-center justify-center text-gray-400 hover:text-white">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+    
+    <nav class="flex-1 px-3 py-4 space-y-1 overflow-y-auto scrollbar-thin">
+      <a href="/" class="flex items-center px-3 py-2 text-sm font-medium rounded-lg bg-primary text-white">
+        <i class="fas fa-chart-line w-5 mr-3"></i> Test Dashboard
+      </a>
+      <a href="/ultron.html" class="flex items-center px-3 py-2 text-sm font-medium rounded-lg text-gray-300 hover:bg-gray-700">
+        <i class="fas fa-microchip w-5 mr-3"></i> System Specs
+      </a>
+      <a href="/ai-teams.html" class="flex items-center px-3 py-2 text-sm font-medium rounded-lg text-gray-300 hover:bg-gray-700">
+        <i class="fas fa-sitemap w-5 mr-3"></i> AI Teams
+      </a>
+      <div class="pt-4 pb-2">
+        <p class="px-3 text-xs font-semibold text-gray-500 uppercase">Dashboard</p>
+      </div>
+      <a href="#tests" class="flex items-center px-3 py-2 text-sm font-medium rounded-lg text-gray-300 hover:bg-gray-700">
+        <i class="fas fa-vial w-5 mr-3"></i> Test Results
+      </a>
+      <a href="#schedule" class="flex items-center px-3 py-2 text-sm font-medium rounded-lg text-gray-300 hover:bg-gray-700">
+        <i class="fas fa-clock w-5 mr-3"></i> Schedule
+      </a>
+      <a href="#liveRunner" class="flex items-center px-3 py-2 text-sm font-medium rounded-lg text-gray-300 hover:bg-gray-700">
+        <i class="fas fa-terminal w-5 mr-3"></i> Live Runner
+      </a>
+    </nav>
+    
+    <div class="px-4 py-4 border-t border-gray-700">
+      <div class="flex items-center">
+        <div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center">
+          <i class="fas fa-robot text-white text-sm"></i>
+        </div>
+        <div class="ml-3">
+          <p class="text-sm font-medium">Autonomous Mode</p>
+          <p class="text-xs text-green-400"><i class="fas fa-circle text-[8px] mr-1"></i>Active</p>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="main-content min-h-screen">
+    <div class="p-4 md:p-8 pt-16 md:pt-8">
+      <!-- Header -->
+      <div class="flex justify-between items-center mb-8">
+        <div>
+          <h1 class="text-2xl font-bold">IPLoop Test Suite</h1>
+          <p class="text-gray-400 mt-1">Autonomous testing with real-time monitoring</p>
+        </div>
+        <div class="flex items-center space-x-4">
+          <div class="text-right">
+            <p class="text-sm text-gray-400">Last updated</p>
+            <p class="text-sm font-medium" id="lastUpdate">--</p>
+          </div>
+          <div id="statusBadge" class="px-4 py-2 rounded-full bg-green-500/20 text-green-400 text-sm font-medium">
+            <i class="fas fa-check-circle mr-2"></i>All Systems Operational
+          </div>
+        </div>
+      </div>
+
+      <!-- Stats Grid -->
+      <div class="grid grid-cols-6 gap-4 mb-8">
+        <div class="stat-card bg-gray-800 rounded-xl p-4 border border-gray-700">
+          <div class="flex justify-between items-start">
+            <div>
+              <p class="text-gray-400 text-sm">Total Tests</p>
+              <p class="text-2xl font-bold mt-1" id="statTotal">0</p>
+            </div>
+            <div class="w-10 h-10 rounded-lg bg-blue-500/20 flex items-center justify-center">
+              <i class="fas fa-list-check text-blue-400"></i>
+            </div>
+          </div>
+          <p class="text-xs text-gray-500 mt-2">Across all categories</p>
+        </div>
+        
+        <div class="stat-card bg-gray-800 rounded-xl p-4 border border-gray-700">
+          <div class="flex justify-between items-start">
+            <div>
+              <p class="text-gray-400 text-sm">Passing</p>
+              <p class="text-2xl font-bold mt-1 text-green-400" id="statPassing">0</p>
+            </div>
+            <div class="w-10 h-10 rounded-lg bg-green-500/20 flex items-center justify-center">
+              <i class="fas fa-check text-green-400"></i>
+            </div>
+          </div>
+          <p class="text-xs text-green-400 mt-2" id="passRate">--% pass rate</p>
+        </div>
+        
+        <div class="stat-card bg-gray-800 rounded-xl p-4 border border-gray-700">
+          <div class="flex justify-between items-start">
+            <div>
+              <p class="text-gray-400 text-sm">Failing</p>
+              <p class="text-2xl font-bold mt-1 text-red-400" id="statFailing">0</p>
+            </div>
+            <div class="w-10 h-10 rounded-lg bg-red-500/20 flex items-center justify-center">
+              <i class="fas fa-times text-red-400"></i>
+            </div>
+          </div>
+          <p class="text-xs text-gray-500 mt-2">Needs attention</p>
+        </div>
+        
+        <div class="stat-card bg-gray-800 rounded-xl p-4 border border-gray-700">
+          <div class="flex justify-between items-start">
+            <div>
+              <p class="text-gray-400 text-sm">Avg Latency</p>
+              <p class="text-2xl font-bold mt-1" id="statLatency">--</p>
+            </div>
+            <div class="w-10 h-10 rounded-lg bg-yellow-500/20 flex items-center justify-center">
+              <i class="fas fa-bolt text-yellow-400"></i>
+            </div>
+          </div>
+          <p class="text-xs text-gray-500 mt-2" id="latencyTrend">--</p>
+        </div>
+        
+        <div class="stat-card bg-gray-800 rounded-xl p-4 border border-gray-700">
+          <div class="flex justify-between items-start">
+            <div>
+              <p class="text-gray-400 text-sm">Total Runs</p>
+              <p class="text-2xl font-bold mt-1" id="statRuns">0</p>
+            </div>
+            <div class="w-10 h-10 rounded-lg bg-purple-500/20 flex items-center justify-center">
+              <i class="fas fa-play text-purple-400"></i>
+            </div>
+          </div>
+          <p class="text-xs text-gray-500 mt-2">All time</p>
+        </div>
+        
+        <div class="stat-card bg-gray-800 rounded-xl p-4 border border-gray-700">
+          <div class="flex justify-between items-start">
+            <div>
+              <p class="text-gray-400 text-sm">Next Run</p>
+              <p class="text-lg font-bold mt-1" id="statNextRun">--</p>
+            </div>
+            <div class="w-10 h-10 rounded-lg bg-indigo-500/20 flex items-center justify-center">
+              <i class="fas fa-calendar text-indigo-400"></i>
+            </div>
+          </div>
+          <p class="text-xs text-gray-500 mt-2" id="nextRunType">--</p>
+        </div>
+      </div>
+
+      <!-- Charts Row -->
+      <div class="grid grid-cols-3 gap-6 mb-8">
+        <!-- Pass/Fail Over Time -->
+        <div class="col-span-2 bg-gray-800 rounded-xl p-6 border border-gray-700">
+          <div class="flex justify-between items-center mb-4">
+            <h3 class="text-lg font-semibold">Test Results Over Time</h3>
+            <div class="flex space-x-2">
+              <button onclick="setTimeRange('24h')" class="px-3 py-1 text-xs rounded bg-gray-700 hover:bg-gray-600">24h</button>
+              <button onclick="setTimeRange('7d')" class="px-3 py-1 text-xs rounded bg-primary text-white">7d</button>
+              <button onclick="setTimeRange('30d')" class="px-3 py-1 text-xs rounded bg-gray-700 hover:bg-gray-600">30d</button>
+            </div>
+          </div>
+          <div class="chart-container">
+            <canvas id="resultsChart"></canvas>
+          </div>
+        </div>
+        
+        <!-- Pass Rate Donut -->
+        <div class="bg-gray-800 rounded-xl p-6 border border-gray-700">
+          <h3 class="text-lg font-semibold mb-4">Overall Health</h3>
+          <div class="chart-container flex items-center justify-center">
+            <canvas id="healthChart"></canvas>
+          </div>
+          <div class="grid grid-cols-2 gap-4 mt-4">
+            <div class="text-center">
+              <p class="text-2xl font-bold text-green-400" id="healthPass">0</p>
+              <p class="text-xs text-gray-400">Passed</p>
+            </div>
+            <div class="text-center">
+              <p class="text-2xl font-bold text-red-400" id="healthFail">0</p>
+              <p class="text-xs text-gray-400">Failed</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Second Charts Row -->
+      <div class="grid grid-cols-3 gap-6 mb-8">
+        <!-- Latency Distribution -->
+        <div class="bg-gray-800 rounded-xl p-6 border border-gray-700">
+          <h3 class="text-lg font-semibold mb-4">Latency Distribution</h3>
+          <div class="chart-container">
+            <canvas id="latencyChart"></canvas>
+          </div>
+        </div>
+        
+        <!-- Test Category Performance -->
+        <div class="bg-gray-800 rounded-xl p-6 border border-gray-700">
+          <h3 class="text-lg font-semibold mb-4">Category Performance</h3>
+          <div class="chart-container">
+            <canvas id="categoryChart"></canvas>
+          </div>
+        </div>
+        
+        <!-- Response Time Trends -->
+        <div class="bg-gray-800 rounded-xl p-6 border border-gray-700">
+          <h3 class="text-lg font-semibold mb-4">Response Time Trend</h3>
+          <div class="chart-container">
+            <canvas id="responseChart"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- Test Results Table -->
+      <div class="bg-gray-800 rounded-xl border border-gray-700 mb-8">
+        <div class="px-6 py-4 border-b border-gray-700 flex justify-between items-center">
+          <h3 class="text-lg font-semibold">Test Results</h3>
+          <div class="flex space-x-2">
+            <select id="filterCategory" class="bg-gray-700 border-gray-600 rounded px-3 py-1.5 text-sm">
+              <option value="all">All Categories</option>
+              <option value="stress">Stress Tests</option>
+              <option value="security">Security Tests</option>
+              <option value="feature">Feature Tests</option>
+              <option value="protocol">Protocol Tests</option>
+            </select>
+            <select id="filterStatus" class="bg-gray-700 border-gray-600 rounded px-3 py-1.5 text-sm">
+              <option value="all">All Status</option>
+              <option value="pass">Passing</option>
+              <option value="fail">Failing</option>
+            </select>
+          </div>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full">
+            <thead class="bg-gray-900/50">
+              <tr>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase">Test Name</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase">Status</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase">Duration</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase">Last Run</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase">Trend</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase">Metrics</th>
+              </tr>
+            </thead>
+            <tbody id="testTableBody" class="divide-y divide-gray-700">
+              <!-- Populated by JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Live Test Runner -->
+      <div class="bg-gray-800 rounded-xl border border-gray-700 mb-8" id="liveRunner">
+        <div class="px-6 py-4 border-b border-gray-700 flex justify-between items-center">
+          <div class="flex items-center">
+            <div id="runnerStatus" class="w-3 h-3 rounded-full bg-gray-500 mr-3"></div>
+            <h3 class="text-lg font-semibold">Live Test Runner</h3>
+          </div>
+          <div class="flex items-center space-x-4">
+            <span class="text-sm text-gray-400" id="runnerInfo">Waiting for tests...</span>
+            <div class="flex items-center space-x-2">
+              <span class="text-xs text-gray-500">Auto-scroll</span>
+              <input type="checkbox" id="autoScroll" checked class="rounded bg-gray-700 border-gray-600">
+            </div>
+          </div>
+        </div>
+        
+        <!-- Progress Bar -->
+        <div class="px-6 py-3 border-b border-gray-700 bg-gray-900/50">
+          <div class="flex justify-between items-center mb-2">
+            <div class="flex items-center space-x-4">
+              <span class="text-sm font-medium" id="currentSuite">--</span>
+              <span class="text-xs text-gray-400" id="suiteProgress">0/0 tests</span>
+            </div>
+            <span class="text-xs text-gray-400" id="suiteTime">--</span>
+          </div>
+          <div class="w-full bg-gray-700 rounded-full h-2">
+            <div id="progressBar" class="bg-primary h-2 rounded-full transition-all duration-300" style="width: 0%"></div>
+          </div>
+        </div>
+        
+        <!-- Current Test Info -->
+        <div class="px-6 py-3 border-b border-gray-700 flex items-center justify-between" id="currentTestBar">
+          <div class="flex items-center">
+            <div class="w-8 h-8 rounded-lg bg-blue-500/20 flex items-center justify-center mr-3">
+              <i class="fas fa-cog fa-spin text-blue-400" id="testIcon"></i>
+            </div>
+            <div>
+              <p class="font-medium" id="currentTest">No test running</p>
+              <p class="text-xs text-gray-400" id="currentTestDesc">--</p>
+            </div>
+          </div>
+          <div class="text-right">
+            <p class="text-sm font-mono" id="testDuration">--</p>
+            <p class="text-xs text-gray-400" id="testStatus">Idle</p>
+          </div>
+        </div>
+        
+        <!-- Live Output Console -->
+        <div class="relative">
+          <pre id="liveOutput" class="p-4 h-64 overflow-auto font-mono text-sm bg-gray-900 text-green-400 scrollbar-thin">Waiting for test output...
+
+The scheduler runs tests automatically:
+• Quick tests every 30 minutes
+• Feature tests every hour  
+• Security tests every 2 hours
+• Performance tests every 3 hours
+• Full suite every 6 hours
+
+Tests will appear here as they run.</pre>
+          <div class="absolute bottom-2 right-2 flex space-x-2">
+            <button onclick="clearOutput()" class="px-2 py-1 text-xs bg-gray-700 hover:bg-gray-600 rounded">Clear</button>
+            <button onclick="copyOutput()" class="px-2 py-1 text-xs bg-gray-700 hover:bg-gray-600 rounded">Copy</button>
+          </div>
+        </div>
+        
+        <!-- Test Queue -->
+        <div class="px-6 py-3 border-t border-gray-700 bg-gray-900/30">
+          <div class="flex items-center justify-between">
+            <span class="text-sm text-gray-400">Queue:</span>
+            <div id="testQueue" class="flex items-center space-x-2 overflow-x-auto">
+              <span class="text-xs text-gray-500">No tests queued</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Schedule & Recent Activity -->
+      <div class="grid grid-cols-2 gap-6">
+        <!-- Schedule -->
+        <div class="bg-gray-800 rounded-xl border border-gray-700">
+          <div class="px-6 py-4 border-b border-gray-700">
+            <h3 class="text-lg font-semibold">Test Schedule</h3>
+          </div>
+          <div class="p-6 space-y-4" id="scheduleList">
+            <div class="flex items-center justify-between p-3 bg-gray-700/50 rounded-lg">
+              <div class="flex items-center">
+                <div class="w-10 h-10 rounded-lg bg-blue-500/20 flex items-center justify-center mr-4">
+                  <i class="fas fa-bolt text-blue-400"></i>
+                </div>
+                <div>
+                  <p class="font-medium">Quick Tests</p>
+                  <p class="text-sm text-gray-400">smoke, leak, protocol</p>
+                </div>
+              </div>
+              <div class="text-right">
+                <p class="text-sm font-medium">Every 30 min</p>
+                <p class="text-xs text-gray-400">Next: <span id="nextQuick">--</span></p>
+              </div>
+            </div>
+            <div class="flex items-center justify-between p-3 bg-gray-700/50 rounded-lg">
+              <div class="flex items-center">
+                <div class="w-10 h-10 rounded-lg bg-purple-500/20 flex items-center justify-center mr-4">
+                  <i class="fas fa-shield-halved text-purple-400"></i>
+                </div>
+                <div>
+                  <p class="font-medium">Security Suite</p>
+                  <p class="text-sm text-gray-400">security, auth, leak</p>
+                </div>
+              </div>
+              <div class="text-right">
+                <p class="text-sm font-medium">Every 2 hours</p>
+                <p class="text-xs text-gray-400">Next: <span id="nextSecurity">--</span></p>
+              </div>
+            </div>
+            <div class="flex items-center justify-between p-3 bg-gray-700/50 rounded-lg">
+              <div class="flex items-center">
+                <div class="w-10 h-10 rounded-lg bg-green-500/20 flex items-center justify-center mr-4">
+                  <i class="fas fa-gauge-high text-green-400"></i>
+                </div>
+                <div>
+                  <p class="font-medium">Full Suite</p>
+                  <p class="text-sm text-gray-400">All 15 tests</p>
+                </div>
+              </div>
+              <div class="text-right">
+                <p class="text-sm font-medium">Every 6 hours</p>
+                <p class="text-xs text-gray-400">Next: <span id="nextFull">--</span></p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Recent Activity -->
+        <div class="bg-gray-800 rounded-xl border border-gray-700">
+          <div class="px-6 py-4 border-b border-gray-700">
+            <h3 class="text-lg font-semibold">Recent Activity</h3>
+          </div>
+          <div class="p-6 space-y-3 max-h-80 overflow-y-auto scrollbar-thin" id="activityFeed">
+            <!-- Populated by JS -->
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    // Sidebar toggle
+    function toggleSidebar() {
+      const sidebar = document.getElementById('sidebar');
+      const overlay = document.getElementById('overlay');
+      sidebar.classList.toggle('open');
+      overlay.classList.toggle('active');
+    }
+
+    // Charts
+    let resultsChart, healthChart, latencyChart, categoryChart, responseChart;
+    let latest = {}, history = {}, schedule = {};
+
+    // Initialize charts
+    function initCharts() {
+      // Results over time
+      const ctx1 = document.getElementById('resultsChart').getContext('2d');
+      resultsChart = new Chart(ctx1, {
+        type: 'line',
+        data: {
+          labels: [],
+          datasets: [
+            { label: 'Passed', data: [], borderColor: '#22c55e', backgroundColor: 'rgba(34,197,94,0.1)', fill: true, tension: 0.4 },
+            { label: 'Failed', data: [], borderColor: '#ef4444', backgroundColor: 'rgba(239,68,68,0.1)', fill: true, tension: 0.4 }
+          ]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          plugins: { legend: { position: 'top', labels: { color: '#9ca3af' } } },
+          scales: {
+            x: { grid: { color: '#374151' }, ticks: { color: '#9ca3af' } },
+            y: { beginAtZero: true, grid: { color: '#374151' }, ticks: { color: '#9ca3af' } }
+          }
+        }
+      });
+
+      // Health donut
+      const ctx2 = document.getElementById('healthChart').getContext('2d');
+      healthChart = new Chart(ctx2, {
+        type: 'doughnut',
+        data: {
+          labels: ['Passed', 'Failed'],
+          datasets: [{ data: [0, 0], backgroundColor: ['#22c55e', '#ef4444'], borderWidth: 0 }]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          cutout: '70%',
+          plugins: { legend: { display: false } }
+        }
+      });
+
+      // Latency distribution
+      const ctx3 = document.getElementById('latencyChart').getContext('2d');
+      latencyChart = new Chart(ctx3, {
+        type: 'bar',
+        data: {
+          labels: ['<100ms', '100-250ms', '250-500ms', '500ms-1s', '>1s'],
+          datasets: [{ data: [0, 0, 0, 0, 0], backgroundColor: ['#22c55e', '#84cc16', '#eab308', '#f97316', '#ef4444'] }]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            x: { grid: { display: false }, ticks: { color: '#9ca3af' } },
+            y: { beginAtZero: true, grid: { color: '#374151' }, ticks: { color: '#9ca3af' } }
+          }
+        }
+      });
+
+      // Category performance radar
+      const ctx4 = document.getElementById('categoryChart').getContext('2d');
+      categoryChart = new Chart(ctx4, {
+        type: 'radar',
+        data: {
+          labels: ['Stress', 'Security', 'Protocol', 'Feature', 'Stability'],
+          datasets: [{
+            label: 'Pass Rate',
+            data: [0, 0, 0, 0, 0],
+            backgroundColor: 'rgba(99,102,241,0.2)',
+            borderColor: '#6366f1',
+            pointBackgroundColor: '#6366f1'
+          }]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            r: {
+              beginAtZero: true, max: 100,
+              grid: { color: '#374151' },
+              angleLines: { color: '#374151' },
+              pointLabels: { color: '#9ca3af' },
+              ticks: { display: false }
+            }
+          }
+        }
+      });
+
+      // Response time trend
+      const ctx5 = document.getElementById('responseChart').getContext('2d');
+      responseChart = new Chart(ctx5, {
+        type: 'line',
+        data: {
+          labels: [],
+          datasets: [{
+            label: 'Avg Response (ms)',
+            data: [],
+            borderColor: '#f59e0b',
+            backgroundColor: 'rgba(245,158,11,0.1)',
+            fill: true, tension: 0.4
+          }]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            x: { grid: { color: '#374151' }, ticks: { color: '#9ca3af' } },
+            y: { beginAtZero: true, grid: { color: '#374151' }, ticks: { color: '#9ca3af' } }
+          }
+        }
+      });
+    }
+
+    // Fetch and update data
+    async function fetchData() {
+      try {
+        const res = await fetch('/api/results');
+        const data = await res.json();
+        latest = data.latest || {};
+        history = data.history || {};
+        schedule = data.schedule || {};
+        updateUI();
+      } catch (e) {
+        console.error('Fetch failed:', e);
+      }
+    }
+
+    function updateUI() {
+      const tests = Object.entries(latest);
+      const passing = tests.filter(([_, t]) => t.passed).length;
+      const failing = tests.filter(([_, t]) => !t.passed).length;
+      const totalRuns = Object.values(history).flat().length;
+
+      // Stats
+      document.getElementById('statTotal').textContent = tests.length;
+      document.getElementById('statPassing').textContent = passing;
+      document.getElementById('statFailing').textContent = failing;
+      document.getElementById('statRuns').textContent = totalRuns;
+      document.getElementById('passRate').textContent = tests.length > 0 
+        ? `${((passing / tests.length) * 100).toFixed(1)}% pass rate` : '--% pass rate';
+
+      // Calculate avg latency
+      const latencies = tests.map(([_, t]) => t.summary?.avgLatency).filter(Boolean);
+      const avgLatency = latencies.length > 0 
+        ? (latencies.reduce((a, b) => a + b, 0) / latencies.length).toFixed(0)
+        : '--';
+      document.getElementById('statLatency').textContent = avgLatency !== '--' ? `${avgLatency}ms` : '--';
+
+      // Update charts
+      updateCharts();
+      updateTable();
+      updateActivity();
+      
+      document.getElementById('lastUpdate').textContent = new Date().toLocaleTimeString();
+      document.getElementById('healthPass').textContent = passing;
+      document.getElementById('healthFail').textContent = failing;
+
+      // Status badge
+      const badge = document.getElementById('statusBadge');
+      if (failing > 0) {
+        badge.className = 'px-4 py-2 rounded-full bg-red-500/20 text-red-400 text-sm font-medium';
+        badge.innerHTML = `<i class="fas fa-exclamation-circle mr-2"></i>${failing} Test${failing > 1 ? 's' : ''} Failing`;
+      } else if (tests.length === 0) {
+        badge.className = 'px-4 py-2 rounded-full bg-yellow-500/20 text-yellow-400 text-sm font-medium';
+        badge.innerHTML = '<i class="fas fa-clock mr-2"></i>No Results Yet';
+      } else {
+        badge.className = 'px-4 py-2 rounded-full bg-green-500/20 text-green-400 text-sm font-medium';
+        badge.innerHTML = '<i class="fas fa-check-circle mr-2"></i>All Systems Operational';
+      }
+    }
+
+    function updateCharts() {
+      // Aggregate history by date
+      const allHistory = Object.values(history).flat().sort((a, b) => 
+        new Date(a.timestamp) - new Date(b.timestamp)
+      );
+      
+      const byDate = {};
+      allHistory.forEach(r => {
+        const date = new Date(r.timestamp).toLocaleDateString();
+        if (!byDate[date]) byDate[date] = { passed: 0, failed: 0, latencies: [] };
+        r.passed ? byDate[date].passed++ : byDate[date].failed++;
+        if (r.duration) byDate[date].latencies.push(r.duration);
+      });
+
+      const dates = Object.keys(byDate).slice(-14);
+      resultsChart.data.labels = dates;
+      resultsChart.data.datasets[0].data = dates.map(d => byDate[d].passed);
+      resultsChart.data.datasets[1].data = dates.map(d => byDate[d].failed);
+      resultsChart.update();
+
+      // Health donut
+      const passing = Object.values(latest).filter(t => t.passed).length;
+      const failing = Object.values(latest).filter(t => !t.passed).length;
+      healthChart.data.datasets[0].data = [passing, failing];
+      healthChart.update();
+
+      // Response time trend
+      responseChart.data.labels = dates;
+      responseChart.data.datasets[0].data = dates.map(d => {
+        const lats = byDate[d].latencies;
+        return lats.length > 0 ? Math.round(lats.reduce((a, b) => a + b, 0) / lats.length) : 0;
+      });
+      responseChart.update();
+
+      // Category performance (mock for now)
+      const categories = { stress: [], security: [], protocol: [], feature: [], stability: [] };
+      Object.entries(latest).forEach(([name, result]) => {
+        if (name.includes('stress') || name.includes('bandwidth')) categories.stress.push(result);
+        else if (name.includes('security') || name.includes('auth') || name.includes('leak')) categories.security.push(result);
+        else if (name.includes('protocol') || name.includes('connection')) categories.protocol.push(result);
+        else if (name.includes('geo') || name.includes('sticky') || name.includes('rotation')) categories.feature.push(result);
+        else categories.stability.push(result);
+      });
+
+      const catRates = Object.values(categories).map(tests => {
+        if (tests.length === 0) return 0;
+        return (tests.filter(t => t.passed).length / tests.length) * 100;
+      });
+      categoryChart.data.datasets[0].data = catRates;
+      categoryChart.update();
+    }
+
+    function updateTable() {
+      const tbody = document.getElementById('testTableBody');
+      const tests = Object.entries(latest).sort((a, b) => 
+        new Date(b[1].timestamp) - new Date(a[1].timestamp)
+      );
+
+      tbody.innerHTML = tests.map(([name, result]) => {
+        const testHistory = history[name] || [];
+        const trend = testHistory.slice(0, 5).map(r => r.passed ? '✓' : '✗').join('');
+        const metrics = result.summary ? Object.entries(result.summary).slice(0, 2)
+          .map(([k, v]) => `${k}: ${typeof v === 'number' ? v.toLocaleString() : v}`).join(', ') : '--';
+
+        return `
+          <tr class="hover:bg-gray-700/50 transition-colors">
+            <td class="px-6 py-4">
+              <div class="flex items-center">
+                <div class="w-8 h-8 rounded-lg ${result.passed ? 'bg-green-500/20' : 'bg-red-500/20'} flex items-center justify-center mr-3">
+                  <i class="fas ${result.passed ? 'fa-check text-green-400' : 'fa-times text-red-400'}"></i>
+                </div>
+                <div>
+                  <p class="font-medium">${name}</p>
+                  <p class="text-xs text-gray-500">${getCategory(name)}</p>
+                </div>
+              </div>
+            </td>
+            <td class="px-6 py-4">
+              <span class="px-2 py-1 text-xs font-medium rounded-full ${result.passed ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}">
+                ${result.passed ? 'PASS' : 'FAIL'}
+              </span>
+            </td>
+            <td class="px-6 py-4 text-gray-300">${formatDuration(result.duration)}</td>
+            <td class="px-6 py-4 text-gray-400 text-sm">${formatTime(result.timestamp)}</td>
+            <td class="px-6 py-4">
+              <span class="font-mono text-sm ${trend.includes('✗') ? 'text-yellow-400' : 'text-green-400'}">${trend || '--'}</span>
+            </td>
+            <td class="px-6 py-4 text-gray-400 text-sm">${metrics}</td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function updateActivity() {
+      const feed = document.getElementById('activityFeed');
+      const allResults = Object.values(history).flat()
+        .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
+        .slice(0, 10);
+
+      feed.innerHTML = allResults.map(r => `
+        <div class="flex items-start space-x-3">
+          <div class="w-8 h-8 rounded-full ${r.passed ? 'bg-green-500/20' : 'bg-red-500/20'} flex items-center justify-center flex-shrink-0">
+            <i class="fas ${r.passed ? 'fa-check text-green-400' : 'fa-times text-red-400'} text-sm"></i>
+          </div>
+          <div class="flex-1 min-w-0">
+            <p class="text-sm font-medium">${r.testName} <span class="${r.passed ? 'text-green-400' : 'text-red-400'}">${r.passed ? 'passed' : 'failed'}</span></p>
+            <p class="text-xs text-gray-500">${formatTime(r.timestamp)} • ${formatDuration(r.duration)}</p>
+          </div>
+        </div>
+      `).join('') || '<p class="text-gray-500 text-sm">No activity yet</p>';
+    }
+
+    function getCategory(name) {
+      if (name.includes('stress') || name.includes('bandwidth')) return 'Stress Test';
+      if (name.includes('security') || name.includes('auth') || name.includes('leak')) return 'Security Test';
+      if (name.includes('protocol') || name.includes('connection')) return 'Protocol Test';
+      if (name.includes('geo') || name.includes('sticky') || name.includes('rotation')) return 'Feature Test';
+      return 'Stability Test';
+    }
+
+    function formatDuration(ms) {
+      if (!ms) return '--';
+      if (ms < 1000) return `${ms}ms`;
+      if (ms < 60000) return `${(ms / 1000).toFixed(1)}s`;
+      return `${(ms / 60000).toFixed(1)}m`;
+    }
+
+    function formatTime(iso) {
+      const d = new Date(iso);
+      const now = new Date();
+      const diff = now - d;
+      if (diff < 60000) return 'Just now';
+      if (diff < 3600000) return `${Math.floor(diff / 60000)}m ago`;
+      if (diff < 86400000) return `${Math.floor(diff / 3600000)}h ago`;
+      return d.toLocaleDateString();
+    }
+
+    function setTimeRange(range) {
+      // Update button styles and filter data
+      document.querySelectorAll('[onclick^="setTimeRange"]').forEach(btn => {
+        btn.className = 'px-3 py-1 text-xs rounded bg-gray-700 hover:bg-gray-600';
+      });
+      event.target.className = 'px-3 py-1 text-xs rounded bg-primary text-white';
+    }
+
+    // Live runner state
+    let liveState = { running: false, suite: null, test: null, progress: 0, total: 0, output: [], startTime: null };
+    let outputBuffer = [];
+
+    function clearOutput() {
+      document.getElementById('liveOutput').textContent = '';
+      outputBuffer = [];
+    }
+
+    function copyOutput() {
+      navigator.clipboard.writeText(document.getElementById('liveOutput').textContent);
+    }
+
+    async function fetchLiveState() {
+      try {
+        const res = await fetch('/api/live');
+        const data = await res.json();
+        updateLiveRunner(data);
+      } catch (e) {}
+    }
+
+    function updateLiveRunner(state) {
+      const statusDot = document.getElementById('runnerStatus');
+      const runnerInfo = document.getElementById('runnerInfo');
+      const currentSuite = document.getElementById('currentSuite');
+      const suiteProgress = document.getElementById('suiteProgress');
+      const progressBar = document.getElementById('progressBar');
+      const currentTest = document.getElementById('currentTest');
+      const currentTestDesc = document.getElementById('currentTestDesc');
+      const testIcon = document.getElementById('testIcon');
+      const testDuration = document.getElementById('testDuration');
+      const testStatus = document.getElementById('testStatus');
+      const testQueue = document.getElementById('testQueue');
+      const output = document.getElementById('liveOutput');
+      const suiteTime = document.getElementById('suiteTime');
+
+      if (state.running) {
+        statusDot.className = 'w-3 h-3 rounded-full bg-green-500 animate-pulse';
+        runnerInfo.textContent = `Running ${state.suite} suite`;
+        currentSuite.textContent = `${state.suite?.toUpperCase()} Suite`;
+        suiteProgress.textContent = `${state.progress}/${state.total} tests`;
+        progressBar.style.width = `${(state.progress / Math.max(state.total, 1)) * 100}%`;
+        
+        if (state.currentTest) {
+          currentTest.textContent = state.currentTest;
+          currentTestDesc.textContent = getTestDescription(state.currentTest);
+          testIcon.className = 'fas fa-cog fa-spin text-blue-400';
+          testStatus.textContent = 'Running';
+          testStatus.className = 'text-xs text-blue-400';
+        }
+
+        if (state.startTime) {
+          const elapsed = Math.floor((Date.now() - state.startTime) / 1000);
+          testDuration.textContent = `${elapsed}s`;
+          const suiteElapsed = Math.floor((Date.now() - state.suiteStartTime) / 1000);
+          suiteTime.textContent = `Elapsed: ${formatDuration(suiteElapsed * 1000)}`;
+        }
+
+        // Update queue
+        if (state.queue && state.queue.length > 0) {
+          testQueue.innerHTML = state.queue.map(t => `
+            <span class="px-2 py-1 text-xs bg-gray-700 rounded">${t}</span>
+          `).join('');
+        }
+      } else {
+        statusDot.className = 'w-3 h-3 rounded-full bg-gray-500';
+        runnerInfo.textContent = 'Waiting for next scheduled run';
+        testIcon.className = 'fas fa-pause text-gray-400';
+        testStatus.textContent = 'Idle';
+        testStatus.className = 'text-xs text-gray-400';
+        
+        // Show last completed test
+        if (state.lastTest) {
+          currentTest.textContent = state.lastTest.name;
+          currentTestDesc.textContent = state.lastTest.passed ? 'Completed successfully' : 'Failed';
+          testDuration.textContent = formatDuration(state.lastTest.duration);
+          testIcon.className = state.lastTest.passed ? 'fas fa-check text-green-400' : 'fas fa-times text-red-400';
+        }
+      }
+
+      // Append new output
+      if (state.output && state.output.length > outputBuffer.length) {
+        const newLines = state.output.slice(outputBuffer.length);
+        outputBuffer = state.output;
+        
+        newLines.forEach(line => {
+          output.textContent += line + '\n';
+        });
+
+        if (document.getElementById('autoScroll').checked) {
+          output.scrollTop = output.scrollHeight;
+        }
+      }
+    }
+
+    function getTestDescription(name) {
+      const descriptions = {
+        'stress-test': 'Load testing with concurrent requests',
+        'leak-test': 'IP/header leak detection',
+        'protocol-test': 'HTTP protocol compliance',
+        'geo-test': 'Geographic targeting validation',
+        'security-test': 'Security vulnerability scan',
+        'auth-test': 'Authentication edge cases',
+        'bandwidth-test': 'Download speed measurement',
+        'latency-test': 'Response time analysis',
+        'rotation-test': 'IP rotation behavior',
+        'sticky-stress': 'Sticky session stress test',
+        'connection-limits': 'Connection pool testing',
+        'concurrency-edge': 'Concurrent request handling',
+        'peer-behavior-test': 'Peer load balancing',
+        'stability-test': 'Long-running stability',
+        'scenario-price-scrape': 'Real-world scraper simulation',
+        'failure-test': 'Error handling & recovery'
+      };
+      return descriptions[name.replace('.js', '').split(' ')[0]] || 'Running test...';
+    }
+
+    // Initialize
+    initCharts();
+    fetchData();
+    fetchLiveState();
+    setInterval(fetchData, 5000);
+    setInterval(fetchLiveState, 1000);
+  </script>
+</body>
+</html>

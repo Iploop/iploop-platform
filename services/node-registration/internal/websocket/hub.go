@@ -280,13 +280,21 @@ func (c *Client) writePump() {
 			if err != nil {
 				return
 			}
-			w.Write(message)
 
-			// Add queued messages to the current message
+			// Collect all queued messages
 			n := len(c.send)
-			for i := 0; i < n; i++ {
-				w.Write([]byte{'\n'})
-				w.Write(<-c.send)
+			if n == 0 {
+				// Single message - send as-is (no array wrapper)
+				w.Write(message)
+			} else {
+				// Multiple messages - wrap in JSON array
+				w.Write([]byte{'['})
+				w.Write(message)
+				for i := 0; i < n; i++ {
+					w.Write([]byte{','})
+					w.Write(<-c.send)
+				}
+				w.Write([]byte{']'})
 			}
 
 			if err := w.Close(); err != nil {

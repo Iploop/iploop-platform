@@ -1,0 +1,118 @@
+{
+  "geo-test": {
+    "timestamp": "2026-02-06T19:36:54.085Z",
+    "summary": {
+      "errors": 8
+    },
+    "passed": false,
+    "duration": 8115
+  },
+  "leak-test": {
+    "timestamp": "2026-02-06T19:35:39.009Z",
+    "summary": {},
+    "passed": false,
+    "duration": 268
+  },
+  "stress-test": {
+    "timestamp": "2026-02-06T19:35:37.676Z",
+    "summary": {
+      "totalRequests": 669,
+      "failed": 669,
+      "throughput": 21.58,
+      "ipsObserved": 0
+    },
+    "passed": false,
+    "duration": 31084
+  },
+  "protocol-test": {
+    "timestamp": "2026-02-06T19:35:44.854Z",
+    "summary": {
+      "failed": 23
+    },
+    "passed": false,
+    "duration": 4787
+  },
+  "rotation-test": {
+    "timestamp": "2026-02-06T19:37:05.429Z",
+    "summary": {
+      "totalRequests": 0,
+      "errors": 50,
+      "uniqueIps": 0
+    },
+    "passed": false,
+    "duration": 10288
+  },
+  "sticky-stress": {
+    "timestamp": "2026-02-06T19:37:19.131Z",
+    "summary": {
+      "failed": 0,
+      "totalRequests": 0,
+      "errors": 500
+    },
+    "passed": false,
+    "duration": 12652
+  },
+  "security-test": {
+    "timestamp": "2026-02-06T19:03:19.500Z",
+    "summary": {
+      "failed": 6
+    },
+    "passed": false,
+    "duration": 3497
+  },
+  "auth-test": {
+    "timestamp": "2026-02-06T19:03:23.370Z",
+    "summary": {
+      "failed": 26
+    },
+    "passed": false,
+    "duration": 2806
+  },
+  "bandwidth-test": {
+    "timestamp": "2026-02-06T17:38:51.776Z",
+    "summary": {},
+    "passed": false,
+    "duration": 104
+  },
+  "latency-test": {
+    "timestamp": "2026-02-06T17:39:16.335Z",
+    "summary": {
+      "p99Latency": 0,
+      "errors": 50,
+      "failed": 1
+    },
+    "passed": false,
+    "duration": 23499
+  },
+  "failure-test": {
+    "timestamp": "2026-02-06T17:21:37.790Z",
+    "summary": {},
+    "passed": false,
+    "duration": 124
+  },
+  "connection-limits": {
+    "timestamp": "2026-02-06T17:22:50.661Z",
+    "summary": {},
+    "passed": true,
+    "duration": 20593
+  },
+  "concurrency-edge": {
+    "timestamp": "2026-02-06T17:24:54.219Z",
+    "summary": {
+      "avgLatency": 593,
+      "throughput": 461.8,
+      "successRate": 100,
+      "totalRequests": 13853
+    },
+    "passed": false,
+    "duration": 122508
+  },
+  "peer-behavior-test": {
+    "timestamp": "2026-02-06T17:25:36.328Z",
+    "summary": {
+      "uniqueIps": 0
+    },
+    "passed": false,
+    "duration": 41051
+  }
+}

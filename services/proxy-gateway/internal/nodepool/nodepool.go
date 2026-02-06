@@ -346,7 +346,7 @@ func (np *NodePool) calculateNodeScore(node *Node) float64 {
 
 func (np *NodePool) isNodeHealthy(node *Node) bool {
 	// Node is healthy if:
-	// 1. Last heartbeat was within 2 minutes
+	// 1. Last heartbeat was within 6 minutes (SDK sends every 5 min)
 	// 2. Quality score is above 50
 	// 3. Status is available
 
@@ -358,7 +358,7 @@ func (np *NodePool) isNodeHealthy(node *Node) bool {
 		return false
 	}
 
-	if time.Since(node.LastHeartbeat) > 2*time.Minute {
+	if time.Since(node.LastHeartbeat) > 6*time.Minute {
 		return false
 	}
 
@@ -385,7 +385,7 @@ func (np *NodePool) cleanupInactiveNodes() {
 
 func (np *NodePool) performCleanup() {
 	ctx := context.Background()
-	cutoff := time.Now().Add(-3 * time.Minute) // 3 minutes without heartbeat
+	cutoff := time.Now().Add(-10 * time.Minute) // 10 minutes without heartbeat (SDK sends every 5 min)
 
 	keys, err := np.rdb.Keys(ctx, "node:*").Result()
 	if err != nil {

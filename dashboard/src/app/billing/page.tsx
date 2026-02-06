@@ -428,11 +428,14 @@ export default function BillingPage() {
                           {invoice.status}
                         </Badge>
                         {invoice.invoice_pdf && (
-                          <Button variant="ghost" size="sm" asChild>
-                            <a href={invoice.invoice_pdf} target="_blank" rel="noopener noreferrer">
-                              <Download className="w-4 h-4" />
-                            </a>
-                          </Button>
+                          <a 
+                            href={invoice.invoice_pdf} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground h-9 w-9"
+                          >
+                            <Download className="w-4 h-4" />
+                          </a>
                         )}
                       </div>
                     </div>

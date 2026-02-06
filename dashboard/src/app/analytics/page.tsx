@@ -41,7 +41,7 @@ export default function AnalyticsPage() {
     setLoading(true)
     try {
       const token = localStorage.getItem('token')
-      const headers = token ? { Authorization: `Bearer ${token}` } : {}
+      const headers: Record<string, string> = token ? { Authorization: `Bearer ${token}` } : {}
 
       const results = await Promise.all([
         fetch(`/api/usage/summary?days=${period}`, { headers }),
@@ -225,7 +225,7 @@ export default function AnalyticsPage() {
                       cx="50%"
                       cy="50%"
                       outerRadius={100}
-                      label={({ country, percent }) => `${country} ${(percent * 100).toFixed(0)}%`}
+                      label={({ name, percent }) => `${name} ${((percent ?? 0) * 100).toFixed(0)}%`}
                     >
                       {data?.byCountry?.slice(0, 6).map((_, index) => (
                         <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />

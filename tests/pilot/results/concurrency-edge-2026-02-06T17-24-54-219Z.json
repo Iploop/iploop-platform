@@ -1,0 +1,14 @@
+{
+  "testName": "concurrency-edge",
+  "timestamp": "2026-02-06T17:24:54.219Z",
+  "duration": 122508,
+  "passed": false,
+  "exitCode": 0,
+  "summary": {
+    "avgLatency": 593,
+    "throughput": 461.8,
+    "successRate": 100,
+    "totalRequests": 13853
+  },
+  "output": "🔀 Concurrency Edge Cases Test\n============================================================\nProxy: localhost:8080\n============================================================\n\n--- Test 1: Same URL Storm (100 requests to same endpoint) ---\nSuccess: 55/100\nAvg latency: 596ms\nMin/Max: 43ms / 1302ms\n\n--- Test 2: Different URLs (100 requests to different endpoints) ---\nSuccess: 100/100\n\n--- Test 3: Interleaved Fast/Slow Requests ---\nFast requests: 20/20\nSlow requests: 20/20\nTotal time: 1983ms (slow shouldn't block fast)\nFast avg latency: 593ms\nSlow avg latency: 808ms\n\n--- Test 4: Request Burst (500 requests instant) ---\nSuccess: 409/500 (81.8%)\nTime: 31213ms\nThroughput: 13.1 req/s\nErrors: {\"TIMEOUT\":91}\n\n--- Test 5: Sustained Load (50 concurrent for 30s) ---\n  [5s] Active: 1 | Total: 1800 | Success: 1800\n  [10s] Active: 0 | Total: 4200 | Success: 4200\n  [15s] Active: 2 | Total: 6625 | Success: 6625\n  [20s] Active: 2 | Total: 9050 | Success: 9050\n  [25s] Active: 2 | Total: 11467 | Success: 11467\n  [30s] Active: 0 | Total: 13853 | Success: 13853\n\nTotal requests: 13853\nSuccess rate: 100.0%\nThroughput: 461.8 req/s\n\n--- Test 6: Slow Client Simulation (reading slowly) ---\nReceived 335 bytes with artificial delays\n\n============================================================\nCONCURRENCY TEST RESULTS\n============================================================\n❌ Same URL Storm\n✅ Different URLs\n✅ Interleaved Speeds\n✅ Request Burst\n✅ Sustained Load\n❌ Slow Client\n\nPassed: 4/6\n"
+}

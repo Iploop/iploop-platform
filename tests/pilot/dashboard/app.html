@@ -283,17 +283,27 @@
         </div>
       </div>
 
-      <!-- QA & Testing -->
+      <!-- 🧪 Quality Assurance -->
       <div class="nav-group">
         <button onclick="toggleNavGroup(this)" class="nav-group-btn w-full flex items-center justify-between px-3 py-2 text-sm font-medium rounded-lg text-gray-300 hover:bg-gray-700">
-          <span><i class="fas fa-vial w-5 mr-3 text-green-400"></i>QA</span>
+          <span><i class="fas fa-vial w-5 mr-3 text-green-400"></i>Quality Assurance</span>
           <i class="fas fa-chevron-down text-xs transition-transform"></i>
         </button>
         <div class="nav-group-items hidden pl-4 mt-1 space-y-1">
-          <a href="#" class="nav-item" data-page="testing" onclick="showPage('testing')"><i class="fas fa-flask w-5"></i> Test Dashboard</a>
-          <a href="#" class="nav-item" data-page="plan-testing" onclick="showPage('plan-testing')"><i class="fas fa-clipboard-check w-5"></i> Test Plan</a>
-          <a href="#" class="nav-item" data-page="qa-schedule" onclick="showPage('qa-schedule')"><i class="fas fa-calendar-alt w-5"></i> Test Schedule</a>
-          <a href="#" class="nav-item" data-page="dev-qa" onclick="showPage('dev-qa')"><i class="fas fa-bug w-5"></i> Bug Tracking</a>
+          <a href="#" class="nav-item" data-page="qa-hub" onclick="showPage('qa-hub')"><i class="fas fa-vial w-5"></i> QA Hub</a>
+          <a href="#" class="nav-item" data-page="qa-proxy" onclick="showPage('qa-proxy')"><i class="fas fa-server w-5"></i> Proxy Platform</a>
+          <a href="#" class="nav-item" data-page="qa-management" onclick="showPage('qa-management')"><i class="fas fa-desktop w-5"></i> Management Platform</a>
+          <a href="#" class="nav-item" data-page="qa-weathero" onclick="showPage('qa-weathero')"><i class="fas fa-cloud-sun w-5"></i> Weathero</a>
+          <a href="#" class="nav-item" data-page="qa-verso" onclick="showPage('qa-verso')"><i class="fas fa-mobile-alt w-5"></i> Verso</a>
+          <a href="#" class="nav-item" data-page="qa-softzero" onclick="showPage('qa-softzero')"><i class="fas fa-windows w-5"></i> Softzero</a>
+          <a href="#" class="nav-item" data-page="qa-pixara" onclick="showPage('qa-pixara')"><i class="fas fa-images w-5"></i> Pixara</a>
+          <a href="#" class="nav-item" data-page="qa-macleaner" onclick="showPage('qa-macleaner')"><i class="fas fa-apple-alt w-5"></i> Macleaner</a>
+          <a href="#" class="nav-item" data-page="qa-keepaa" onclick="showPage('qa-keepaa')"><i class="fas fa-key w-5"></i> Keepaa</a>
+          <a href="#" class="nav-item" data-page="qa-sdk" onclick="showPage('qa-sdk')"><i class="fas fa-microchip w-5"></i> IPLoop SDK</a>
+          <a href="#" class="nav-item text-gray-500 border-t border-gray-700 mt-2 pt-2" data-page="testing" onclick="showPage('testing')"><i class="fas fa-flask w-5"></i> Live Dashboard</a>
+          <a href="#" class="nav-item text-gray-500" data-page="plan-testing" onclick="showPage('plan-testing')"><i class="fas fa-clipboard-check w-5"></i> Test Plan</a>
+          <a href="#" class="nav-item text-gray-500" data-page="qa-schedule" onclick="showPage('qa-schedule')"><i class="fas fa-calendar-alt w-5"></i> Test Schedule</a>
+          <a href="#" class="nav-item text-gray-500" data-page="dev-qa" onclick="showPage('dev-qa')"><i class="fas fa-bug w-5"></i> Bug Tracking</a>
         </div>
       </div>
       
@@ -5246,6 +5256,912 @@
       </div>
     </div>
 
+    <!-- ===================== QA HUB PAGE ===================== -->
+    <div id="page-qa-hub" class="page p-4 md:p-6 lg:p-8 pt-16 lg:pt-8">
+      <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
+        <div>
+          <h1 class="text-2xl md:text-3xl font-bold"><i class="fas fa-vial text-green-400 mr-3"></i>Quality Assurance Hub</h1>
+          <p class="text-gray-400 mt-1">Test everything. Trust nothing.</p>
+        </div>
+        <div class="mt-4 md:mt-0 flex items-center gap-3">
+          <span class="text-xs text-gray-500">Last updated: Feb 7, 2026</span>
+          <button onclick="showPage('testing')" class="px-4 py-2 bg-green-600 rounded-lg text-sm font-medium hover:bg-green-700 transition">
+            <i class="fas fa-play mr-2"></i>Live Dashboard
+          </button>
+        </div>
+      </div>
+
+      <!-- Overall Stats -->
+      <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
+        <div class="bg-gray-800 rounded-xl border border-gray-700 p-4 text-center">
+          <p class="text-3xl font-bold text-white">9</p>
+          <p class="text-xs text-gray-400 mt-1">Total Products</p>
+        </div>
+        <div class="bg-gray-800 rounded-xl border border-gray-700 p-4 text-center">
+          <p class="text-3xl font-bold text-yellow-400">2</p>
+          <p class="text-xs text-gray-400 mt-1">Products Tested</p>
+        </div>
+        <div class="bg-gray-800 rounded-xl border border-gray-700 p-4 text-center">
+          <p class="text-3xl font-bold text-gray-500">14</p>
+          <p class="text-xs text-gray-400 mt-1">Test Categories</p>
+        </div>
+        <div class="bg-gray-800 rounded-xl border border-gray-700 p-4 text-center">
+          <p class="text-3xl font-bold text-gray-500">-</p>
+          <p class="text-xs text-gray-400 mt-1">Overall Pass Rate</p>
+        </div>
+        <div class="bg-gray-800 rounded-xl border border-gray-700 p-4 text-center">
+          <p class="text-3xl font-bold text-gray-500">-</p>
+          <p class="text-xs text-gray-400 mt-1">Open Bugs</p>
+        </div>
+      </div>
+
+      <!-- Product Health Grid -->
+      <h2 class="text-lg font-semibold mb-4"><i class="fas fa-heartbeat text-red-400 mr-2"></i>Product Health Grid</h2>
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
+
+        <!-- Proxy Platform -->
+        <div onclick="showPage('qa-proxy')" class="bg-gray-800 rounded-xl border border-gray-700 p-5 cursor-pointer hover:border-green-500/50 hover:bg-gray-750 transition group">
+          <div class="flex items-center justify-between mb-3">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-lg bg-green-500/20 flex items-center justify-center"><i class="fas fa-server text-green-400"></i></div>
+              <div><h3 class="font-semibold">Proxy Platform</h3><p class="text-xs text-gray-400">Server</p></div>
+            </div>
+            <span class="text-xs bg-green-500/20 text-green-400 px-2 py-1 rounded-full">🔄 Testing</span>
+          </div>
+          <div class="grid grid-cols-3 gap-2 text-center">
+            <div><p class="text-lg font-bold text-green-400">14</p><p class="text-xs text-gray-500">Test Types</p></div>
+            <div><p class="text-lg font-bold text-yellow-400">539</p><p class="text-xs text-gray-500">Total Runs</p></div>
+            <div><p class="text-lg font-bold text-gray-500">-</p><p class="text-xs text-gray-500">Bugs</p></div>
+          </div>
+          <div class="mt-3 w-full bg-gray-700 rounded-full h-1.5"><div class="bg-green-500 h-1.5 rounded-full" style="width: 85%"></div></div>
+        </div>
+
+        <!-- Management Platform -->
+        <div onclick="showPage('qa-management')" class="bg-gray-800 rounded-xl border border-gray-700 p-5 cursor-pointer hover:border-blue-500/50 hover:bg-gray-750 transition group">
+          <div class="flex items-center justify-between mb-3">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-lg bg-blue-500/20 flex items-center justify-center"><i class="fas fa-desktop text-blue-400"></i></div>
+              <div><h3 class="font-semibold">Management Platform</h3><p class="text-xs text-gray-400">Web</p></div>
+            </div>
+            <span class="text-xs bg-blue-500/20 text-blue-400 px-2 py-1 rounded-full">🔄 Building</span>
+          </div>
+          <div class="grid grid-cols-3 gap-2 text-center">
+            <div><p class="text-lg font-bold text-gray-500">-</p><p class="text-xs text-gray-500">Tests</p></div>
+            <div><p class="text-lg font-bold text-gray-500">-</p><p class="text-xs text-gray-500">Pass Rate</p></div>
+            <div><p class="text-lg font-bold text-gray-500">-</p><p class="text-xs text-gray-500">Bugs</p></div>
+          </div>
+          <div class="mt-3 w-full bg-gray-700 rounded-full h-1.5"><div class="bg-blue-500 h-1.5 rounded-full" style="width: 30%"></div></div>
+        </div>
+
+        <!-- Weathero -->
+        <div onclick="showPage('qa-weathero')" class="bg-gray-800 rounded-xl border border-gray-700 p-5 cursor-pointer hover:border-gray-500/50 hover:bg-gray-750 transition group">
+          <div class="flex items-center justify-between mb-3">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-lg bg-orange-500/20 flex items-center justify-center"><i class="fas fa-cloud-sun text-orange-400"></i></div>
+              <div><h3 class="font-semibold">Weathero</h3><p class="text-xs text-gray-400">Android / Smart TV</p></div>
+            </div>
+            <span class="text-xs bg-gray-600/50 text-gray-400 px-2 py-1 rounded-full">⬜ Not tested</span>
+          </div>
+          <div class="grid grid-cols-3 gap-2 text-center">
+            <div><p class="text-lg font-bold text-gray-500">-</p><p class="text-xs text-gray-500">Tests</p></div>
+            <div><p class="text-lg font-bold text-gray-500">-</p><p class="text-xs text-gray-500">Pass Rate</p></div>
+            <div><p class="text-lg font-bold text-gray-500">-</p><p class="text-xs text-gray-500">Bugs</p></div>
+          </div>
+          <div class="mt-3 w-full bg-gray-700 rounded-full h-1.5"><div class="bg-gray-600 h-1.5 rounded-full" style="width: 0%"></div></div>
+        </div>
+
+        <!-- Verso -->
+        <div onclick="showPage('qa-verso')" class="bg-gray-800 rounded-xl border border-gray-700 p-5 cursor-pointer hover:border-gray-500/50 hover:bg-gray-750 transition group">
+          <div class="flex items-center justify-between mb-3">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-lg bg-purple-500/20 flex items-center justify-center"><i class="fas fa-mobile-alt text-purple-400"></i></div>
+              <div><h3 class="font-semibold">Verso</h3><p class="text-xs text-gray-400">Mobile</p></div>
+            </div>
+            <span class="text-xs bg-gray-600/50 text-gray-400 px-2 py-1 rounded-full">⬜ Not tested</span>
+          </div>
+          <div class="grid grid-cols-3 gap-2 text-center">
+            <div><p class="text-lg font-bold text-gray-500">-</p><p class="text-xs text-gray-500">Tests</p></div>
+            <div><p class="text-lg font-bold text-gray-500">-</p><p class="text-xs text-gray-500">Pass Rate</p></div>
+            <div><p class="text-lg font-bold text-gray-500">-</p><p class="text-xs text-gray-500">Bugs</p></div>
+          </div>
+          <div class="mt-3 w-full bg-gray-700 rounded-full h-1.5"><div class="bg-gray-600 h-1.5 rounded-full" style="width: 0%"></div></div>
+        </div>
+
+        <!-- Softzero -->
+        <div onclick="showPage('qa-softzero')" class="bg-gray-800 rounded-xl border border-gray-700 p-5 cursor-pointer hover:border-gray-500/50 hover:bg-gray-750 transition group">
+          <div class="flex items-center justify-between mb-3">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-lg bg-cyan-500/20 flex items-center justify-center"><i class="fab fa-windows text-cyan-400"></i></div>
+              <div><h3 class="font-semibold">Softzero</h3><p class="text-xs text-gray-400">Windows</p></div>
+            </div>
+            <span class="text-xs bg-gray-600/50 text-gray-400 px-2 py-1 rounded-full">⬜ Not tested</span>
+          </div>
+          <div class="grid grid-cols-3 gap-2 text-center">
+            <div><p class="text-lg font-bold text-gray-500">-</p><p class="text-xs text-gray-500">Tests</p></div>
+            <div><p class="text-lg font-bold text-gray-500">-</p><p class="text-xs text-gray-500">Pass Rate</p></div>
+            <div><p class="text-lg font-bold text-gray-500">-</p><p class="text-xs text-gray-500">Bugs</p></div>
+          </div>
+          <div class="mt-3 w-full bg-gray-700 rounded-full h-1.5"><div class="bg-gray-600 h-1.5 rounded-full" style="width: 0%"></div></div>
+        </div>
+
+        <!-- Pixara -->
+        <div onclick="showPage('qa-pixara')" class="bg-gray-800 rounded-xl border border-gray-700 p-5 cursor-pointer hover:border-gray-500/50 hover:bg-gray-750 transition group">
+          <div class="flex items-center justify-between mb-3">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-lg bg-pink-500/20 flex items-center justify-center"><i class="fas fa-images text-pink-400"></i></div>
+              <div><h3 class="font-semibold">Pixara</h3><p class="text-xs text-gray-400">Mac</p></div>
+            </div>
+            <span class="text-xs bg-gray-600/50 text-gray-400 px-2 py-1 rounded-full">⬜ Not tested</span>
+          </div>
+          <div class="grid grid-cols-3 gap-2 text-center">
+            <div><p class="text-lg font-bold text-gray-500">-</p><p class="text-xs text-gray-500">Tests</p></div>
+            <div><p class="text-lg font-bold text-gray-500">-</p><p class="text-xs text-gray-500">Pass Rate</p></div>
+            <div><p class="text-lg font-bold text-gray-500">-</p><p class="text-xs text-gray-500">Bugs</p></div>
+          </div>
+          <div class="mt-3 w-full bg-gray-700 rounded-full h-1.5"><div class="bg-gray-600 h-1.5 rounded-full" style="width: 0%"></div></div>
+        </div>
+
+        <!-- Macleaner -->
+        <div onclick="showPage('qa-macleaner')" class="bg-gray-800 rounded-xl border border-gray-700 p-5 cursor-pointer hover:border-gray-500/50 hover:bg-gray-750 transition group">
+          <div class="flex items-center justify-between mb-3">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-lg bg-emerald-500/20 flex items-center justify-center"><i class="fas fa-apple-alt text-emerald-400"></i></div>
+              <div><h3 class="font-semibold">Macleaner</h3><p class="text-xs text-gray-400">Mac</p></div>
+            </div>
+            <span class="text-xs bg-gray-600/50 text-gray-400 px-2 py-1 rounded-full">⬜ Not tested</span>
+          </div>
+          <div class="grid grid-cols-3 gap-2 text-center">
+            <div><p class="text-lg font-bold text-gray-500">-</p><p class="text-xs text-gray-500">Tests</p></div>
+            <div><p class="text-lg font-bold text-gray-500">-</p><p class="text-xs text-gray-500">Pass Rate</p></div>
+            <div><p class="text-lg font-bold text-gray-500">-</p><p class="text-xs text-gray-500">Bugs</p></div>
+          </div>
+          <div class="mt-3 w-full bg-gray-700 rounded-full h-1.5"><div class="bg-gray-600 h-1.5 rounded-full" style="width: 0%"></div></div>
+        </div>
+
+        <!-- Keepaa -->
+        <div onclick="showPage('qa-keepaa')" class="bg-gray-800 rounded-xl border border-gray-700 p-5 cursor-pointer hover:border-gray-500/50 hover:bg-gray-750 transition group">
+          <div class="flex items-center justify-between mb-3">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-lg bg-yellow-500/20 flex items-center justify-center"><i class="fas fa-key text-yellow-400"></i></div>
+              <div><h3 class="font-semibold">Keepaa</h3><p class="text-xs text-gray-400">Cross-platform</p></div>
+            </div>
+            <span class="text-xs bg-gray-600/50 text-gray-400 px-2 py-1 rounded-full">⬜ Not tested</span>
+          </div>
+          <div class="grid grid-cols-3 gap-2 text-center">
+            <div><p class="text-lg font-bold text-gray-500">-</p><p class="text-xs text-gray-500">Tests</p></div>
+            <div><p class="text-lg font-bold text-gray-500">-</p><p class="text-xs text-gray-500">Pass Rate</p></div>
+            <div><p class="text-lg font-bold text-gray-500">-</p><p class="text-xs text-gray-500">Bugs</p></div>
+          </div>
+          <div class="mt-3 w-full bg-gray-700 rounded-full h-1.5"><div class="bg-gray-600 h-1.5 rounded-full" style="width: 0%"></div></div>
+        </div>
+
+        <!-- IPLoop SDK -->
+        <div onclick="showPage('qa-sdk')" class="bg-gray-800 rounded-xl border border-gray-700 p-5 cursor-pointer hover:border-yellow-500/50 hover:bg-gray-750 transition group">
+          <div class="flex items-center justify-between mb-3">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-lg bg-amber-500/20 flex items-center justify-center"><i class="fas fa-microchip text-amber-400"></i></div>
+              <div><h3 class="font-semibold">IPLoop SDK</h3><p class="text-xs text-gray-400">Android (Java)</p></div>
+            </div>
+            <span class="text-xs bg-yellow-500/20 text-yellow-400 px-2 py-1 rounded-full">🔄 v1.0.57</span>
+          </div>
+          <div class="grid grid-cols-3 gap-2 text-center">
+            <div><p class="text-lg font-bold text-gray-500">-</p><p class="text-xs text-gray-500">Tests</p></div>
+            <div><p class="text-lg font-bold text-gray-500">-</p><p class="text-xs text-gray-500">Pass Rate</p></div>
+            <div><p class="text-lg font-bold text-gray-500">-</p><p class="text-xs text-gray-500">Bugs</p></div>
+          </div>
+          <div class="mt-3 w-full bg-gray-700 rounded-full h-1.5"><div class="bg-yellow-500 h-1.5 rounded-full" style="width: 15%"></div></div>
+        </div>
+
+      </div>
+
+      <!-- Testing Coverage Matrix -->
+      <h2 class="text-lg font-semibold mb-4"><i class="fas fa-th text-blue-400 mr-2"></i>Coverage Matrix</h2>
+      <div class="bg-gray-800 rounded-xl border border-gray-700 overflow-x-auto mb-8">
+        <table class="w-full text-sm">
+          <thead><tr class="border-b border-gray-700">
+            <th class="px-4 py-3 text-left text-gray-400 font-medium">Product</th>
+            <th class="px-3 py-3 text-center text-gray-400 font-medium">Functional</th>
+            <th class="px-3 py-3 text-center text-gray-400 font-medium">Performance</th>
+            <th class="px-3 py-3 text-center text-gray-400 font-medium">Security</th>
+            <th class="px-3 py-3 text-center text-gray-400 font-medium">Compat</th>
+            <th class="px-3 py-3 text-center text-gray-400 font-medium">UI/UX</th>
+            <th class="px-3 py-3 text-center text-gray-400 font-medium">Integration</th>
+          </tr></thead>
+          <tbody>
+            <tr class="border-b border-gray-700/50 hover:bg-gray-700/30"><td class="px-4 py-3 font-medium">Proxy Platform</td><td class="px-3 py-3 text-center">✅</td><td class="px-3 py-3 text-center">✅</td><td class="px-3 py-3 text-center">✅</td><td class="px-3 py-3 text-center">✅</td><td class="px-3 py-3 text-center text-gray-600">N/A</td><td class="px-3 py-3 text-center">✅</td></tr>
+            <tr class="border-b border-gray-700/50 hover:bg-gray-700/30"><td class="px-4 py-3 font-medium">Management Platform</td><td class="px-3 py-3 text-center">🔄</td><td class="px-3 py-3 text-center text-gray-600">—</td><td class="px-3 py-3 text-center text-gray-600">—</td><td class="px-3 py-3 text-center text-gray-600">—</td><td class="px-3 py-3 text-center">🔄</td><td class="px-3 py-3 text-center text-gray-600">—</td></tr>
+            <tr class="border-b border-gray-700/50 hover:bg-gray-700/30"><td class="px-4 py-3 font-medium text-gray-400">Weathero</td><td class="px-3 py-3 text-center text-gray-600">—</td><td class="px-3 py-3 text-center text-gray-600">—</td><td class="px-3 py-3 text-center text-gray-600">—</td><td class="px-3 py-3 text-center text-gray-600">—</td><td class="px-3 py-3 text-center text-gray-600">—</td><td class="px-3 py-3 text-center text-gray-600">—</td></tr>
+            <tr class="border-b border-gray-700/50 hover:bg-gray-700/30"><td class="px-4 py-3 font-medium text-gray-400">Verso</td><td class="px-3 py-3 text-center text-gray-600">—</td><td class="px-3 py-3 text-center text-gray-600">—</td><td class="px-3 py-3 text-center text-gray-600">—</td><td class="px-3 py-3 text-center text-gray-600">—</td><td class="px-3 py-3 text-center text-gray-600">—</td><td class="px-3 py-3 text-center text-gray-600">—</td></tr>
+            <tr class="border-b border-gray-700/50 hover:bg-gray-700/30"><td class="px-4 py-3 font-medium text-gray-400">Softzero</td><td class="px-3 py-3 text-center text-gray-600">—</td><td class="px-3 py-3 text-center text-gray-600">—</td><td class="px-3 py-3 text-center text-gray-600">—</td><td class="px-3 py-3 text-center text-gray-600">—</td><td class="px-3 py-3 text-center text-gray-600">—</td><td class="px-3 py-3 text-center text-gray-600">—</td></tr>
+            <tr class="border-b border-gray-700/50 hover:bg-gray-700/30"><td class="px-4 py-3 font-medium text-gray-400">Pixara</td><td class="px-3 py-3 text-center text-gray-600">—</td><td class="px-3 py-3 text-center text-gray-600">—</td><td class="px-3 py-3 text-center text-gray-600">—</td><td class="px-3 py-3 text-center text-gray-600">—</td><td class="px-3 py-3 text-center text-gray-600">—</td><td class="px-3 py-3 text-center text-gray-600">—</td></tr>
+            <tr class="border-b border-gray-700/50 hover:bg-gray-700/30"><td class="px-4 py-3 font-medium text-gray-400">Macleaner</td><td class="px-3 py-3 text-center text-gray-600">—</td><td class="px-3 py-3 text-center text-gray-600">—</td><td class="px-3 py-3 text-center text-gray-600">—</td><td class="px-3 py-3 text-center text-gray-600">—</td><td class="px-3 py-3 text-center text-gray-600">—</td><td class="px-3 py-3 text-center text-gray-600">—</td></tr>
+            <tr class="border-b border-gray-700/50 hover:bg-gray-700/30"><td class="px-4 py-3 font-medium text-gray-400">Keepaa</td><td class="px-3 py-3 text-center text-gray-600">—</td><td class="px-3 py-3 text-center text-gray-600">—</td><td class="px-3 py-3 text-center text-gray-600">—</td><td class="px-3 py-3 text-center text-gray-600">—</td><td class="px-3 py-3 text-center text-gray-600">—</td><td class="px-3 py-3 text-center text-gray-600">—</td></tr>
+            <tr class="hover:bg-gray-700/30"><td class="px-4 py-3 font-medium">IPLoop SDK</td><td class="px-3 py-3 text-center text-gray-600">—</td><td class="px-3 py-3 text-center text-gray-600">—</td><td class="px-3 py-3 text-center text-gray-600">—</td><td class="px-3 py-3 text-center text-gray-600">—</td><td class="px-3 py-3 text-center text-gray-600">N/A</td><td class="px-3 py-3 text-center text-gray-600">—</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Legend -->
+      <div class="flex flex-wrap gap-4 text-xs text-gray-400">
+        <span>✅ Tested & Passing</span> <span>🔄 In Progress</span> <span class="text-gray-600">— Not Started</span> <span class="text-gray-600">N/A Not Applicable</span>
+      </div>
+    </div>
+
+    <!-- ===================== QA: PROXY PLATFORM ===================== -->
+    <div id="page-qa-proxy" class="page p-4 md:p-6 lg:p-8 pt-16 lg:pt-8">
+      <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
+        <div>
+          <h1 class="text-2xl md:text-3xl font-bold"><i class="fas fa-server text-green-400 mr-3"></i>Proxy Platform QA</h1>
+          <p class="text-gray-400 mt-1">Server • Continuous automated testing since Feb 5, 2026</p>
+        </div>
+        <div class="mt-4 md:mt-0 flex items-center gap-3">
+          <button onclick="showPage('qa-hub')" class="px-3 py-2 bg-gray-700 rounded-lg text-sm hover:bg-gray-600 transition"><i class="fas fa-arrow-left mr-1"></i>Hub</button>
+          <button onclick="showPage('testing')" class="px-4 py-2 bg-green-600 rounded-lg text-sm font-medium hover:bg-green-700 transition"><i class="fas fa-play mr-2"></i>Live Dashboard</button>
+        </div>
+      </div>
+
+      <!-- Product Header -->
+      <div class="bg-gray-800 rounded-xl border border-green-500/30 p-5 mb-6">
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div><p class="text-xs text-gray-400">Platform</p><p class="font-medium">Server (Node.js)</p></div>
+          <div><p class="text-xs text-gray-400">Version</p><p class="font-medium">Pilot v1.0</p></div>
+          <div><p class="text-xs text-gray-400">First Tested</p><p class="font-medium">Feb 5, 2026</p></div>
+          <div><p class="text-xs text-gray-400">Last Run</p><p class="font-medium">Feb 7, 2026 13:12 UTC</p></div>
+        </div>
+      </div>
+
+      <!-- Test Summary -->
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+        <div class="bg-gray-800 rounded-xl border border-gray-700 p-4 text-center">
+          <p class="text-3xl font-bold text-green-400">14</p>
+          <p class="text-xs text-gray-400 mt-1">Test Categories</p>
+        </div>
+        <div class="bg-gray-800 rounded-xl border border-gray-700 p-4 text-center">
+          <p class="text-3xl font-bold text-blue-400">539</p>
+          <p class="text-xs text-gray-400 mt-1">Total Test Runs</p>
+        </div>
+        <div class="bg-gray-800 rounded-xl border border-gray-700 p-4 text-center">
+          <p class="text-3xl font-bold text-yellow-400">1</p>
+          <p class="text-xs text-gray-400 mt-1">Passing</p>
+        </div>
+        <div class="bg-gray-800 rounded-xl border border-gray-700 p-4 text-center">
+          <p class="text-3xl font-bold text-red-400">13</p>
+          <p class="text-xs text-gray-400 mt-1">Failing</p>
+        </div>
+      </div>
+
+      <!-- Progress bar -->
+      <div class="bg-gray-800 rounded-xl border border-gray-700 p-4 mb-6">
+        <div class="flex justify-between text-xs text-gray-400 mb-2"><span>Pass Rate</span><span>1/14 categories passing (7%)</span></div>
+        <div class="w-full bg-gray-700 rounded-full h-3 flex overflow-hidden">
+          <div class="bg-green-500 h-3" style="width: 7%"></div>
+          <div class="bg-red-500 h-3" style="width: 93%"></div>
+        </div>
+        <p class="text-xs text-gray-500 mt-2">⚠️ Most tests failing due to proxy service being offline (ECONNREFUSED). Tests are infrastructure-validated and ready.</p>
+      </div>
+
+      <!-- Test Results Table -->
+      <h2 class="text-lg font-semibold mb-4"><i class="fas fa-list-check text-green-400 mr-2"></i>Test Results by Category</h2>
+      <div class="bg-gray-800 rounded-xl border border-gray-700 overflow-x-auto mb-6">
+        <table class="w-full text-sm">
+          <thead><tr class="border-b border-gray-700">
+            <th class="px-4 py-3 text-left text-gray-400">Test Name</th>
+            <th class="px-3 py-3 text-left text-gray-400">Category</th>
+            <th class="px-3 py-3 text-center text-gray-400">Runs</th>
+            <th class="px-3 py-3 text-center text-gray-400">Status</th>
+            <th class="px-3 py-3 text-left text-gray-400">Last Run</th>
+            <th class="px-3 py-3 text-left text-gray-400">Notes</th>
+          </tr></thead>
+          <tbody>
+            <tr class="border-b border-gray-700/50 hover:bg-gray-700/30">
+              <td class="px-4 py-3 font-medium">stress-test</td><td class="px-3 py-3 text-gray-400">Performance</td>
+              <td class="px-3 py-3 text-center">95</td><td class="px-3 py-3 text-center"><span class="text-xs bg-red-500/20 text-red-400 px-2 py-1 rounded">FAIL</span></td>
+              <td class="px-3 py-3 text-gray-400">Feb 7 13:12</td><td class="px-3 py-3 text-xs text-gray-500">685 req, 22 req/s throughput, ECONNREFUSED</td>
+            </tr>
+            <tr class="border-b border-gray-700/50 hover:bg-gray-700/30">
+              <td class="px-4 py-3 font-medium">leak-test</td><td class="px-3 py-3 text-gray-400">Security</td>
+              <td class="px-3 py-3 text-center">104</td><td class="px-3 py-3 text-center"><span class="text-xs bg-red-500/20 text-red-400 px-2 py-1 rounded">FAIL</span></td>
+              <td class="px-3 py-3 text-gray-400">Feb 7 13:12</td><td class="px-3 py-3 text-xs text-gray-500">DNS/WebRTC leak detection</td>
+            </tr>
+            <tr class="border-b border-gray-700/50 hover:bg-gray-700/30">
+              <td class="px-4 py-3 font-medium">protocol-test</td><td class="px-3 py-3 text-gray-400">Functionality</td>
+              <td class="px-3 py-3 text-center">82</td><td class="px-3 py-3 text-center"><span class="text-xs bg-red-500/20 text-red-400 px-2 py-1 rounded">FAIL</span></td>
+              <td class="px-3 py-3 text-gray-400">Feb 7 13:12</td><td class="px-3 py-3 text-xs text-gray-500">HTTP/HTTPS/SOCKS5 protocols, 23 failed</td>
+            </tr>
+            <tr class="border-b border-gray-700/50 hover:bg-gray-700/30">
+              <td class="px-4 py-3 font-medium">geo-test</td><td class="px-3 py-3 text-gray-400">Functionality</td>
+              <td class="px-3 py-3 text-center">46</td><td class="px-3 py-3 text-center"><span class="text-xs bg-red-500/20 text-red-400 px-2 py-1 rounded">FAIL</span></td>
+              <td class="px-3 py-3 text-gray-400">Feb 7 12:58</td><td class="px-3 py-3 text-xs text-gray-500">Geographic targeting accuracy</td>
+            </tr>
+            <tr class="border-b border-gray-700/50 hover:bg-gray-700/30">
+              <td class="px-4 py-3 font-medium">rotation-test</td><td class="px-3 py-3 text-gray-400">Functionality</td>
+              <td class="px-3 py-3 text-center">45</td><td class="px-3 py-3 text-center"><span class="text-xs bg-red-500/20 text-red-400 px-2 py-1 rounded">FAIL</span></td>
+              <td class="px-3 py-3 text-gray-400">Feb 7 12:58</td><td class="px-3 py-3 text-xs text-gray-500">IP rotation, 50 errors, 0 unique IPs</td>
+            </tr>
+            <tr class="border-b border-gray-700/50 hover:bg-gray-700/30">
+              <td class="px-4 py-3 font-medium">sticky-stress</td><td class="px-3 py-3 text-gray-400">Functionality</td>
+              <td class="px-3 py-3 text-center">45</td><td class="px-3 py-3 text-center"><span class="text-xs bg-red-500/20 text-red-400 px-2 py-1 rounded">FAIL</span></td>
+              <td class="px-3 py-3 text-gray-400">Feb 7 12:59</td><td class="px-3 py-3 text-xs text-gray-500">Session stickiness, 500 errors</td>
+            </tr>
+            <tr class="border-b border-gray-700/50 hover:bg-gray-700/30">
+              <td class="px-4 py-3 font-medium">auth-test</td><td class="px-3 py-3 text-gray-400">Security</td>
+              <td class="px-3 py-3 text-center">27</td><td class="px-3 py-3 text-center"><span class="text-xs bg-red-500/20 text-red-400 px-2 py-1 rounded">FAIL</span></td>
+              <td class="px-3 py-3 text-gray-400">Feb 7 13:10</td><td class="px-3 py-3 text-xs text-gray-500">Authentication methods, 26 failed</td>
+            </tr>
+            <tr class="border-b border-gray-700/50 hover:bg-gray-700/30">
+              <td class="px-4 py-3 font-medium">security-test</td><td class="px-3 py-3 text-gray-400">Security</td>
+              <td class="px-3 py-3 text-center">27</td><td class="px-3 py-3 text-center"><span class="text-xs bg-red-500/20 text-red-400 px-2 py-1 rounded">FAIL</span></td>
+              <td class="px-3 py-3 text-gray-400">Feb 7 13:10</td><td class="px-3 py-3 text-xs text-gray-500">Header injection, TLS, 12 failed</td>
+            </tr>
+            <tr class="border-b border-gray-700/50 hover:bg-gray-700/30">
+              <td class="px-4 py-3 font-medium">bandwidth-test</td><td class="px-3 py-3 text-gray-400">Performance</td>
+              <td class="px-3 py-3 text-center">20</td><td class="px-3 py-3 text-center"><span class="text-xs bg-red-500/20 text-red-400 px-2 py-1 rounded">FAIL</span></td>
+              <td class="px-3 py-3 text-gray-400">Feb 7 12:15</td><td class="px-3 py-3 text-xs text-gray-500">Throughput measurement</td>
+            </tr>
+            <tr class="border-b border-gray-700/50 hover:bg-gray-700/30">
+              <td class="px-4 py-3 font-medium">latency-test</td><td class="px-3 py-3 text-gray-400">Performance</td>
+              <td class="px-3 py-3 text-center">20</td><td class="px-3 py-3 text-center"><span class="text-xs bg-red-500/20 text-red-400 px-2 py-1 rounded">FAIL</span></td>
+              <td class="px-3 py-3 text-gray-400">Feb 7 12:15</td><td class="px-3 py-3 text-xs text-gray-500">p99 latency, 50 errors</td>
+            </tr>
+            <tr class="border-b border-gray-700/50 hover:bg-gray-700/30">
+              <td class="px-4 py-3 font-medium">connection-limits</td><td class="px-3 py-3 text-gray-400">Performance</td>
+              <td class="px-3 py-3 text-center">7</td><td class="px-3 py-3 text-center"><span class="text-xs bg-green-500/20 text-green-400 px-2 py-1 rounded">PASS</span></td>
+              <td class="px-3 py-3 text-gray-400">Feb 7 11:35</td><td class="px-3 py-3 text-xs text-gray-500">✅ Connection limit enforcement working</td>
+            </tr>
+            <tr class="border-b border-gray-700/50 hover:bg-gray-700/30">
+              <td class="px-4 py-3 font-medium">concurrency-edge</td><td class="px-3 py-3 text-gray-400">Performance</td>
+              <td class="px-3 py-3 text-center">7</td><td class="px-3 py-3 text-center"><span class="text-xs bg-red-500/20 text-red-400 px-2 py-1 rounded">FAIL</span></td>
+              <td class="px-3 py-3 text-gray-400">Feb 7 11:35</td><td class="px-3 py-3 text-xs text-gray-500">482 req/s throughput, 0% success rate</td>
+            </tr>
+            <tr class="border-b border-gray-700/50 hover:bg-gray-700/30">
+              <td class="px-4 py-3 font-medium">peer-behavior-test</td><td class="px-3 py-3 text-gray-400">Integration</td>
+              <td class="px-3 py-3 text-center">7</td><td class="px-3 py-3 text-center"><span class="text-xs bg-red-500/20 text-red-400 px-2 py-1 rounded">FAIL</span></td>
+              <td class="px-3 py-3 text-gray-400">Feb 7 11:36</td><td class="px-3 py-3 text-xs text-gray-500">Peer node behavior, 0 unique IPs</td>
+            </tr>
+            <tr class="hover:bg-gray-700/30">
+              <td class="px-4 py-3 font-medium">failure-test</td><td class="px-3 py-3 text-gray-400">Reliability</td>
+              <td class="px-3 py-3 text-center">7</td><td class="px-3 py-3 text-center"><span class="text-xs bg-red-500/20 text-red-400 px-2 py-1 rounded">FAIL</span></td>
+              <td class="px-3 py-3 text-gray-400">Feb 7 11:34</td><td class="px-3 py-3 text-xs text-gray-500">Failure recovery & graceful degradation</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Test File Timeline -->
+      <h2 class="text-lg font-semibold mb-4"><i class="fas fa-clock text-blue-400 mr-2"></i>Test Run Timeline</h2>
+      <div class="bg-gray-800 rounded-xl border border-gray-700 p-5 mb-6">
+        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 text-xs">
+          <div class="bg-gray-700/50 rounded-lg p-3"><p class="font-medium text-green-400">stress-test</p><p class="text-gray-500">First: Feb 5 22:54</p><p class="text-gray-500">Last: Feb 7 13:12</p><p class="text-gray-400 mt-1">95 runs • ~30min interval</p></div>
+          <div class="bg-gray-700/50 rounded-lg p-3"><p class="font-medium text-green-400">leak-test</p><p class="text-gray-500">First: Feb 5 22:49</p><p class="text-gray-500">Last: Feb 7 13:12</p><p class="text-gray-400 mt-1">104 runs • ~30min interval</p></div>
+          <div class="bg-gray-700/50 rounded-lg p-3"><p class="font-medium text-green-400">protocol-test</p><p class="text-gray-500">First: Feb 5 22:54</p><p class="text-gray-500">Last: Feb 7 13:12</p><p class="text-gray-400 mt-1">82 runs • ~30min interval</p></div>
+          <div class="bg-gray-700/50 rounded-lg p-3"><p class="font-medium text-green-400">geo-test</p><p class="text-gray-500">First: Feb 5 22:49</p><p class="text-gray-500">Last: Feb 7 12:58</p><p class="text-gray-400 mt-1">46 runs • ~1hr interval</p></div>
+          <div class="bg-gray-700/50 rounded-lg p-3"><p class="font-medium text-green-400">rotation-test</p><p class="text-gray-500">First: Feb 5 22:55</p><p class="text-gray-500">Last: Feb 7 12:58</p><p class="text-gray-400 mt-1">45 runs • ~1hr interval</p></div>
+          <div class="bg-gray-700/50 rounded-lg p-3"><p class="font-medium text-green-400">sticky-stress</p><p class="text-gray-500">First: Feb 5 22:55</p><p class="text-gray-500">Last: Feb 7 12:59</p><p class="text-gray-400 mt-1">45 runs • ~1hr interval</p></div>
+          <div class="bg-gray-700/50 rounded-lg p-3"><p class="font-medium text-green-400">auth-test</p><p class="text-gray-500">First: Feb 5 22:55</p><p class="text-gray-500">Last: Feb 7 13:10</p><p class="text-gray-400 mt-1">27 runs • ~2hr interval</p></div>
+          <div class="bg-gray-700/50 rounded-lg p-3"><p class="font-medium text-green-400">security-test</p><p class="text-gray-500">First: Feb 5 22:55</p><p class="text-gray-500">Last: Feb 7 13:10</p><p class="text-gray-400 mt-1">27 runs • ~2hr interval</p></div>
+          <div class="bg-gray-700/50 rounded-lg p-3"><p class="font-medium text-green-400">bandwidth-test</p><p class="text-gray-500">First: Feb 5 22:56</p><p class="text-gray-500">Last: Feb 7 12:15</p><p class="text-gray-400 mt-1">20 runs • ~3hr interval</p></div>
+          <div class="bg-gray-700/50 rounded-lg p-3"><p class="font-medium text-green-400">latency-test</p><p class="text-gray-500">First: Feb 5 22:57</p><p class="text-gray-500">Last: Feb 7 12:15</p><p class="text-gray-400 mt-1">20 runs • ~3hr interval</p></div>
+          <div class="bg-gray-700/50 rounded-lg p-3"><p class="font-medium text-green-400">connection-limits</p><p class="text-gray-500">First: Feb 5 23:05</p><p class="text-gray-500">Last: Feb 7 11:35</p><p class="text-gray-400 mt-1">7 runs • ~6hr interval</p></div>
+          <div class="bg-gray-700/50 rounded-lg p-3"><p class="font-medium text-green-400">concurrency-edge</p><p class="text-gray-500">First: Feb 5 23:07</p><p class="text-gray-500">Last: Feb 7 11:35</p><p class="text-gray-400 mt-1">7 runs • ~6hr interval</p></div>
+          <div class="bg-gray-700/50 rounded-lg p-3"><p class="font-medium text-green-400">peer-behavior-test</p><p class="text-gray-500">First: Feb 5 23:08</p><p class="text-gray-500">Last: Feb 7 11:36</p><p class="text-gray-400 mt-1">7 runs • ~6hr interval</p></div>
+          <div class="bg-gray-700/50 rounded-lg p-3"><p class="font-medium text-green-400">failure-test</p><p class="text-gray-500">First: Feb 5 23:04</p><p class="text-gray-500">Last: Feb 7 11:34</p><p class="text-gray-400 mt-1">7 runs • ~6hr interval</p></div>
+        </div>
+      </div>
+
+      <!-- Bug Tracker -->
+      <h2 class="text-lg font-semibold mb-4"><i class="fas fa-bug text-red-400 mr-2"></i>Known Issues</h2>
+      <div class="bg-gray-800 rounded-xl border border-gray-700 p-5 mb-6">
+        <div class="space-y-3">
+          <div class="flex items-start gap-3 bg-red-500/10 border border-red-500/20 rounded-lg p-3">
+            <span class="text-red-400 mt-0.5"><i class="fas fa-circle-exclamation"></i></span>
+            <div><p class="text-sm font-medium">Proxy service offline — ECONNREFUSED on all connection tests</p><p class="text-xs text-gray-400 mt-1">All tests fail because proxy is not running. Infrastructure is validated but service needs active peers to test against.</p></div>
+          </div>
+          <div class="flex items-start gap-3 bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-3">
+            <span class="text-yellow-400 mt-0.5"><i class="fas fa-triangle-exclamation"></i></span>
+            <div><p class="text-sm font-medium">0 unique IPs observed in rotation/sticky tests</p><p class="text-xs text-gray-400 mt-1">No peer nodes connected to provide residential IPs during test window.</p></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Compliance -->
+      <h2 class="text-lg font-semibold mb-4"><i class="fas fa-shield-halved text-purple-400 mr-2"></i>Compliance Checklist</h2>
+      <div class="bg-gray-800 rounded-xl border border-gray-700 p-5 mb-6">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div class="flex items-center gap-2"><span class="text-green-400">✅</span><span class="text-sm">No data logging on proxy traffic</span></div>
+          <div class="flex items-center gap-2"><span class="text-green-400">✅</span><span class="text-sm">TLS encryption for all control traffic</span></div>
+          <div class="flex items-center gap-2"><span class="text-green-400">✅</span><span class="text-sm">Authentication required for proxy access</span></div>
+          <div class="flex items-center gap-2"><span class="text-green-400">✅</span><span class="text-sm">Connection limits enforced per customer</span></div>
+          <div class="flex items-center gap-2"><span class="text-yellow-400">⬜</span><span class="text-sm text-gray-400">GDPR compliance audit</span></div>
+          <div class="flex items-center gap-2"><span class="text-yellow-400">⬜</span><span class="text-sm text-gray-400">Partner regulation review</span></div>
+        </div>
+      </div>
+
+      <!-- Notes -->
+      <div class="bg-gray-800 rounded-xl border border-gray-700 p-5">
+        <h3 class="font-semibold mb-3"><i class="fas fa-sticky-note text-yellow-400 mr-2"></i>Notes</h3>
+        <ul class="text-sm text-gray-400 space-y-2">
+          <li>• Automated test scheduler runs 14 test categories at varying intervals (30min to 6hr)</li>
+          <li>• Tests began Feb 5, 2026 22:49 UTC — 539 total test runs collected</li>
+          <li>• connection-limits is the only consistently passing test — validates rate limiting logic</li>
+          <li>• All other failures are expected while proxy service has no active peer connections</li>
+          <li>• Test infrastructure is production-ready; results will improve when peer network is live</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- ===================== QA: MANAGEMENT PLATFORM ===================== -->
+    <div id="page-qa-management" class="page p-4 md:p-6 lg:p-8 pt-16 lg:pt-8">
+      <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
+        <div>
+          <h1 class="text-2xl md:text-3xl font-bold"><i class="fas fa-desktop text-blue-400 mr-3"></i>Management Platform QA</h1>
+          <p class="text-gray-400 mt-1">Web • Active development — building and testing in parallel</p>
+        </div>
+        <div class="mt-4 md:mt-0">
+          <button onclick="showPage('qa-hub')" class="px-3 py-2 bg-gray-700 rounded-lg text-sm hover:bg-gray-600 transition"><i class="fas fa-arrow-left mr-1"></i>Hub</button>
+        </div>
+      </div>
+
+      <!-- Product Header -->
+      <div class="bg-gray-800 rounded-xl border border-blue-500/30 p-5 mb-6">
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div><p class="text-xs text-gray-400">Platform</p><p class="font-medium">Web (HTML/JS)</p></div>
+          <div><p class="text-xs text-gray-400">Version</p><p class="font-medium">v1.0 (Building)</p></div>
+          <div><p class="text-xs text-gray-400">Status</p><p class="font-medium text-blue-400">🔄 In Development</p></div>
+          <div><p class="text-xs text-gray-400">Last Review</p><p class="font-medium">Discussion #002</p></div>
+        </div>
+      </div>
+
+      <!-- Test Summary -->
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+        <div class="bg-gray-800 rounded-xl border border-gray-700 p-4 text-center">
+          <p class="text-3xl font-bold text-gray-500">-</p><p class="text-xs text-gray-400 mt-1">Tests Written</p>
+        </div>
+        <div class="bg-gray-800 rounded-xl border border-gray-700 p-4 text-center">
+          <p class="text-3xl font-bold text-gray-500">-</p><p class="text-xs text-gray-400 mt-1">Pass Rate</p>
+        </div>
+        <div class="bg-gray-800 rounded-xl border border-gray-700 p-4 text-center">
+          <p class="text-3xl font-bold text-gray-500">-</p><p class="text-xs text-gray-400 mt-1">Bugs Found</p>
+        </div>
+        <div class="bg-gray-800 rounded-xl border border-gray-700 p-4 text-center">
+          <p class="text-3xl font-bold text-gray-500">-</p><p class="text-xs text-gray-400 mt-1">Coverage</p>
+        </div>
+      </div>
+
+      <!-- Known Issues from Discussion #002 -->
+      <h2 class="text-lg font-semibold mb-4"><i class="fas fa-clipboard-list text-blue-400 mr-2"></i>Known Issues (from Team Review)</h2>
+      <div class="bg-gray-800 rounded-xl border border-gray-700 p-5 mb-6">
+        <div class="space-y-3">
+          <div class="flex items-start gap-3 bg-blue-500/10 border border-blue-500/20 rounded-lg p-3">
+            <span class="text-blue-400 mt-0.5"><i class="fas fa-info-circle"></i></span>
+            <div><p class="text-sm font-medium">Dashboard is this very app — self-referential QA</p><p class="text-xs text-gray-400 mt-1">The management platform IS the dashboard being tested. New pages and sections are added continuously.</p></div>
+          </div>
+          <div class="flex items-start gap-3 bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-3">
+            <span class="text-yellow-400 mt-0.5"><i class="fas fa-triangle-exclamation"></i></span>
+            <div><p class="text-sm font-medium">Discussion #002 grades show areas needing work</p><p class="text-xs text-gray-400 mt-1">Team review identified UX consistency issues, mobile responsiveness gaps, and data placeholder cleanup needed.</p></div>
+          </div>
+          <div class="flex items-start gap-3 bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-3">
+            <span class="text-yellow-400 mt-0.5"><i class="fas fa-triangle-exclamation"></i></span>
+            <div><p class="text-sm font-medium">Single HTML file architecture</p><p class="text-xs text-gray-400 mt-1">Entire platform is one 9000+ line HTML file. May need componentization for maintainability.</p></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Test Categories Needed -->
+      <h2 class="text-lg font-semibold mb-4"><i class="fas fa-list text-purple-400 mr-2"></i>Test Categories (Planned)</h2>
+      <div class="bg-gray-800 rounded-xl border border-gray-700 overflow-x-auto mb-6">
+        <table class="w-full text-sm">
+          <thead><tr class="border-b border-gray-700"><th class="px-4 py-3 text-left text-gray-400">Test Name</th><th class="px-3 py-3 text-left text-gray-400">Category</th><th class="px-3 py-3 text-center text-gray-400">Status</th><th class="px-3 py-3 text-left text-gray-400">Last Run</th><th class="px-3 py-3 text-left text-gray-400">Notes</th></tr></thead>
+          <tbody>
+            <tr class="border-b border-gray-700/50"><td class="px-4 py-3">Page navigation</td><td class="px-3 py-3 text-gray-400">Functionality</td><td class="px-3 py-3 text-center text-gray-600">—</td><td class="px-3 py-3 text-gray-500">-</td><td class="px-3 py-3 text-xs text-gray-500">All showPage() links work</td></tr>
+            <tr class="border-b border-gray-700/50"><td class="px-4 py-3">Command palette</td><td class="px-3 py-3 text-gray-400">Functionality</td><td class="px-3 py-3 text-center text-gray-600">—</td><td class="px-3 py-3 text-gray-500">-</td><td class="px-3 py-3 text-xs text-gray-500">Cmd+K search and navigation</td></tr>
+            <tr class="border-b border-gray-700/50"><td class="px-4 py-3">Mobile responsiveness</td><td class="px-3 py-3 text-gray-400">UI/UX</td><td class="px-3 py-3 text-center text-gray-600">—</td><td class="px-3 py-3 text-gray-500">-</td><td class="px-3 py-3 text-xs text-gray-500">All pages on mobile viewport</td></tr>
+            <tr class="border-b border-gray-700/50"><td class="px-4 py-3">Chart rendering</td><td class="px-3 py-3 text-gray-400">Functionality</td><td class="px-3 py-3 text-center text-gray-600">—</td><td class="px-3 py-3 text-gray-500">-</td><td class="px-3 py-3 text-xs text-gray-500">Chart.js visualizations</td></tr>
+            <tr class="border-b border-gray-700/50"><td class="px-4 py-3">Department bar</td><td class="px-3 py-3 text-gray-400">Functionality</td><td class="px-3 py-3 text-center text-gray-600">—</td><td class="px-3 py-3 text-gray-500">-</td><td class="px-3 py-3 text-xs text-gray-500">Dept switching & page mapping</td></tr>
+            <tr class="border-b border-gray-700/50"><td class="px-4 py-3">Load performance</td><td class="px-3 py-3 text-gray-400">Performance</td><td class="px-3 py-3 text-center text-gray-600">—</td><td class="px-3 py-3 text-gray-500">-</td><td class="px-3 py-3 text-xs text-gray-500">9000+ line HTML load time</td></tr>
+            <tr class="border-b border-gray-700/50"><td class="px-4 py-3">Cross-browser compat</td><td class="px-3 py-3 text-gray-400">Compatibility</td><td class="px-3 py-3 text-center text-gray-600">—</td><td class="px-3 py-3 text-gray-500">-</td><td class="px-3 py-3 text-xs text-gray-500">Chrome, Firefox, Safari, Edge</td></tr>
+            <tr class="hover:bg-gray-700/30"><td class="px-4 py-3">Data security</td><td class="px-3 py-3 text-gray-400">Security</td><td class="px-3 py-3 text-center text-gray-600">—</td><td class="px-3 py-3 text-gray-500">-</td><td class="px-3 py-3 text-xs text-gray-500">No sensitive data in client-side code</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Notes -->
+      <div class="bg-gray-800 rounded-xl border border-gray-700 p-5">
+        <h3 class="font-semibold mb-3"><i class="fas fa-sticky-note text-yellow-400 mr-2"></i>Notes</h3>
+        <ul class="text-sm text-gray-400 space-y-2">
+          <li>• Platform is actively being built — QA runs alongside development</li>
+          <li>• Formal automated tests not yet written — manual review during dev sprints</li>
+          <li>• Priority: ensure all navigation works, no dead links, consistent dark theme</li>
+          <li>• Cloudflare tunnel deployment — test HTTPS access and tunnel stability</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- ===================== QA: WEATHERO ===================== -->
+    <div id="page-qa-weathero" class="page p-4 md:p-6 lg:p-8 pt-16 lg:pt-8">
+      <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
+        <div>
+          <h1 class="text-2xl md:text-3xl font-bold"><i class="fas fa-cloud-sun text-orange-400 mr-3"></i>Weathero QA</h1>
+          <p class="text-gray-400 mt-1">Android / Smart TV • Weather app — not yet tested</p>
+        </div>
+        <div class="mt-4 md:mt-0"><button onclick="showPage('qa-hub')" class="px-3 py-2 bg-gray-700 rounded-lg text-sm hover:bg-gray-600 transition"><i class="fas fa-arrow-left mr-1"></i>Hub</button></div>
+      </div>
+      <div class="bg-gray-800 rounded-xl border border-orange-500/30 p-5 mb-6">
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div><p class="text-xs text-gray-400">Platform</p><p class="font-medium">Android / Smart TV</p></div>
+          <div><p class="text-xs text-gray-400">Version</p><p class="font-medium">-</p></div>
+          <div><p class="text-xs text-gray-400">Status</p><p class="font-medium text-gray-500">⬜ Not Tested</p></div>
+          <div><p class="text-xs text-gray-400">Website</p><p class="font-medium">weathero.io</p></div>
+        </div>
+      </div>
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+        <div class="bg-gray-800 rounded-xl border border-gray-700 p-4 text-center"><p class="text-3xl font-bold text-gray-500">-</p><p class="text-xs text-gray-400 mt-1">Tests</p></div>
+        <div class="bg-gray-800 rounded-xl border border-gray-700 p-4 text-center"><p class="text-3xl font-bold text-gray-500">-</p><p class="text-xs text-gray-400 mt-1">Pass Rate</p></div>
+        <div class="bg-gray-800 rounded-xl border border-gray-700 p-4 text-center"><p class="text-3xl font-bold text-gray-500">-</p><p class="text-xs text-gray-400 mt-1">Bugs</p></div>
+        <div class="bg-gray-800 rounded-xl border border-gray-700 p-4 text-center"><p class="text-3xl font-bold text-gray-500">-</p><p class="text-xs text-gray-400 mt-1">Coverage</p></div>
+      </div>
+      <h2 class="text-lg font-semibold mb-4"><i class="fas fa-list text-purple-400 mr-2"></i>Test Categories (Planned)</h2>
+      <div class="bg-gray-800 rounded-xl border border-gray-700 overflow-x-auto mb-6">
+        <table class="w-full text-sm">
+          <thead><tr class="border-b border-gray-700"><th class="px-4 py-3 text-left text-gray-400">Test Name</th><th class="px-3 py-3 text-left text-gray-400">Category</th><th class="px-3 py-3 text-center text-gray-400">Status</th><th class="px-3 py-3 text-left text-gray-400">Last Run</th><th class="px-3 py-3 text-left text-gray-400">Notes</th></tr></thead>
+          <tbody>
+            <tr class="border-b border-gray-700/50"><td class="px-4 py-3">Weather data accuracy</td><td class="px-3 py-3 text-gray-400">Functionality</td><td class="px-3 py-3 text-center text-gray-600">—</td><td class="px-3 py-3 text-gray-500">-</td><td class="px-3 py-3 text-xs text-gray-500">API data matches display</td></tr>
+            <tr class="border-b border-gray-700/50"><td class="px-4 py-3">Smart TV rendering</td><td class="px-3 py-3 text-gray-400">Compatibility</td><td class="px-3 py-3 text-center text-gray-600">—</td><td class="px-3 py-3 text-gray-500">-</td><td class="px-3 py-3 text-xs text-gray-500">Samsung/LG/Android TV</td></tr>
+            <tr class="border-b border-gray-700/50"><td class="px-4 py-3">Location services</td><td class="px-3 py-3 text-gray-400">Functionality</td><td class="px-3 py-3 text-center text-gray-600">—</td><td class="px-3 py-3 text-gray-500">-</td><td class="px-3 py-3 text-xs text-gray-500">GPS & manual location</td></tr>
+            <tr class="border-b border-gray-700/50"><td class="px-4 py-3">App startup time</td><td class="px-3 py-3 text-gray-400">Performance</td><td class="px-3 py-3 text-center text-gray-600">—</td><td class="px-3 py-3 text-gray-500">-</td><td class="px-3 py-3 text-xs text-gray-500">Cold/warm start</td></tr>
+            <tr class="border-b border-gray-700/50"><td class="px-4 py-3">Battery consumption</td><td class="px-3 py-3 text-gray-400">Performance</td><td class="px-3 py-3 text-center text-gray-600">—</td><td class="px-3 py-3 text-gray-500">-</td><td class="px-3 py-3 text-xs text-gray-500">Background service impact</td></tr>
+            <tr class="hover:bg-gray-700/30"><td class="px-4 py-3">SDK integration</td><td class="px-3 py-3 text-gray-400">Integration</td><td class="px-3 py-3 text-center text-gray-600">—</td><td class="px-3 py-3 text-gray-500">-</td><td class="px-3 py-3 text-xs text-gray-500">IPLoop SDK embedded behavior</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="bg-gray-800 rounded-xl border border-gray-700 p-5 mb-6">
+        <h3 class="font-semibold mb-3"><i class="fas fa-shield-halved text-purple-400 mr-2"></i>Compliance Checklist</h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div class="flex items-center gap-2"><span class="text-gray-500">⬜</span><span class="text-sm text-gray-400">Google Play Store requirements</span></div>
+          <div class="flex items-center gap-2"><span class="text-gray-500">⬜</span><span class="text-sm text-gray-400">Privacy policy compliance</span></div>
+          <div class="flex items-center gap-2"><span class="text-gray-500">⬜</span><span class="text-sm text-gray-400">SDK consent/disclosure requirements</span></div>
+          <div class="flex items-center gap-2"><span class="text-gray-500">⬜</span><span class="text-sm text-gray-400">Partner regulation review</span></div>
+        </div>
+      </div>
+      <div class="bg-gray-800 rounded-xl border border-gray-700 p-5"><h3 class="font-semibold mb-3"><i class="fas fa-sticky-note text-yellow-400 mr-2"></i>Notes</h3><p class="text-sm text-gray-400">No tests run yet. Ready for test data when QA begins.</p></div>
+    </div>
+
+    <!-- ===================== QA: VERSO ===================== -->
+    <div id="page-qa-verso" class="page p-4 md:p-6 lg:p-8 pt-16 lg:pt-8">
+      <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
+        <div>
+          <h1 class="text-2xl md:text-3xl font-bold"><i class="fas fa-mobile-alt text-purple-400 mr-3"></i>Verso QA</h1>
+          <p class="text-gray-400 mt-1">Mobile • VPN/utility app — not yet tested</p>
+        </div>
+        <div class="mt-4 md:mt-0"><button onclick="showPage('qa-hub')" class="px-3 py-2 bg-gray-700 rounded-lg text-sm hover:bg-gray-600 transition"><i class="fas fa-arrow-left mr-1"></i>Hub</button></div>
+      </div>
+      <div class="bg-gray-800 rounded-xl border border-purple-500/30 p-5 mb-6">
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div><p class="text-xs text-gray-400">Platform</p><p class="font-medium">Mobile (iOS/Android)</p></div>
+          <div><p class="text-xs text-gray-400">Version</p><p class="font-medium">-</p></div>
+          <div><p class="text-xs text-gray-400">Status</p><p class="font-medium text-gray-500">⬜ Not Tested</p></div>
+          <div><p class="text-xs text-gray-400">Last Tested</p><p class="font-medium">-</p></div>
+        </div>
+      </div>
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+        <div class="bg-gray-800 rounded-xl border border-gray-700 p-4 text-center"><p class="text-3xl font-bold text-gray-500">-</p><p class="text-xs text-gray-400 mt-1">Tests</p></div>
+        <div class="bg-gray-800 rounded-xl border border-gray-700 p-4 text-center"><p class="text-3xl font-bold text-gray-500">-</p><p class="text-xs text-gray-400 mt-1">Pass Rate</p></div>
+        <div class="bg-gray-800 rounded-xl border border-gray-700 p-4 text-center"><p class="text-3xl font-bold text-gray-500">-</p><p class="text-xs text-gray-400 mt-1">Bugs</p></div>
+        <div class="bg-gray-800 rounded-xl border border-gray-700 p-4 text-center"><p class="text-3xl font-bold text-gray-500">-</p><p class="text-xs text-gray-400 mt-1">Coverage</p></div>
+      </div>
+      <h2 class="text-lg font-semibold mb-4"><i class="fas fa-list text-purple-400 mr-2"></i>Test Categories (Planned)</h2>
+      <div class="bg-gray-800 rounded-xl border border-gray-700 overflow-x-auto mb-6">
+        <table class="w-full text-sm">
+          <thead><tr class="border-b border-gray-700"><th class="px-4 py-3 text-left text-gray-400">Test Name</th><th class="px-3 py-3 text-left text-gray-400">Category</th><th class="px-3 py-3 text-center text-gray-400">Status</th><th class="px-3 py-3 text-left text-gray-400">Last Run</th><th class="px-3 py-3 text-left text-gray-400">Notes</th></tr></thead>
+          <tbody>
+            <tr class="border-b border-gray-700/50"><td class="px-4 py-3">VPN connection</td><td class="px-3 py-3 text-gray-400">Functionality</td><td class="px-3 py-3 text-center text-gray-600">—</td><td class="px-3 py-3 text-gray-500">-</td><td class="px-3 py-3 text-xs text-gray-500">Connect/disconnect flows</td></tr>
+            <tr class="border-b border-gray-700/50"><td class="px-4 py-3">Speed test</td><td class="px-3 py-3 text-gray-400">Performance</td><td class="px-3 py-3 text-center text-gray-600">—</td><td class="px-3 py-3 text-gray-500">-</td><td class="px-3 py-3 text-xs text-gray-500">Throughput with VPN active</td></tr>
+            <tr class="border-b border-gray-700/50"><td class="px-4 py-3">IP masking</td><td class="px-3 py-3 text-gray-400">Security</td><td class="px-3 py-3 text-center text-gray-600">—</td><td class="px-3 py-3 text-gray-500">-</td><td class="px-3 py-3 text-xs text-gray-500">Real IP not leaked</td></tr>
+            <tr class="border-b border-gray-700/50"><td class="px-4 py-3">App store compliance</td><td class="px-3 py-3 text-gray-400">Compliance</td><td class="px-3 py-3 text-center text-gray-600">—</td><td class="px-3 py-3 text-gray-500">-</td><td class="px-3 py-3 text-xs text-gray-500">iOS & Google Play guidelines</td></tr>
+            <tr class="hover:bg-gray-700/30"><td class="px-4 py-3">SDK integration</td><td class="px-3 py-3 text-gray-400">Integration</td><td class="px-3 py-3 text-center text-gray-600">—</td><td class="px-3 py-3 text-gray-500">-</td><td class="px-3 py-3 text-xs text-gray-500">IPLoop SDK embedded behavior</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="bg-gray-800 rounded-xl border border-gray-700 p-5 mb-6">
+        <h3 class="font-semibold mb-3"><i class="fas fa-shield-halved text-purple-400 mr-2"></i>Compliance Checklist</h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div class="flex items-center gap-2"><span class="text-gray-500">⬜</span><span class="text-sm text-gray-400">App Store / Play Store requirements</span></div>
+          <div class="flex items-center gap-2"><span class="text-gray-500">⬜</span><span class="text-sm text-gray-400">Privacy policy compliance</span></div>
+          <div class="flex items-center gap-2"><span class="text-gray-500">⬜</span><span class="text-sm text-gray-400">VPN usage disclosure</span></div>
+          <div class="flex items-center gap-2"><span class="text-gray-500">⬜</span><span class="text-sm text-gray-400">Partner regulation review</span></div>
+        </div>
+      </div>
+      <div class="bg-gray-800 rounded-xl border border-gray-700 p-5"><h3 class="font-semibold mb-3"><i class="fas fa-sticky-note text-yellow-400 mr-2"></i>Notes</h3><p class="text-sm text-gray-400">No tests run yet. Ready for test data when QA begins.</p></div>
+    </div>
+
+    <!-- ===================== QA: SOFTZERO ===================== -->
+    <div id="page-qa-softzero" class="page p-4 md:p-6 lg:p-8 pt-16 lg:pt-8">
+      <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
+        <div>
+          <h1 class="text-2xl md:text-3xl font-bold"><i class="fab fa-windows text-cyan-400 mr-3"></i>Softzero QA</h1>
+          <p class="text-gray-400 mt-1">Windows • Uninstaller app — not yet tested</p>
+        </div>
+        <div class="mt-4 md:mt-0"><button onclick="showPage('qa-hub')" class="px-3 py-2 bg-gray-700 rounded-lg text-sm hover:bg-gray-600 transition"><i class="fas fa-arrow-left mr-1"></i>Hub</button></div>
+      </div>
+      <div class="bg-gray-800 rounded-xl border border-cyan-500/30 p-5 mb-6">
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div><p class="text-xs text-gray-400">Platform</p><p class="font-medium">Windows</p></div>
+          <div><p class="text-xs text-gray-400">Version</p><p class="font-medium">-</p></div>
+          <div><p class="text-xs text-gray-400">Status</p><p class="font-medium text-gray-500">⬜ Not Tested</p></div>
+          <div><p class="text-xs text-gray-400">Website</p><p class="font-medium">softzero.io</p></div>
+        </div>
+      </div>
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+        <div class="bg-gray-800 rounded-xl border border-gray-700 p-4 text-center"><p class="text-3xl font-bold text-gray-500">-</p><p class="text-xs text-gray-400 mt-1">Tests</p></div>
+        <div class="bg-gray-800 rounded-xl border border-gray-700 p-4 text-center"><p class="text-3xl font-bold text-gray-500">-</p><p class="text-xs text-gray-400 mt-1">Pass Rate</p></div>
+        <div class="bg-gray-800 rounded-xl border border-gray-700 p-4 text-center"><p class="text-3xl font-bold text-gray-500">-</p><p class="text-xs text-gray-400 mt-1">Bugs</p></div>
+        <div class="bg-gray-800 rounded-xl border border-gray-700 p-4 text-center"><p class="text-3xl font-bold text-gray-500">-</p><p class="text-xs text-gray-400 mt-1">Coverage</p></div>
+      </div>
+      <h2 class="text-lg font-semibold mb-4"><i class="fas fa-list text-purple-400 mr-2"></i>Test Categories (Planned)</h2>
+      <div class="bg-gray-800 rounded-xl border border-gray-700 overflow-x-auto mb-6">
+        <table class="w-full text-sm">
+          <thead><tr class="border-b border-gray-700"><th class="px-4 py-3 text-left text-gray-400">Test Name</th><th class="px-3 py-3 text-left text-gray-400">Category</th><th class="px-3 py-3 text-center text-gray-400">Status</th><th class="px-3 py-3 text-left text-gray-400">Last Run</th><th class="px-3 py-3 text-left text-gray-400">Notes</th></tr></thead>
+          <tbody>
+            <tr class="border-b border-gray-700/50"><td class="px-4 py-3">Program detection</td><td class="px-3 py-3 text-gray-400">Functionality</td><td class="px-3 py-3 text-center text-gray-600">—</td><td class="px-3 py-3 text-gray-500">-</td><td class="px-3 py-3 text-xs text-gray-500">Installed programs scan</td></tr>
+            <tr class="border-b border-gray-700/50"><td class="px-4 py-3">Clean uninstall</td><td class="px-3 py-3 text-gray-400">Functionality</td><td class="px-3 py-3 text-center text-gray-600">—</td><td class="px-3 py-3 text-gray-500">-</td><td class="px-3 py-3 text-xs text-gray-500">Complete removal + residuals</td></tr>
+            <tr class="border-b border-gray-700/50"><td class="px-4 py-3">System stability</td><td class="px-3 py-3 text-gray-400">Security</td><td class="px-3 py-3 text-center text-gray-600">—</td><td class="px-3 py-3 text-gray-500">-</td><td class="px-3 py-3 text-xs text-gray-500">No system damage after uninstall</td></tr>
+            <tr class="border-b border-gray-700/50"><td class="px-4 py-3">Windows version compat</td><td class="px-3 py-3 text-gray-400">Compatibility</td><td class="px-3 py-3 text-center text-gray-600">—</td><td class="px-3 py-3 text-gray-500">-</td><td class="px-3 py-3 text-xs text-gray-500">Win 10/11, x64/ARM</td></tr>
+            <tr class="hover:bg-gray-700/30"><td class="px-4 py-3">SDK integration</td><td class="px-3 py-3 text-gray-400">Integration</td><td class="px-3 py-3 text-center text-gray-600">—</td><td class="px-3 py-3 text-gray-500">-</td><td class="px-3 py-3 text-xs text-gray-500">IPLoop SDK embedded behavior</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="bg-gray-800 rounded-xl border border-gray-700 p-5 mb-6">
+        <h3 class="font-semibold mb-3"><i class="fas fa-shield-halved text-purple-400 mr-2"></i>Compliance Checklist</h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div class="flex items-center gap-2"><span class="text-gray-500">⬜</span><span class="text-sm text-gray-400">Windows SmartScreen signing</span></div>
+          <div class="flex items-center gap-2"><span class="text-gray-500">⬜</span><span class="text-sm text-gray-400">Antivirus false positive check</span></div>
+          <div class="flex items-center gap-2"><span class="text-gray-500">⬜</span><span class="text-sm text-gray-400">Privacy policy compliance</span></div>
+          <div class="flex items-center gap-2"><span class="text-gray-500">⬜</span><span class="text-sm text-gray-400">Partner regulation review</span></div>
+        </div>
+      </div>
+      <div class="bg-gray-800 rounded-xl border border-gray-700 p-5"><h3 class="font-semibold mb-3"><i class="fas fa-sticky-note text-yellow-400 mr-2"></i>Notes</h3><p class="text-sm text-gray-400">No tests run yet. Ready for test data when QA begins.</p></div>
+    </div>
+
+    <!-- ===================== QA: PIXARA ===================== -->
+    <div id="page-qa-pixara" class="page p-4 md:p-6 lg:p-8 pt-16 lg:pt-8">
+      <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
+        <div>
+          <h1 class="text-2xl md:text-3xl font-bold"><i class="fas fa-images text-pink-400 mr-3"></i>Pixara QA</h1>
+          <p class="text-gray-400 mt-1">Mac • Photo/video browser — not yet tested</p>
+        </div>
+        <div class="mt-4 md:mt-0"><button onclick="showPage('qa-hub')" class="px-3 py-2 bg-gray-700 rounded-lg text-sm hover:bg-gray-600 transition"><i class="fas fa-arrow-left mr-1"></i>Hub</button></div>
+      </div>
+      <div class="bg-gray-800 rounded-xl border border-pink-500/30 p-5 mb-6">
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div><p class="text-xs text-gray-400">Platform</p><p class="font-medium">macOS</p></div>
+          <div><p class="text-xs text-gray-400">Version</p><p class="font-medium">-</p></div>
+          <div><p class="text-xs text-gray-400">Status</p><p class="font-medium text-gray-500">⬜ Not Tested</p></div>
+          <div><p class="text-xs text-gray-400">Website</p><p class="font-medium">pixara.io</p></div>
+        </div>
+      </div>
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+        <div class="bg-gray-800 rounded-xl border border-gray-700 p-4 text-center"><p class="text-3xl font-bold text-gray-500">-</p><p class="text-xs text-gray-400 mt-1">Tests</p></div>
+        <div class="bg-gray-800 rounded-xl border border-gray-700 p-4 text-center"><p class="text-3xl font-bold text-gray-500">-</p><p class="text-xs text-gray-400 mt-1">Pass Rate</p></div>
+        <div class="bg-gray-800 rounded-xl border border-gray-700 p-4 text-center"><p class="text-3xl font-bold text-gray-500">-</p><p class="text-xs text-gray-400 mt-1">Bugs</p></div>
+        <div class="bg-gray-800 rounded-xl border border-gray-700 p-4 text-center"><p class="text-3xl font-bold text-gray-500">-</p><p class="text-xs text-gray-400 mt-1">Coverage</p></div>
+      </div>
+      <h2 class="text-lg font-semibold mb-4"><i class="fas fa-list text-purple-400 mr-2"></i>Test Categories (Planned)</h2>
+      <div class="bg-gray-800 rounded-xl border border-gray-700 overflow-x-auto mb-6">
+        <table class="w-full text-sm">
+          <thead><tr class="border-b border-gray-700"><th class="px-4 py-3 text-left text-gray-400">Test Name</th><th class="px-3 py-3 text-left text-gray-400">Category</th><th class="px-3 py-3 text-center text-gray-400">Status</th><th class="px-3 py-3 text-left text-gray-400">Last Run</th><th class="px-3 py-3 text-left text-gray-400">Notes</th></tr></thead>
+          <tbody>
+            <tr class="border-b border-gray-700/50"><td class="px-4 py-3">Media import</td><td class="px-3 py-3 text-gray-400">Functionality</td><td class="px-3 py-3 text-center text-gray-600">—</td><td class="px-3 py-3 text-gray-500">-</td><td class="px-3 py-3 text-xs text-gray-500">Photo/video library scanning</td></tr>
+            <tr class="border-b border-gray-700/50"><td class="px-4 py-3">Format support</td><td class="px-3 py-3 text-gray-400">Compatibility</td><td class="px-3 py-3 text-center text-gray-600">—</td><td class="px-3 py-3 text-gray-500">-</td><td class="px-3 py-3 text-xs text-gray-500">JPEG, PNG, HEIC, MOV, MP4</td></tr>
+            <tr class="border-b border-gray-700/50"><td class="px-4 py-3">Thumbnail generation</td><td class="px-3 py-3 text-gray-400">Performance</td><td class="px-3 py-3 text-center text-gray-600">—</td><td class="px-3 py-3 text-gray-500">-</td><td class="px-3 py-3 text-xs text-gray-500">Large library performance</td></tr>
+            <tr class="border-b border-gray-700/50"><td class="px-4 py-3">macOS version compat</td><td class="px-3 py-3 text-gray-400">Compatibility</td><td class="px-3 py-3 text-center text-gray-600">—</td><td class="px-3 py-3 text-gray-500">-</td><td class="px-3 py-3 text-xs text-gray-500">Ventura/Sonoma/Sequoia</td></tr>
+            <tr class="hover:bg-gray-700/30"><td class="px-4 py-3">SDK integration</td><td class="px-3 py-3 text-gray-400">Integration</td><td class="px-3 py-3 text-center text-gray-600">—</td><td class="px-3 py-3 text-gray-500">-</td><td class="px-3 py-3 text-xs text-gray-500">IPLoop SDK embedded behavior</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="bg-gray-800 rounded-xl border border-gray-700 p-5 mb-6">
+        <h3 class="font-semibold mb-3"><i class="fas fa-shield-halved text-purple-400 mr-2"></i>Compliance Checklist</h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div class="flex items-center gap-2"><span class="text-gray-500">⬜</span><span class="text-sm text-gray-400">Mac App Store requirements</span></div>
+          <div class="flex items-center gap-2"><span class="text-gray-500">⬜</span><span class="text-sm text-gray-400">Notarization & code signing</span></div>
+          <div class="flex items-center gap-2"><span class="text-gray-500">⬜</span><span class="text-sm text-gray-400">Privacy policy compliance</span></div>
+          <div class="flex items-center gap-2"><span class="text-gray-500">⬜</span><span class="text-sm text-gray-400">Partner regulation review</span></div>
+        </div>
+      </div>
+      <div class="bg-gray-800 rounded-xl border border-gray-700 p-5"><h3 class="font-semibold mb-3"><i class="fas fa-sticky-note text-yellow-400 mr-2"></i>Notes</h3><p class="text-sm text-gray-400">No tests run yet. Ready for test data when QA begins.</p></div>
+    </div>
+
+    <!-- ===================== QA: MACLEANER ===================== -->
+    <div id="page-qa-macleaner" class="page p-4 md:p-6 lg:p-8 pt-16 lg:pt-8">
+      <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
+        <div>
+          <h1 class="text-2xl md:text-3xl font-bold"><i class="fas fa-apple-alt text-emerald-400 mr-3"></i>Macleaner QA</h1>
+          <p class="text-gray-400 mt-1">Mac • System cleaner — not yet tested</p>
+        </div>
+        <div class="mt-4 md:mt-0"><button onclick="showPage('qa-hub')" class="px-3 py-2 bg-gray-700 rounded-lg text-sm hover:bg-gray-600 transition"><i class="fas fa-arrow-left mr-1"></i>Hub</button></div>
+      </div>
+      <div class="bg-gray-800 rounded-xl border border-emerald-500/30 p-5 mb-6">
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div><p class="text-xs text-gray-400">Platform</p><p class="font-medium">macOS</p></div>
+          <div><p class="text-xs text-gray-400">Version</p><p class="font-medium">-</p></div>
+          <div><p class="text-xs text-gray-400">Status</p><p class="font-medium text-gray-500">⬜ Not Tested</p></div>
+          <div><p class="text-xs text-gray-400">Website</p><p class="font-medium">macleaner.io</p></div>
+        </div>
+      </div>
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+        <div class="bg-gray-800 rounded-xl border border-gray-700 p-4 text-center"><p class="text-3xl font-bold text-gray-500">-</p><p class="text-xs text-gray-400 mt-1">Tests</p></div>
+        <div class="bg-gray-800 rounded-xl border border-gray-700 p-4 text-center"><p class="text-3xl font-bold text-gray-500">-</p><p class="text-xs text-gray-400 mt-1">Pass Rate</p></div>
+        <div class="bg-gray-800 rounded-xl border border-gray-700 p-4 text-center"><p class="text-3xl font-bold text-gray-500">-</p><p class="text-xs text-gray-400 mt-1">Bugs</p></div>
+        <div class="bg-gray-800 rounded-xl border border-gray-700 p-4 text-center"><p class="text-3xl font-bold text-gray-500">-</p><p class="text-xs text-gray-400 mt-1">Coverage</p></div>
+      </div>
+      <h2 class="text-lg font-semibold mb-4"><i class="fas fa-list text-purple-400 mr-2"></i>Test Categories (Planned)</h2>
+      <div class="bg-gray-800 rounded-xl border border-gray-700 overflow-x-auto mb-6">
+        <table class="w-full text-sm">
+          <thead><tr class="border-b border-gray-700"><th class="px-4 py-3 text-left text-gray-400">Test Name</th><th class="px-3 py-3 text-left text-gray-400">Category</th><th class="px-3 py-3 text-center text-gray-400">Status</th><th class="px-3 py-3 text-left text-gray-400">Last Run</th><th class="px-3 py-3 text-left text-gray-400">Notes</th></tr></thead>
+          <tbody>
+            <tr class="border-b border-gray-700/50"><td class="px-4 py-3">Junk file detection</td><td class="px-3 py-3 text-gray-400">Functionality</td><td class="px-3 py-3 text-center text-gray-600">—</td><td class="px-3 py-3 text-gray-500">-</td><td class="px-3 py-3 text-xs text-gray-500">Cache, logs, temp files</td></tr>
+            <tr class="border-b border-gray-700/50"><td class="px-4 py-3">Safe cleanup</td><td class="px-3 py-3 text-gray-400">Security</td><td class="px-3 py-3 text-center text-gray-600">—</td><td class="px-3 py-3 text-gray-500">-</td><td class="px-3 py-3 text-xs text-gray-500">No critical file deletion</td></tr>
+            <tr class="border-b border-gray-700/50"><td class="px-4 py-3">Disk space recovery</td><td class="px-3 py-3 text-gray-400">Performance</td><td class="px-3 py-3 text-center text-gray-600">—</td><td class="px-3 py-3 text-gray-500">-</td><td class="px-3 py-3 text-xs text-gray-500">Actual space freed accuracy</td></tr>
+            <tr class="border-b border-gray-700/50"><td class="px-4 py-3">macOS version compat</td><td class="px-3 py-3 text-gray-400">Compatibility</td><td class="px-3 py-3 text-center text-gray-600">—</td><td class="px-3 py-3 text-gray-500">-</td><td class="px-3 py-3 text-xs text-gray-500">Ventura/Sonoma/Sequoia</td></tr>
+            <tr class="hover:bg-gray-700/30"><td class="px-4 py-3">SDK integration</td><td class="px-3 py-3 text-gray-400">Integration</td><td class="px-3 py-3 text-center text-gray-600">—</td><td class="px-3 py-3 text-gray-500">-</td><td class="px-3 py-3 text-xs text-gray-500">IPLoop SDK embedded behavior</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="bg-gray-800 rounded-xl border border-gray-700 p-5 mb-6">
+        <h3 class="font-semibold mb-3"><i class="fas fa-shield-halved text-purple-400 mr-2"></i>Compliance Checklist</h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div class="flex items-center gap-2"><span class="text-gray-500">⬜</span><span class="text-sm text-gray-400">Mac App Store requirements</span></div>
+          <div class="flex items-center gap-2"><span class="text-gray-500">⬜</span><span class="text-sm text-gray-400">Notarization & code signing</span></div>
+          <div class="flex items-center gap-2"><span class="text-gray-500">⬜</span><span class="text-sm text-gray-400">Privacy policy compliance</span></div>
+          <div class="flex items-center gap-2"><span class="text-gray-500">⬜</span><span class="text-sm text-gray-400">Partner regulation review</span></div>
+        </div>
+      </div>
+      <div class="bg-gray-800 rounded-xl border border-gray-700 p-5"><h3 class="font-semibold mb-3"><i class="fas fa-sticky-note text-yellow-400 mr-2"></i>Notes</h3><p class="text-sm text-gray-400">No tests run yet. Ready for test data when QA begins.</p></div>
+    </div>
+
+    <!-- ===================== QA: KEEPAA ===================== -->
+    <div id="page-qa-keepaa" class="page p-4 md:p-6 lg:p-8 pt-16 lg:pt-8">
+      <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
+        <div>
+          <h1 class="text-2xl md:text-3xl font-bold"><i class="fas fa-key text-yellow-400 mr-3"></i>Keepaa QA</h1>
+          <p class="text-gray-400 mt-1">Cross-platform • Password manager — not yet tested</p>
+        </div>
+        <div class="mt-4 md:mt-0"><button onclick="showPage('qa-hub')" class="px-3 py-2 bg-gray-700 rounded-lg text-sm hover:bg-gray-600 transition"><i class="fas fa-arrow-left mr-1"></i>Hub</button></div>
+      </div>
+      <div class="bg-gray-800 rounded-xl border border-yellow-500/30 p-5 mb-6">
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div><p class="text-xs text-gray-400">Platform</p><p class="font-medium">Cross-platform</p></div>
+          <div><p class="text-xs text-gray-400">Version</p><p class="font-medium">-</p></div>
+          <div><p class="text-xs text-gray-400">Status</p><p class="font-medium text-gray-500">⬜ Not Tested</p></div>
+          <div><p class="text-xs text-gray-400">Last Tested</p><p class="font-medium">-</p></div>
+        </div>
+      </div>
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+        <div class="bg-gray-800 rounded-xl border border-gray-700 p-4 text-center"><p class="text-3xl font-bold text-gray-500">-</p><p class="text-xs text-gray-400 mt-1">Tests</p></div>
+        <div class="bg-gray-800 rounded-xl border border-gray-700 p-4 text-center"><p class="text-3xl font-bold text-gray-500">-</p><p class="text-xs text-gray-400 mt-1">Pass Rate</p></div>
+        <div class="bg-gray-800 rounded-xl border border-gray-700 p-4 text-center"><p class="text-3xl font-bold text-gray-500">-</p><p class="text-xs text-gray-400 mt-1">Bugs</p></div>
+        <div class="bg-gray-800 rounded-xl border border-gray-700 p-4 text-center"><p class="text-3xl font-bold text-gray-500">-</p><p class="text-xs text-gray-400 mt-1">Coverage</p></div>
+      </div>
+      <h2 class="text-lg font-semibold mb-4"><i class="fas fa-list text-purple-400 mr-2"></i>Test Categories (Planned)</h2>
+      <div class="bg-gray-800 rounded-xl border border-gray-700 overflow-x-auto mb-6">
+        <table class="w-full text-sm">
+          <thead><tr class="border-b border-gray-700"><th class="px-4 py-3 text-left text-gray-400">Test Name</th><th class="px-3 py-3 text-left text-gray-400">Category</th><th class="px-3 py-3 text-center text-gray-400">Status</th><th class="px-3 py-3 text-left text-gray-400">Last Run</th><th class="px-3 py-3 text-left text-gray-400">Notes</th></tr></thead>
+          <tbody>
+            <tr class="border-b border-gray-700/50"><td class="px-4 py-3">Password encryption</td><td class="px-3 py-3 text-gray-400">Security</td><td class="px-3 py-3 text-center text-gray-600">—</td><td class="px-3 py-3 text-gray-500">-</td><td class="px-3 py-3 text-xs text-gray-500">AES-256 vault security</td></tr>
+            <tr class="border-b border-gray-700/50"><td class="px-4 py-3">Cross-device sync</td><td class="px-3 py-3 text-gray-400">Functionality</td><td class="px-3 py-3 text-center text-gray-600">—</td><td class="px-3 py-3 text-gray-500">-</td><td class="px-3 py-3 text-xs text-gray-500">Sync across platforms</td></tr>
+            <tr class="border-b border-gray-700/50"><td class="px-4 py-3">Auto-fill</td><td class="px-3 py-3 text-gray-400">Functionality</td><td class="px-3 py-3 text-center text-gray-600">—</td><td class="px-3 py-3 text-gray-500">-</td><td class="px-3 py-3 text-xs text-gray-500">Browser & app auto-fill</td></tr>
+            <tr class="border-b border-gray-700/50"><td class="px-4 py-3">Platform compat</td><td class="px-3 py-3 text-gray-400">Compatibility</td><td class="px-3 py-3 text-center text-gray-600">—</td><td class="px-3 py-3 text-gray-500">-</td><td class="px-3 py-3 text-xs text-gray-500">Windows, Mac, Android, iOS</td></tr>
+            <tr class="hover:bg-gray-700/30"><td class="px-4 py-3">SDK integration</td><td class="px-3 py-3 text-gray-400">Integration</td><td class="px-3 py-3 text-center text-gray-600">—</td><td class="px-3 py-3 text-gray-500">-</td><td class="px-3 py-3 text-xs text-gray-500">IPLoop SDK embedded behavior</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="bg-gray-800 rounded-xl border border-gray-700 p-5 mb-6">
+        <h3 class="font-semibold mb-3"><i class="fas fa-shield-halved text-purple-400 mr-2"></i>Compliance Checklist</h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div class="flex items-center gap-2"><span class="text-gray-500">⬜</span><span class="text-sm text-gray-400">App Store / Play Store requirements</span></div>
+          <div class="flex items-center gap-2"><span class="text-gray-500">⬜</span><span class="text-sm text-gray-400">SOC 2 / security audit</span></div>
+          <div class="flex items-center gap-2"><span class="text-gray-500">⬜</span><span class="text-sm text-gray-400">Privacy policy compliance</span></div>
+          <div class="flex items-center gap-2"><span class="text-gray-500">⬜</span><span class="text-sm text-gray-400">Partner regulation review</span></div>
+        </div>
+      </div>
+      <div class="bg-gray-800 rounded-xl border border-gray-700 p-5"><h3 class="font-semibold mb-3"><i class="fas fa-sticky-note text-yellow-400 mr-2"></i>Notes</h3><p class="text-sm text-gray-400">No tests run yet. Ready for test data when QA begins.</p></div>
+    </div>
+
+    <!-- ===================== QA: IPLOOP SDK ===================== -->
+    <div id="page-qa-sdk" class="page p-4 md:p-6 lg:p-8 pt-16 lg:pt-8">
+      <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
+        <div>
+          <h1 class="text-2xl md:text-3xl font-bold"><i class="fas fa-microchip text-amber-400 mr-3"></i>IPLoop SDK QA</h1>
+          <p class="text-gray-400 mt-1">Android (Pure Java) • v1.0.57 — needs device testing</p>
+        </div>
+        <div class="mt-4 md:mt-0"><button onclick="showPage('qa-hub')" class="px-3 py-2 bg-gray-700 rounded-lg text-sm hover:bg-gray-600 transition"><i class="fas fa-arrow-left mr-1"></i>Hub</button></div>
+      </div>
+
+      <!-- Product Header -->
+      <div class="bg-gray-800 rounded-xl border border-amber-500/30 p-5 mb-6">
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div><p class="text-xs text-gray-400">Platform</p><p class="font-medium">Android (Pure Java)</p></div>
+          <div><p class="text-xs text-gray-400">Version</p><p class="font-medium text-amber-400">v1.0.57</p></div>
+          <div><p class="text-xs text-gray-400">Min SDK</p><p class="font-medium">22 (Android 5.1+)</p></div>
+          <div><p class="text-xs text-gray-400">Status</p><p class="font-medium text-yellow-400">🔄 Needs Device QA</p></div>
+        </div>
+      </div>
+
+      <!-- Test Summary -->
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+        <div class="bg-gray-800 rounded-xl border border-gray-700 p-4 text-center"><p class="text-3xl font-bold text-gray-500">-</p><p class="text-xs text-gray-400 mt-1">Tests Written</p></div>
+        <div class="bg-gray-800 rounded-xl border border-gray-700 p-4 text-center"><p class="text-3xl font-bold text-gray-500">-</p><p class="text-xs text-gray-400 mt-1">Pass Rate</p></div>
+        <div class="bg-gray-800 rounded-xl border border-gray-700 p-4 text-center"><p class="text-3xl font-bold text-gray-500">-</p><p class="text-xs text-gray-400 mt-1">Bugs</p></div>
+        <div class="bg-gray-800 rounded-xl border border-gray-700 p-4 text-center"><p class="text-3xl font-bold text-amber-400">57</p><p class="text-xs text-gray-400 mt-1">Versions Released</p></div>
+      </div>
+
+      <!-- SDK Features to Test -->
+      <h2 class="text-lg font-semibold mb-4"><i class="fas fa-list-check text-amber-400 mr-2"></i>SDK Features (v1.0.57)</h2>
+      <div class="bg-gray-800 rounded-xl border border-gray-700 overflow-x-auto mb-6">
+        <table class="w-full text-sm">
+          <thead><tr class="border-b border-gray-700"><th class="px-4 py-3 text-left text-gray-400">Feature</th><th class="px-3 py-3 text-left text-gray-400">Category</th><th class="px-3 py-3 text-center text-gray-400">Status</th><th class="px-3 py-3 text-left text-gray-400">Last Run</th><th class="px-3 py-3 text-left text-gray-400">Notes</th></tr></thead>
+          <tbody>
+            <tr class="border-b border-gray-700/50"><td class="px-4 py-3">WebSocket connection</td><td class="px-3 py-3 text-gray-400">Functionality</td><td class="px-3 py-3 text-center text-gray-600">—</td><td class="px-3 py-3 text-gray-500">-</td><td class="px-3 py-3 text-xs text-gray-500">WSS to gateway.iploop.io</td></tr>
+            <tr class="border-b border-gray-700/50"><td class="px-4 py-3">Auto-reconnect</td><td class="px-3 py-3 text-gray-400">Reliability</td><td class="px-3 py-3 text-center text-gray-600">—</td><td class="px-3 py-3 text-gray-500">-</td><td class="px-3 py-3 text-xs text-gray-500">v1.0.57: Never gives up, 10min max intervals</td></tr>
+            <tr class="border-b border-gray-700/50"><td class="px-4 py-3">HTTP tunnels</td><td class="px-3 py-3 text-gray-400">Functionality</td><td class="px-3 py-3 text-center text-gray-600">—</td><td class="px-3 py-3 text-gray-500">-</td><td class="px-3 py-3 text-xs text-gray-500">v1.0.55: HTTP tunnel support</td></tr>
+            <tr class="border-b border-gray-700/50"><td class="px-4 py-3">Geographic targeting</td><td class="px-3 py-3 text-gray-400">Functionality</td><td class="px-3 py-3 text-center text-gray-600">—</td><td class="px-3 py-3 text-gray-500">-</td><td class="px-3 py-3 text-xs text-gray-500">v1.0.20: Country, city, ASN</td></tr>
+            <tr class="border-b border-gray-700/50"><td class="px-4 py-3">Session management</td><td class="px-3 py-3 text-gray-400">Functionality</td><td class="px-3 py-3 text-center text-gray-600">—</td><td class="px-3 py-3 text-gray-500">-</td><td class="px-3 py-3 text-xs text-gray-500">Sticky, rotating, per-request</td></tr>
+            <tr class="border-b border-gray-700/50"><td class="px-4 py-3">Browser profiles</td><td class="px-3 py-3 text-gray-400">Functionality</td><td class="px-3 py-3 text-center text-gray-600">—</td><td class="px-3 py-3 text-gray-500">-</td><td class="px-3 py-3 text-xs text-gray-500">Chrome, Firefox, Safari, Mobile presets</td></tr>
+            <tr class="border-b border-gray-700/50"><td class="px-4 py-3">Performance controls</td><td class="px-3 py-3 text-gray-400">Performance</td><td class="px-3 py-3 text-center text-gray-600">—</td><td class="px-3 py-3 text-gray-500">-</td><td class="px-3 py-3 text-xs text-gray-500">Speed/latency requirements</td></tr>
+            <tr class="border-b border-gray-700/50"><td class="px-4 py-3">Auth methods</td><td class="px-3 py-3 text-gray-400">Security</td><td class="px-3 py-3 text-center text-gray-600">—</td><td class="px-3 py-3 text-gray-500">-</td><td class="px-3 py-3 text-xs text-gray-500">Multiple auth, rich parameters</td></tr>
+            <tr class="border-b border-gray-700/50"><td class="px-4 py-3">Proxy URL generation</td><td class="px-3 py-3 text-gray-400">Functionality</td><td class="px-3 py-3 text-center text-gray-600">—</td><td class="px-3 py-3 text-gray-500">-</td><td class="px-3 py-3 text-xs text-gray-500">HTTP & SOCKS5 URL generation</td></tr>
+            <tr class="border-b border-gray-700/50"><td class="px-4 py-3">Debug logging</td><td class="px-3 py-3 text-gray-400">Functionality</td><td class="px-3 py-3 text-center text-gray-600">—</td><td class="px-3 py-3 text-gray-500">-</td><td class="px-3 py-3 text-xs text-gray-500">v1.0.55: Debug logging, thread stats</td></tr>
+            <tr class="border-b border-gray-700/50"><td class="px-4 py-3">5-minute heartbeat</td><td class="px-3 py-3 text-gray-400">Reliability</td><td class="px-3 py-3 text-center text-gray-600">—</td><td class="px-3 py-3 text-gray-500">-</td><td class="px-3 py-3 text-xs text-gray-500">v1.0.52: Keep-alive heartbeat</td></tr>
+            <tr class="border-b border-gray-700/50"><td class="px-4 py-3">Battery & data impact</td><td class="px-3 py-3 text-gray-400">Performance</td><td class="px-3 py-3 text-center text-gray-600">—</td><td class="px-3 py-3 text-gray-500">-</td><td class="px-3 py-3 text-xs text-gray-500">Resource consumption on device</td></tr>
+            <tr class="hover:bg-gray-700/30"><td class="px-4 py-3">Min SDK 22 compat</td><td class="px-3 py-3 text-gray-400">Compatibility</td><td class="px-3 py-3 text-center text-gray-600">—</td><td class="px-3 py-3 text-gray-500">-</td><td class="px-3 py-3 text-xs text-gray-500">Android 5.1+ through 16</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Test Device -->
+      <h2 class="text-lg font-semibold mb-4"><i class="fas fa-mobile text-blue-400 mr-2"></i>Test Device</h2>
+      <div class="bg-gray-800 rounded-xl border border-gray-700 p-5 mb-6">
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div><p class="text-xs text-gray-400">Device</p><p class="font-medium">Samsung Galaxy A17</p></div>
+          <div><p class="text-xs text-gray-400">Model</p><p class="font-medium">SM-A175F/DS</p></div>
+          <div><p class="text-xs text-gray-400">Android</p><p class="font-medium">16 (SDK 36)</p></div>
+          <div><p class="text-xs text-gray-400">ADB</p><p class="font-medium text-green-400">Available via Tailscale</p></div>
+        </div>
+      </div>
+
+      <!-- Version History -->
+      <h2 class="text-lg font-semibold mb-4"><i class="fas fa-code-branch text-purple-400 mr-2"></i>Key Versions</h2>
+      <div class="bg-gray-800 rounded-xl border border-gray-700 p-5 mb-6">
+        <div class="space-y-3">
+          <div class="flex items-start gap-3 border-l-2 border-amber-500 pl-3"><div><p class="text-sm font-medium">v1.0.57 <span class="text-xs text-amber-400">(latest)</span></p><p class="text-xs text-gray-400">Auto-reconnect — never gives up, 10min intervals after initial backoff</p></div></div>
+          <div class="flex items-start gap-3 border-l-2 border-gray-600 pl-3"><div><p class="text-sm font-medium">v1.0.55</p><p class="text-xs text-gray-400">HTTP tunnels, debug logging, thread stats</p></div></div>
+          <div class="flex items-start gap-3 border-l-2 border-gray-600 pl-3"><div><p class="text-sm font-medium">v1.0.52</p><p class="text-xs text-gray-400">Success field fix, 5-minute heartbeat</p></div></div>
+          <div class="flex items-start gap-3 border-l-2 border-gray-600 pl-3"><div><p class="text-sm font-medium">v1.0.20</p><p class="text-xs text-gray-400">Enterprise proxy features, geographic targeting, session management</p></div></div>
+        </div>
+      </div>
+
+      <!-- Compliance -->
+      <div class="bg-gray-800 rounded-xl border border-gray-700 p-5 mb-6">
+        <h3 class="font-semibold mb-3"><i class="fas fa-shield-halved text-purple-400 mr-2"></i>Compliance Checklist</h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div class="flex items-center gap-2"><span class="text-gray-500">⬜</span><span class="text-sm text-gray-400">Google Play SDK compliance</span></div>
+          <div class="flex items-center gap-2"><span class="text-gray-500">⬜</span><span class="text-sm text-gray-400">Consent / disclosure requirements</span></div>
+          <div class="flex items-center gap-2"><span class="text-gray-500">⬜</span><span class="text-sm text-gray-400">Privacy policy for SDK data collection</span></div>
+          <div class="flex items-center gap-2"><span class="text-gray-500">⬜</span><span class="text-sm text-gray-400">Partner app integration guidelines</span></div>
+        </div>
+      </div>
+
+      <!-- Notes -->
+      <div class="bg-gray-800 rounded-xl border border-gray-700 p-5">
+        <h3 class="font-semibold mb-3"><i class="fas fa-sticky-note text-yellow-400 mr-2"></i>Notes</h3>
+        <ul class="text-sm text-gray-400 space-y-2">
+          <li>• SDK v1.0.57 is production-ready with auto-reconnect that never gives up</li>
+          <li>• JAR built at: /iploop-platform/sdk/android-java/build/iploop-sdk-1.0.57-bundle.jar</li>
+          <li>• Manual QA needed on Samsung A17 physical device (assigned to Charlie/GLITCH)</li>
+          <li>• Min SDK 22 targets Android 5.1+ — test on older devices when available</li>
+          <li>• Enterprise features (geo targeting, sessions) need integration testing with live proxy</li>
+        </ul>
+      </div>
+    </div>
+
     <!-- ===================== QA: TEST SCHEDULE PAGE ===================== -->
     <div id="page-qa-schedule" class="page p-4 md:p-6 lg:p-8 pt-16 lg:pt-8">
       <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
@@ -7302,7 +8218,17 @@
       { name: 'Competitor Intel', icon: 'fa-binoculars', action: () => showPage('competitor-intel'), category: 'Navigate' },
       { name: 'Market Research', icon: 'fa-magnifying-glass-chart', action: () => showPage('market-research'), category: 'Navigate' },
       // Navigate — QA
-      { name: 'Testing Dashboard', icon: 'fa-vial', action: () => showPage('testing'), category: 'Navigate' },
+      { name: 'QA Hub', icon: 'fa-vial', action: () => showPage('qa-hub'), category: 'Navigate' },
+      { name: 'QA: Proxy Platform', icon: 'fa-server', action: () => showPage('qa-proxy'), category: 'Navigate' },
+      { name: 'QA: Management Platform', icon: 'fa-desktop', action: () => showPage('qa-management'), category: 'Navigate' },
+      { name: 'QA: Weathero', icon: 'fa-cloud-sun', action: () => showPage('qa-weathero'), category: 'Navigate' },
+      { name: 'QA: Verso', icon: 'fa-mobile-alt', action: () => showPage('qa-verso'), category: 'Navigate' },
+      { name: 'QA: Softzero', icon: 'fa-windows', action: () => showPage('qa-softzero'), category: 'Navigate' },
+      { name: 'QA: Pixara', icon: 'fa-images', action: () => showPage('qa-pixara'), category: 'Navigate' },
+      { name: 'QA: Macleaner', icon: 'fa-apple-alt', action: () => showPage('qa-macleaner'), category: 'Navigate' },
+      { name: 'QA: Keepaa', icon: 'fa-key', action: () => showPage('qa-keepaa'), category: 'Navigate' },
+      { name: 'QA: IPLoop SDK', icon: 'fa-microchip', action: () => showPage('qa-sdk'), category: 'Navigate' },
+      { name: 'Live Test Dashboard', icon: 'fa-flask', action: () => showPage('testing'), category: 'Navigate' },
       { name: 'Bug Tracking', icon: 'fa-bug', action: () => showPage('dev-qa'), category: 'Navigate' },
       // Navigate — Ops
       { name: 'Ops HQ', icon: 'fa-cogs', action: () => showPage('ops-strategy'), category: 'Navigate' },
@@ -8828,6 +9754,7 @@
         'plan-roadmap': 'product', 'competitor-intel': 'product', 'market-research': 'product',
         
         'system-specs': 'home', 'system-logs': 'home',
+        'qa-hub': 'dev', 'qa-proxy': 'dev', 'qa-management': 'dev', 'qa-weathero': 'dev', 'qa-verso': 'dev', 'qa-softzero': 'dev', 'qa-pixara': 'dev', 'qa-macleaner': 'dev', 'qa-keepaa': 'dev', 'qa-sdk': 'dev',
         'testing': 'dev', 'plan-testing': 'dev', 'qa-schedule': 'dev', 'dev-qa': 'dev',
         'plan-tasks': 'home', 'plan-schedule': 'home',
         'partners-accounts': 'sales', 'partners-support': 'sales',

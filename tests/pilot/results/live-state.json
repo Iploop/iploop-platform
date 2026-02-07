@@ -1,16 +1,16 @@
 {
-  "running": false,
-  "suite": "feature",
-  "description": "Feature validation",
+  "running": true,
+  "suite": "performance",
+  "description": "Performance benchmark",
   "total": 3,
-  "progress": 3,
-  "currentTest": null,
-  "startTime": 1770414034649,
-  "suiteStartTime": 1770414014086,
+  "progress": 2,
+  "currentTest": "stress-test.js",
+  "startTime": 1770444179377,
+  "suiteStartTime": 1770444156645,
   "queue": [],
   "lastTest": {
-    "name": "sticky-stress.js",
+    "name": "latency-test.js",
     "passed": false,
-    "duration": 12692
+    "duration": 20561
   }
 }

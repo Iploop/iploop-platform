@@ -1,110 +1,579 @@
 ══════════════════════════════════════════════════
-📋 FEATURE SUITE: Feature validation
+📋 PERFORMANCE SUITE: Performance benchmark
 Total tests: 3
 ══════════════════════════════════════════════════
 
 ──────────────────────────────────────────────────
-🧪 Running: geo-test.js
+🧪 Running: bandwidth-test.js
 ──────────────────────────────────────────────────
-🧪 Running test: geo-test
+🧪 Running test: bandwidth-test
 ──────────────────────────────────────────────────
-🗺️  IPLoop Geographic Targeting Test
-==================================================
-Proxy: localhost:8080
-==================================================
-
-Testing US...
-❌ Error: Parse error
-Testing DE...
-❌ Error: Parse error
-Testing GB...
-❌ Error: Parse error
-Testing FR...
-❌ Error: Parse error
-Testing JP...
-❌ Error: Parse error
-Testing AU...
-❌ Error: Parse error
-Testing BR...
-❌ Error: Parse error
-Testing IN...
-❌ Error: Parse error
-==================================================
-SUMMARY
-==================================================
-Passed: 0/8
-Failed (wrong country): 0
-Errors: 8
-
-⚠️  Some geographic targeting tests failed
-📊 Results saved to: geo-test-2026-02-06T21-40-22-280Z.json
-──────────────────────────────────────────────────
-❌ Test geo-test FAILED in 8141ms
-❌ geo-test.js - 8.2s
-
-──────────────────────────────────────────────────
-🧪 Running: rotation-test.js
-──────────────────────────────────────────────────
-🧪 Running test: rotation-test
-──────────────────────────────────────────────────
-🔄 IPLoop IP Rotation Test
+📊 IPLoop Bandwidth Test
 ============================================================
 Proxy: localhost:8080
-Requests: 50
 ============================================================
 
-Making requests with rotating session type...
+Testing 1KB            ...
+❌ Error:
+Testing 10KB           ...
+❌ Error:
+Testing 100KB          ...
+❌ Error:
+Testing 1MB            ...
+❌ Error:
+Testing Stream 10KB    ...
+❌ Error: 
+Testing Drip 5KB/1s    ...
+❌ Error: 
+
 ============================================================
-📊 ROTATION RESULTS
+BANDWIDTH SUMMARY
 ============================================================
-Total requests: 0
-Errors: 50
-Unique IPs: 0
-Rotation rate: 0.0% (IP changed between requests)
-IP diversity ratio: NaN%
-
-📍 IP Distribution:
-TypeError: Cannot read properties of undefined (reading '0')
-    at runRotationTest (/root/clawd-secure/iploop-platform/tests/pilot/rotation-test.js:117:40)
-📊 Results saved to: rotation-test-2026-02-06T21-40-33-633Z.json
+❌ Failed tests: 1KB, 10KB, 100KB, 1MB, Stream 10KB, Drip 5KB/1s
+📊 Results saved to: bandwidth-test-2026-02-07T06-02-36-797Z.json
 
 ──────────────────────────────────────────────────
-❌ Test rotation-test FAILED in 10295ms
-❌ rotation-test.js - 10.3s
+❌ Test bandwidth-test FAILED in 97ms
+❌ bandwidth-test.js - 0.2s
 
 ──────────────────────────────────────────────────
-🧪 Running: sticky-stress.js
+🧪 Running: latency-test.js
 ──────────────────────────────────────────────────
-🧪 Running test: sticky-stress
+🧪 Running test: latency-test
 ──────────────────────────────────────────────────
-🔗 IPLoop Sticky Session Stress Test
+⏱️  Latency Deep Analysis Test
 ============================================================
 Proxy: localhost:8080
-Concurrent sessions: 50
-Requests per session: 10
-Session lifetime: 60s
 ============================================================
-[5.0s] Sessions: 0/50 | Requests: 0 | Sticky OK: 0 | Failed: 0
-[10.0s] Sessions: 0/50 | Requests: 0 | Sticky OK: 0 | Failed: 0
-============================================================
-📊 STICKY SESSION STRESS RESULTS
-============================================================
-Duration: 12.6s
-Total sessions: 50
-Total requests: 0
 
-Session Results:
-  ✅ Sticky maintained: 0 (0.0%)
-  ❌ Sticky broken: 0
-  ⚠️  Request errors: 500
+--- Test 1: Baseline Latency (50 sequential requests) ---
+10/50...
+20/50...
+30/50...
+40/50...
+50/50...
+done
+Total Latency:
+  Min: 0ms | Max: 0ms | Avg: 0ms
+  P50: 0ms | P95: 0ms | P99: 0ms
+  Std Dev: undefinedms
 
+Time to First Byte:
+  Min: 0ms | Max: 0ms | Avg: 0ms
+  P50: 0ms | P95: 0ms
+
+--- Test 2: Latency Under Load (50 concurrent) ---
+Success: 0/50 | Errors: 50
+Latency under load:
+Min: 0ms | Max: 0ms | Avg: 0ms
+  P50: 0ms | P95: 0ms | P99: 0ms
+
+--- Test 3: Latency Consistency (5 batches of 20) ---
+Batch 1: Avg 0ms | P95 0ms
+Batch 2: Avg 0ms | P95 0ms
+Batch 3: Avg 0ms | P95 0ms
+Batch 4: Avg 0ms | P95 0ms
+Batch 5: Avg 0ms | P95 0ms
+Variance between batches: 0ms
+✅ Consistent
+--- Test 4: Timeout Behavior ---
+
+5s timeout, 3s delay: ❌ Unexpected: failed
+2s timeout, 5s delay:
+✅ Timed out after 1ms
+10s timeout, 8s delay:
+❌ Unexpected: failed
+1s timeout, 2s delay:
+✅ Timed out after 1ms
+--- Test 5: Latency by Payload Size ---
+1KB     : Failed
+10KB    : Failed
+100KB   : Failed
+1MB     : Failed
 ============================================================
-❌ FAIL: Significant session stickiness problems
-📊 Results saved to: sticky-stress-2026-02-06T21-40-47-333Z.json
+LATENCY TEST SUMMARY
+============================================================
+
+Baseline vs Under Load:
+  Baseline P95: 0ms
+  Under Load P95: 0ms
+  Degradation: NaN%
+
+✅ Latency characteristics are healthy
+📊 Results saved to: latency-test-2026-02-07T06-02-58-360Z.json
+
 ──────────────────────────────────────────────────
-❌ Test sticky-stress FAILED in 12639ms
-❌ sticky-stress.js - 12.7s
+❌ Test latency-test FAILED in 20500ms
+❌ latency-test.js - 20.6s
 
-══════════════════════════════════════════════════
-📊 SUITE COMPLETE: 0/3 passed, 3 failed
-══════════════════════════════════════════════════
+──────────────────────────────────────────────────
+🧪 Running: stress-test.js --profile=ramp
+──────────────────────────────────────────────────
+🧪 Running test: stress-test
+──────────────────────────────────────────────────
+🚀 IPLoop Pilot Stress Test
+============================================================
+Profile: ramp
+Target concurrency: 100
+Duration: 300s
+Ramp time: 120s
+Proxy: localhost:8080
+============================================================
+============================================================
+📈 Progress Report
+============================================================
+Duration: 5.0s
+Total Requests: 42
+Successful: 0 (0.00%)
+Failed: 42
+Throughput: 8.39 req/s
+Data Transferred: 0.00 MB
+
+🌐 Unique IPs Observed: 0
+
+❌ Errors:
+  ECONNREFUSED: 42
+
+🔗 Session Stickiness Tests: 0 passed, 2 failed
+============================================================
+📈 Progress Report
+============================================================
+Duration: 10.0s
+Total Requests: 193
+Successful: 0 (0.00%)
+Failed: 193
+Throughput: 19.29 req/s
+Data Transferred: 0.00 MB
+
+🌐 Unique IPs Observed: 0
+
+❌ Errors:
+  ECONNREFUSED: 193
+
+🔗 Session Stickiness Tests: 0 passed, 8 failed
+============================================================
+📈 Progress Report
+============================================================
+Duration: 15.0s
+Total Requests: 440
+Successful: 0 (0.00%)
+Failed: 440
+Throughput: 29.33 req/s
+Data Transferred: 0.00 MB
+
+🌐 Unique IPs Observed: 0
+
+❌ Errors:
+  ECONNREFUSED: 440
+
+🔗 Session Stickiness Tests: 0 passed, 21 failed
+============================================================
+📈 Progress Report
+============================================================
+Duration: 20.0s
+Total Requests: 801
+Successful: 0 (0.00%)
+Failed: 801
+Throughput: 40.04 req/s
+Data Transferred: 0.00 MB
+🌐 Unique IPs Observed: 0
+
+❌ Errors:
+  ECONNREFUSED: 801
+
+🔗 Session Stickiness Tests: 0 passed, 34 failed
+============================================================
+📈 Progress Report
+============================================================
+Duration: 25.0s
+Total Requests: 1256
+Successful: 0 (0.00%)
+Failed: 1256
+Throughput: 50.23 req/s
+Data Transferred: 0.00 MB
+
+🌐 Unique IPs Observed: 0
+
+❌ Errors:
+  ECONNREFUSED: 1256
+
+🔗 Session Stickiness Tests: 0 passed, 51 failed
+============================================================
+📈 Progress Report
+============================================================
+Duration: 30.0s
+Total Requests: 1811
+Successful: 0 (0.00%)
+Failed: 1810
+Throughput: 60.36 req/s
+Data Transferred: 0.00 MB
+
+🌐 Unique IPs Observed: 0
+
+❌ Errors:
+  ECONNREFUSED: 1810
+
+🔗 Session Stickiness Tests: 0 passed, 78 failed
+============================================================
+📈 Progress Report
+============================================================
+Duration: 35.0s
+Total Requests: 2459
+Successful: 0 (0.00%)
+Failed: 2459
+Throughput: 70.25 req/s
+Data Transferred: 0.00 MB
+
+🌐 Unique IPs Observed: 0
+
+❌ Errors:
+  ECONNREFUSED: 2459
+
+🔗 Session Stickiness Tests: 0 passed, 109 failed
+============================================================
+📈 Progress Report
+============================================================
+Duration: 40.0s
+Total Requests: 3210
+Successful: 0 (0.00%)
+Failed: 3210
+Throughput: 80.24 req/s
+Data Transferred: 0.00 MB
+
+🌐 Unique IPs Observed: 0
+
+❌ Errors:
+  ECONNREFUSED: 3210
+
+🔗 Session Stickiness Tests: 0 passed, 151 failed
+============================================================
+📈 Progress Report
+============================================================
+Duration: 45.0s
+Total Requests: 4077
+Successful: 0 (0.00%)
+Failed: 4077
+Throughput: 90.59 req/s
+Data Transferred: 0.00 MB
+
+🌐 Unique IPs Observed: 0
+
+❌ Errors:
+  ECONNREFUSED: 4077
+
+🔗 Session Stickiness Tests: 0 passed, 196 failed
+============================================================
+📈 Progress Report
+============================================================
+Duration: 50.0s
+Total Requests: 5055
+Successful: 0 (0.00%)
+Failed: 5055
+Throughput: 101.09 req/s
+Data Transferred: 0.00 MB
+
+🌐 Unique IPs Observed: 0
+
+❌ Errors:
+  ECONNREFUSED: 5055
+
+🔗 Session Stickiness Tests: 0 passed, 252 failed
+============================================================
+📈 Progress Report
+============================================================
+Duration: 55.0s
+Total Requests: 6132
+Successful: 0 (0.00%)
+Failed: 6132
+Throughput: 111.48 req/s
+Data Transferred: 0.00 MB
+
+🌐 Unique IPs Observed: 0
+
+❌ Errors:
+  ECONNREFUSED: 6132
+
+🔗 Session Stickiness Tests: 0 passed, 305 failed
+============================================================
+📈 Progress Report
+============================================================
+Duration: 60.0s
+Total Requests: 7327
+Successful: 0 (0.00%)
+Failed: 7327
+Throughput: 122.11 req/s
+Data Transferred: 0.00 MB
+
+🌐 Unique IPs Observed: 0
+
+❌ Errors:
+  ECONNREFUSED: 7327
+
+🔗 Session Stickiness Tests: 0 passed, 352 failed
+============================================================
+📈 Progress Report
+============================================================
+Duration: 65.0s
+Total Requests: 8618
+Successful: 0 (0.00%)
+Failed: 8618
+Throughput: 132.58 req/s
+Data Transferred: 0.00 MB
+
+🌐 Unique IPs Observed: 0
+
+❌ Errors:
+  ECONNREFUSED: 8618
+
+🔗 Session Stickiness Tests: 0 passed, 422 failed
+============================================================
+📈 Progress Report
+============================================================
+Duration: 70.0s
+Total Requests: 10028
+Successful: 0 (0.00%)
+Failed: 10028
+Throughput: 143.25 req/s
+Data Transferred: 0.00 MB
+
+🌐 Unique IPs Observed: 0
+
+❌ Errors:
+  ECONNREFUSED: 10028
+
+🔗 Session Stickiness Tests: 0 passed, 494 failed
+============================================================
+📈 Progress Report
+============================================================
+Duration: 75.0s
+Total Requests: 11507
+Successful: 0 (0.00%)
+Failed: 11507
+Throughput: 153.42 req/s
+Data Transferred: 0.00 MB
+
+🌐 Unique IPs Observed: 0
+
+❌ Errors:
+  ECONNREFUSED: 11507
+
+🔗 Session Stickiness Tests: 0 passed, 566 failed
+============================================================
+📈 Progress Report
+============================================================
+Duration: 80.0s
+Total Requests: 13115
+Successful: 0 (0.00%)
+Failed: 13115
+Throughput: 163.93 req/s
+Data Transferred: 0.00 MB
+
+🌐 Unique IPs Observed: 0
+❌ Errors:
+  ECONNREFUSED: 13115
+
+🔗 Session Stickiness Tests: 0 passed, 648 failed
+============================================================
+📈 Progress Report
+============================================================
+Duration: 85.0s
+Total Requests: 14798
+Successful: 0 (0.00%)
+Failed: 14798
+Throughput: 174.08 req/s
+Data Transferred: 0.00 MB
+
+🌐 Unique IPs Observed: 0
+
+❌ Errors:
+  ECONNREFUSED: 14798
+
+🔗 Session Stickiness Tests: 0 passed, 731 failed
+============================================================
+📈 Progress Report
+============================================================
+Duration: 90.0s
+Total Requests: 16589
+Successful: 0 (0.00%)
+Failed: 16589
+Throughput: 184.31 req/s
+Data Transferred: 0.00 MB
+
+🌐 Unique IPs Observed: 0
+
+❌ Errors:
+  ECONNREFUSED: 16589
+
+🔗 Session Stickiness Tests: 0 passed, 816 failed
+============================================================
+📈 Progress Report
+============================================================
+Duration: 95.0s
+Total Requests: 18490
+Successful: 0 (0.00%)
+Failed: 18490
+Throughput: 194.62 req/s
+Data Transferred: 0.00 MB
+🌐 Unique IPs Observed: 0
+
+❌ Errors:
+  ECONNREFUSED: 18490
+
+🔗 Session Stickiness Tests: 0 passed, 900 failed
+============================================================
+📈 Progress Report
+============================================================
+Duration: 100.0s
+Total Requests: 20500
+Successful: 0 (0.00%)
+Failed: 20499
+Throughput: 204.99 req/s
+Data Transferred: 0.00 MB
+
+🌐 Unique IPs Observed: 0
+
+❌ Errors:
+  ECONNREFUSED: 20499
+
+🔗 Session Stickiness Tests: 0 passed, 1009 failed
+============================================================
+📈 Progress Report
+============================================================
+Duration: 105.0s
+Total Requests: 22617
+Successful: 0 (0.00%)
+Failed: 22617
+Throughput: 215.38 req/s
+Data Transferred: 0.00 MB
+
+🌐 Unique IPs Observed: 0
+
+❌ Errors:
+  ECONNREFUSED: 22617
+
+🔗 Session Stickiness Tests: 0 passed, 1122 failed
+============================================================
+📈 Progress Report
+============================================================
+Duration: 110.0s
+Total Requests: 24861
+Successful: 0 (0.00%)
+Failed: 24861
+Throughput: 225.99 req/s
+Data Transferred: 0.00 MB
+
+🌐 Unique IPs Observed: 0
+
+❌ Errors:
+  ECONNREFUSED: 24861
+
+🔗 Session Stickiness Tests: 0 passed, 1237 failed
+============================================================
+📈 Progress Report
+============================================================
+Duration: 115.0s
+Total Requests: 27153
+Successful: 0 (0.00%)
+Failed: 27153
+Throughput: 236.09 req/s
+Data Transferred: 0.00 MB
+
+🌐 Unique IPs Observed: 0
+
+❌ Errors:
+  ECONNREFUSED: 27153
+
+🔗 Session Stickiness Tests: 0 passed, 1342 failed
+============================================================
+📈 Progress Report
+============================================================
+Duration: 120.0s
+Total Requests: 29597
+Successful: 0 (0.00%)
+Failed: 29597
+Throughput: 246.62 req/s
+Data Transferred: 0.00 MB
+
+🌐 Unique IPs Observed: 0
+
+❌ Errors:
+  ECONNREFUSED: 29597
+🔗 Session Stickiness Tests: 0 passed, 1454 failed
+============================================================
+📈 Progress Report
+============================================================
+Duration: 125.0s
+Total Requests: 32072
+Successful: 0 (0.00%)
+Failed: 32072
+Throughput: 256.56 req/s
+Data Transferred: 0.00 MB
+
+🌐 Unique IPs Observed: 0
+
+❌ Errors:
+  ECONNREFUSED: 32072
+
+🔗 Session Stickiness Tests: 0 passed, 1584 failed
+============================================================
+📈 Progress Report
+============================================================
+Duration: 130.0s
+Total Requests: 34564
+Successful: 0 (0.00%)
+Failed: 34563
+Throughput: 265.86 req/s
+Data Transferred: 0.00 MB
+
+🌐 Unique IPs Observed: 0
+
+❌ Errors:
+  ECONNREFUSED: 34563
+
+🔗 Session Stickiness Tests: 0 passed, 1702 failed
+============================================================
+📈 Progress Report
+============================================================
+Duration: 135.0s
+Total Requests: 37072
+Successful: 0 (0.00%)
+Failed: 37072
+Throughput: 274.59 req/s
+Data Transferred: 0.00 MB
+
+🌐 Unique IPs Observed: 0
+
+❌ Errors:
+  ECONNREFUSED: 37072
+🔗 Session Stickiness Tests: 0 passed, 1823 failed
+============================================================
+📈 Progress Report
+============================================================
+Duration: 140.0s
+Total Requests: 39587
+Successful: 0 (0.00%)
+Failed: 39586
+Throughput: 282.75 req/s
+Data Transferred: 0.00 MB
+🌐 Unique IPs Observed: 0
+
+❌ Errors:
+  ECONNREFUSED: 39586
+
+🔗 Session Stickiness Tests: 0 passed, 1948 failed
+============================================================
+📈 Progress Report
+============================================================
+Duration: 145.0s
+Total Requests: 42076
+Successful: 0 (0.00%)
+Failed: 42076
+Throughput: 290.16 req/s
+Data Transferred: 0.00 MB
+
+🌐 Unique IPs Observed: 0
+
+❌ Errors:
+  ECONNREFUSED: 42076
+
+🔗 Session Stickiness Tests: 0 passed, 2088 failed

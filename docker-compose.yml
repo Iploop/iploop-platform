@@ -59,7 +59,7 @@ services:
       - "${PROXY_GATEWAY_SOCKS_PORT}:${PROXY_GATEWAY_SOCKS_PORT}"
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:${PROXY_GATEWAY_HTTP_PORT}/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -198,7 +198,7 @@ services:
     ports:
       - "9090:9090"
     volumes:
-      - ./shared/config/prometheus.yml:/etc/prometheus/prometheus.yml
+      - /root/iploop-config/prometheus.yml:/etc/prometheus/prometheus.yml
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'
       - '--storage.tsdb.path=/prometheus'

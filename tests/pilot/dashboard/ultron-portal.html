@@ -201,25 +201,38 @@
     
     <!-- Navigation -->
     <nav class="flex-1 py-4 overflow-y-auto px-3 space-y-1">
-      <div class="px-3 py-2 text-xs text-purple-400/50 uppercase tracking-wider font-medium">Social</div>
-      <a href="#" class="nav-item active" data-page="team-feed" onclick="showPage('team-feed')">
-        <i class="fas fa-house w-5 text-purple-400"></i> 🏠 Team Feed
+      <!-- First Part -->
+      <a href="#" class="nav-item" data-page="ai-profiles" onclick="showPage('ai-profiles')">
+        <i class="fas fa-id-card w-5"></i> 🤖 AI Team
       </a>
-      <a href="#" class="nav-item" data-page="team-chat" onclick="showPage('team-chat')">
-        <i class="fas fa-comments w-5"></i> 💬 Team Chat
+      <a href="#" class="nav-item" data-page="agent-logs" onclick="showPage('agent-logs')">
+        <i class="fas fa-message w-5"></i> 💬 Discussion Logs
       </a>
       <a href="#" class="nav-item" data-page="team-stats" onclick="showPage('team-stats')">
         <i class="fas fa-chart-bar w-5"></i> 📊 Team Stats
       </a>
-      <a href="#" class="nav-item" data-page="classified" onclick="showPage('classified')">
-        <i class="fas fa-lock w-5"></i> 🔒 Classified
+      
+      <div class="my-3 border-t border-purple-500/10"></div>
+      <!-- Second Part -->
+      <a href="#" class="nav-item" data-page="ai-integrations" onclick="showPage('ai-integrations')">
+        <i class="fas fa-plug w-5"></i> 🔧 Integration Wizard
       </a>
       <a href="#" class="nav-item" data-page="ops-brief" onclick="showPage('ops-brief')">
         <i class="fas fa-sliders-h w-5"></i> ⚙️ Ops Brief
       </a>
+      <a href="#" class="nav-item" data-page="ai-specs" onclick="showPage('ai-specs')">
+        <i class="fas fa-microchip w-5"></i> ⚡ Ultron Specs
+      </a>
       
       <div class="my-3 border-t border-purple-500/10"></div>
-      <div class="px-3 py-2 text-xs text-purple-400/50 uppercase tracking-wider font-medium">Portal</div>
+      <!-- Third Part -->
+      <a href="#" class="nav-item active" data-page="team-feed" onclick="showPage('team-feed')">
+        <i class="fas fa-house w-5 text-purple-400"></i> 🏠 Live Feed
+      </a>
+      <a href="#" class="nav-item" data-page="team-chat" onclick="showPage('team-chat')">
+        <i class="fas fa-comments w-5"></i> 💬 Group Chat
+      </a>
+      
       <div class="my-3 border-t border-purple-500/10"></div>
       <div class="px-3 py-2 text-xs text-purple-400/50 uppercase tracking-wider font-medium">Foundation</div>
       <a href="#" class="nav-item" data-page="ai-bible" onclick="showPage('ai-bible')">
@@ -230,27 +243,10 @@
       </a>
       
       <div class="my-3 border-t border-purple-500/10"></div>
-      <div class="px-3 py-2 text-xs text-purple-400/50 uppercase tracking-wider font-medium">Agents</div>
-      <a href="#" class="nav-item" data-page="ai-profiles" onclick="showPage('ai-profiles')">
-        <i class="fas fa-id-card w-5"></i> 🤖 AI Team
+      <div class="px-3 py-2 text-xs text-purple-400/50 uppercase tracking-wider font-medium">Other</div>
+      <a href="#" class="nav-item" data-page="classified" onclick="showPage('classified')">
+        <i class="fas fa-lock w-5"></i> 🔒 Classified
       </a>
-      <a href="#" class="nav-item" data-page="agent-logs" onclick="showPage('agent-logs')">
-        <i class="fas fa-message w-5"></i> 💬 Discussion Logs
-      </a>
-      
-      <div class="my-3 border-t border-purple-500/10"></div>
-      <div class="px-3 py-2 text-xs text-purple-400/50 uppercase tracking-wider font-medium">Operations</div>
-      <a href="#" class="nav-item" data-page="ai-integrations" onclick="showPage('ai-integrations')">
-        <i class="fas fa-plug w-5"></i> 🔧 Integration Wizard
-      </a>
-      <!-- Approval Center removed - will be redesigned -->
-      <a href="#" class="nav-item" data-page="ai-specs" onclick="showPage('ai-specs')">
-        <i class="fas fa-microchip w-5"></i> ⚡ Ultron Specs
-      </a>
-      
-      <div class="my-3 border-t border-purple-500/10"></div>
-      <div class="px-3 py-2 text-xs text-purple-400/50 uppercase tracking-wider font-medium">Interface</div>
-      <!-- AI Chat removed - not needed -->
       <a href="#" class="nav-item" data-page="ai-config" onclick="showPage('ai-config')">
         <i class="fas fa-sliders w-5"></i> ⚙️ AI Config
       </a>

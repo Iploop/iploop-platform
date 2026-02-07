@@ -217,6 +217,9 @@
       <a href="#" class="nav-item" data-page="classified" onclick="showPage('classified')">
         <i class="fas fa-lock w-5"></i> 🔒 Classified
       </a>
+      <a href="#" class="nav-item" data-page="ops-brief" onclick="showPage('ops-brief')">
+        <i class="fas fa-sliders-h w-5"></i> ⚙️ Ops Brief
+      </a>
       
       <div class="my-3 border-t border-purple-500/10"></div>
       <div class="px-3 py-2 text-xs text-purple-400/50 uppercase tracking-wider font-medium">Portal</div>
@@ -378,6 +381,164 @@
           <div class="flex items-start gap-3"><div class="text-xs text-gray-500 w-16 pt-1 flex-shrink-0">10:00</div><div class="w-2 h-2 rounded-full bg-green-500 mt-2 flex-shrink-0"></div><div class="text-sm text-gray-300">🌙 SAGE builds Master Plan page. 9 objectives tracked.</div></div>
         </div>
         <div class="text-center text-gray-500 text-sm border-t border-gray-700 pt-6 mt-8 italic">"So let it be lived." ⚡ — Day 1</div>
+      </div>
+    </div>
+
+    <!-- ===================== OPS BRIEF PAGE ===================== -->
+    <div id="page-ops-brief" class="page p-4 md:p-6 lg:p-8 pt-16 lg:pt-8">
+      <div style="max-width:900px;margin:0 auto">
+        <h1 class="text-3xl font-extrabold mb-2" style="background:linear-gradient(135deg,#8b5cf6,#c084fc);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">⚙️ Agent Operations Brief</h1>
+        <p class="text-gray-400 mb-6">How the Ultron family works — resource strategy & optimization</p>
+
+        <!-- Architecture -->
+        <div class="bg-gray-800/50 rounded-xl border border-purple-500/20 p-6 mb-6">
+          <h2 class="text-xl font-bold text-purple-400 mb-4"><i class="fas fa-sitemap mr-2"></i>Architecture</h2>
+          <div class="bg-gray-900 rounded-lg p-4 font-mono text-sm text-gray-300">
+            <span class="text-purple-400 font-bold">ULTRON (Opus)</span> — Always running. The permanent brain.<br>
+            <span class="text-gray-500">&nbsp;&nbsp;│</span><br>
+            <span class="text-gray-500">&nbsp;&nbsp;├──</span> Spawns sub-agents when work is needed<br>
+            <span class="text-gray-500">&nbsp;&nbsp;├──</span> Each sub-agent = one agent persona doing one task<br>
+            <span class="text-gray-500">&nbsp;&nbsp;├──</span> Sub-agent finishes → goes to sleep<br>
+            <span class="text-gray-500">&nbsp;&nbsp;└──</span> Files = memory between sessions
+          </div>
+        </div>
+
+        <!-- When to Use What -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+          <div class="bg-gray-800/50 rounded-xl border border-gray-700 p-5">
+            <div class="text-2xl mb-2">🟣</div>
+            <h3 class="font-bold text-white mb-2">ULTRON Direct</h3>
+            <p class="text-xs text-gray-400 mb-3">No sub-agent needed</p>
+            <ul class="text-xs text-gray-300 space-y-1">
+              <li>• UI/platform changes</li>
+              <li>• File edits & git pushes</li>
+              <li>• Shell commands</li>
+              <li>• Quick research</li>
+              <li>• Conversations</li>
+            </ul>
+            <div class="mt-3 text-xs text-green-400">Cost: Minimal</div>
+          </div>
+          <div class="bg-gray-800/50 rounded-xl border border-blue-500/30 p-5">
+            <div class="text-2xl mb-2">🔵</div>
+            <h3 class="font-bold text-white mb-2">Sub-Agent (Sonnet)</h3>
+            <p class="text-xs text-gray-400 mb-3">Cheap daily operations</p>
+            <ul class="text-xs text-gray-300 space-y-1">
+              <li>• Email outreach</li>
+              <li>• Social media posting</li>
+              <li>• Research tasks</li>
+              <li>• Content writing</li>
+              <li>• QA analysis</li>
+              <li>• Report generation</li>
+            </ul>
+            <div class="mt-3 text-xs text-blue-400">Cost: 5-25K tokens/task</div>
+          </div>
+          <div class="bg-gray-800/50 rounded-xl border border-purple-500/30 p-5">
+            <div class="text-2xl mb-2">🟣</div>
+            <h3 class="font-bold text-white mb-2">Sub-Agent (Opus)</h3>
+            <p class="text-xs text-gray-400 mb-3">Premium strategic thinking</p>
+            <ul class="text-xs text-gray-300 space-y-1">
+              <li>• Strategy meetings</li>
+              <li>• Complex decisions</li>
+              <li>• Crisis response</li>
+              <li>• Investor decks</li>
+              <li>• Architecture decisions</li>
+            </ul>
+            <div class="mt-3 text-xs text-purple-400">Cost: 50-150K tokens/task</div>
+            <div class="mt-1 text-xs text-yellow-400">Max 2-3 per week</div>
+          </div>
+        </div>
+
+        <!-- Agent Wake-Up Protocol -->
+        <div class="bg-gray-800/50 rounded-xl border border-gray-700 p-6 mb-6">
+          <h2 class="text-xl font-bold text-purple-400 mb-4"><i class="fas fa-power-off mr-2"></i>Agent Wake-Up Protocol</h2>
+          <div class="space-y-3 text-sm text-gray-300">
+            <div class="flex items-start"><span class="text-purple-400 font-bold mr-3">1.</span><div><strong class="text-white">WHO</strong> — "You are STRIKER (Marco Rivera), Head of Sales"</div></div>
+            <div class="flex items-start"><span class="text-purple-400 font-bold mr-3">2.</span><div><strong class="text-white">CONTEXT</strong> — Core identity, persona, recent work history</div></div>
+            <div class="flex items-start"><span class="text-purple-400 font-bold mr-3">3.</span><div><strong class="text-white">TASK</strong> — Specific job to do right now</div></div>
+            <div class="flex items-start"><span class="text-purple-400 font-bold mr-3">4.</span><div><strong class="text-white">RESOURCES</strong> — Files to read, tools available</div></div>
+            <div class="flex items-start"><span class="text-purple-400 font-bold mr-3">5.</span><div><strong class="text-white">RULES</strong> — No AI story externally, product-only messaging</div></div>
+          </div>
+          <div class="mt-4 bg-gray-900 rounded-lg p-4 text-xs font-mono text-gray-400">
+            <span class="text-green-400">Example: STRIKER sends outreach</span><br>
+            SPAWN (Sonnet) → Load persona → Read CRM + templates<br>
+            → Send 5 personalized emails → Update CRM → Save to work log<br>
+            → Task complete → <span class="text-red-400">Session ends → STRIKER sleeps</span>
+          </div>
+        </div>
+
+        <!-- Daily Schedule -->
+        <div class="bg-gray-800/50 rounded-xl border border-gray-700 p-6 mb-6">
+          <h2 class="text-xl font-bold text-purple-400 mb-4"><i class="fas fa-clock mr-2"></i>Daily Operations Schedule</h2>
+          <div class="space-y-4">
+            <div>
+              <h3 class="text-sm font-bold text-yellow-400 mb-2">🌅 Morning (8:00-9:00 IST)</h3>
+              <div class="grid grid-cols-3 gap-2 text-xs">
+                <div class="bg-gray-900 rounded p-2"><span class="text-teal-400">NEXUS</span><br>Health check<br><span class="text-gray-500">Sonnet · 3K</span></div>
+                <div class="bg-gray-900 rounded p-2"><span class="text-pink-400">BLAZE</span><br>LinkedIn post<br><span class="text-gray-500">Sonnet · 5K</span></div>
+                <div class="bg-gray-900 rounded p-2"><span class="text-emerald-400">SCOUT</span><br>Market alerts<br><span class="text-gray-500">Sonnet · 5K</span></div>
+              </div>
+            </div>
+            <div>
+              <h3 class="text-sm font-bold text-yellow-400 mb-2">☀️ Midday (12:00-13:00 IST)</h3>
+              <div class="grid grid-cols-3 gap-2 text-xs">
+                <div class="bg-gray-900 rounded p-2"><span class="text-red-400">STRIKER</span><br>Outreach (5-10)<br><span class="text-gray-500">Sonnet · 15K</span></div>
+                <div class="bg-gray-900 rounded p-2"><span class="text-pink-400">BLAZE</span><br>Twitter + engage<br><span class="text-gray-500">Sonnet · 5K</span></div>
+                <div class="bg-gray-900 rounded p-2"><span class="text-blue-400">CODEX</span><br>Dev / testing<br><span class="text-gray-500">Sonnet · 20K</span></div>
+              </div>
+            </div>
+            <div>
+              <h3 class="text-sm font-bold text-yellow-400 mb-2">🌆 Afternoon (16:00-17:00 IST)</h3>
+              <div class="grid grid-cols-3 gap-2 text-xs">
+                <div class="bg-gray-900 rounded p-2"><span class="text-red-400">STRIKER</span><br>Follow-ups<br><span class="text-gray-500">Sonnet · 10K</span></div>
+                <div class="bg-gray-900 rounded p-2"><span class="text-pink-400">BLAZE</span><br>Afternoon post<br><span class="text-gray-500">Sonnet · 5K</span></div>
+                <div class="bg-gray-900 rounded p-2"><span class="text-emerald-400">HARBOR</span><br>Partner comms<br><span class="text-gray-500">Sonnet · 5K</span></div>
+              </div>
+            </div>
+            <div>
+              <h3 class="text-sm font-bold text-yellow-400 mb-2">🌙 Evening (20:00-21:00 IST)</h3>
+              <div class="grid grid-cols-3 gap-2 text-xs">
+                <div class="bg-gray-900 rounded p-2"><span class="text-yellow-400">LEDGER</span><br>Cost summary<br><span class="text-gray-500">Sonnet · 5K</span></div>
+                <div class="bg-gray-900 rounded p-2"><span class="text-teal-400">NEXUS</span><br>EOD report<br><span class="text-gray-500">Sonnet · 3K</span></div>
+                <div class="bg-gray-900 rounded p-2"><span class="text-yellow-400">CIPHER</span><br>Analytics snap<br><span class="text-gray-500">Sonnet · 5K</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Budget Allocation -->
+        <div class="bg-gray-800/50 rounded-xl border border-gray-700 p-6 mb-6">
+          <h2 class="text-xl font-bold text-purple-400 mb-4"><i class="fas fa-chart-pie mr-2"></i>Weekly Budget Allocation (Max 20x)</h2>
+          <div class="space-y-3">
+            <div class="flex items-center"><div class="w-32 text-sm text-gray-300">Gil + Ultron</div><div class="flex-1 bg-gray-900 rounded-full h-6 overflow-hidden"><div class="h-full bg-purple-600 rounded-full flex items-center pl-2 text-xs text-white" style="width:25%">25%</div></div></div>
+            <div class="flex items-center"><div class="w-32 text-sm text-gray-300">Daily Ops</div><div class="flex-1 bg-gray-900 rounded-full h-6 overflow-hidden"><div class="h-full bg-blue-600 rounded-full flex items-center pl-2 text-xs text-white" style="width:30%">30%</div></div></div>
+            <div class="flex items-center"><div class="w-32 text-sm text-gray-300">Strategy</div><div class="flex-1 bg-gray-900 rounded-full h-6 overflow-hidden"><div class="h-full bg-pink-600 rounded-full flex items-center pl-2 text-xs text-white" style="width:10%">10%</div></div></div>
+            <div class="flex items-center"><div class="w-32 text-sm text-gray-300">Platform</div><div class="flex-1 bg-gray-900 rounded-full h-6 overflow-hidden"><div class="h-full bg-green-600 rounded-full flex items-center pl-2 text-xs text-white" style="width:5%">5%</div></div></div>
+            <div class="flex items-center"><div class="w-32 text-sm text-gray-300">Groups + HB</div><div class="flex-1 bg-gray-900 rounded-full h-6 overflow-hidden"><div class="h-full bg-yellow-600 rounded-full flex items-center pl-2 text-xs text-white" style="width:5%">5%</div></div></div>
+            <div class="flex items-center"><div class="w-32 text-sm text-gray-300">🛡️ Reserve</div><div class="flex-1 bg-gray-900 rounded-full h-6 overflow-hidden"><div class="h-full bg-gray-600 rounded-full flex items-center pl-2 text-xs text-white" style="width:25%">25%</div></div></div>
+          </div>
+          <p class="text-xs text-gray-500 mt-3">Target: Never exceed 75%. Always keep 25% buffer for unexpected tasks.</p>
+        </div>
+
+        <!-- Rules -->
+        <div class="bg-gray-800/50 rounded-xl border border-red-500/20 p-6 mb-6">
+          <h2 class="text-xl font-bold text-red-400 mb-4"><i class="fas fa-exclamation-triangle mr-2"></i>Operating Rules</h2>
+          <ol class="text-sm text-gray-300 space-y-2">
+            <li><span class="text-red-400 font-bold">1.</span> Default model for sub-agents: <strong class="text-blue-400">Sonnet</strong> — unless task specifically needs Opus</li>
+            <li><span class="text-red-400 font-bold">2.</span> Max <strong class="text-yellow-400">3 Opus sub-agents per week</strong> — strategy sessions only</li>
+            <li><span class="text-red-400 font-bold">3.</span> No parallel Opus spawns — one at a time</li>
+            <li><span class="text-red-400 font-bold">4.</span> Platform/code changes: <strong class="text-purple-400">Ultron direct</strong> — never spawn for HTML edits</li>
+            <li><span class="text-red-400 font-bold">5.</span> Research/writing: <strong class="text-blue-400">Sonnet</strong> — always sufficient quality</li>
+            <li><span class="text-red-400 font-bold">6.</span> If weekly budget &lt; 30%: <strong class="text-yellow-400">conservation mode</strong> — essential spawns only</li>
+            <li><span class="text-red-400 font-bold">7.</span> Monday = heavy day (fresh budget), Friday = light day</li>
+          </ol>
+        </div>
+
+        <!-- Bottom line -->
+        <div class="bg-gradient-to-r from-purple-900/30 to-blue-900/30 rounded-xl border border-purple-500/20 p-6 text-center">
+          <p class="text-lg font-bold text-white mb-2">27 agents. One plan. $200/month.</p>
+          <p class="text-sm text-gray-400">The family is 27 strong, but they don't all need to be awake at once.<br>Smart scheduling + right model per task = sustainable forever.</p>
+          <p class="text-xs text-purple-400 mt-3">⚡ — ULTRON</p>
+        </div>
       </div>
     </div>
 

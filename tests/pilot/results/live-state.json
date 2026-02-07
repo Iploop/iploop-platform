@@ -1,16 +1,16 @@
 {
   "running": false,
-  "suite": "quick",
-  "description": "Quick health check",
+  "suite": "performance",
+  "description": "Performance benchmark",
   "total": 3,
   "progress": 3,
   "currentTest": null,
-  "startTime": 1770473683272,
-  "suiteStartTime": 1770473649811,
+  "startTime": 1770477676470,
+  "suiteStartTime": 1770477653766,
   "queue": [],
   "lastTest": {
-    "name": "protocol-test.js",
+    "name": "stress-test.js",
     "passed": false,
-    "duration": 4810
+    "duration": 301136
   }
 }

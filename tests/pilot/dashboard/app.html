@@ -9895,9 +9895,9 @@
     // Run on page load
     document.addEventListener('DOMContentLoaded', calculateObjectiveProgress);
     // Also run when page becomes visible
-    const origShowPage = showPage;
+    const origShowPage2 = showPage;
     showPage = function(pageId) {
-      origShowPage(pageId);
+      origShowPage2(pageId);
       if (pageId === 'plan-objectives') {
         calculateObjectiveProgress();
       }

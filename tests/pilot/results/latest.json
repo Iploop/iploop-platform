@@ -1,49 +1,49 @@
 {
   "geo-test": {
-    "timestamp": "2026-02-07T12:58:38.784Z",
+    "timestamp": "2026-02-07T13:59:43.304Z",
     "summary": {
       "errors": 0
     },
     "passed": false,
-    "duration": 8102
+    "duration": 8114
   },
   "leak-test": {
-    "timestamp": "2026-02-07T13:12:47.280Z",
+    "timestamp": "2026-02-07T13:43:27.685Z",
     "summary": {},
     "passed": false,
-    "duration": 246
+    "duration": 232
   },
   "stress-test": {
-    "timestamp": "2026-02-07T13:12:45.977Z",
+    "timestamp": "2026-02-07T13:43:26.394Z",
     "summary": {
-      "totalRequests": 685,
-      "failed": 685,
-      "throughput": 22.09,
+      "totalRequests": 670,
+      "failed": 670,
+      "throughput": 21.61,
       "ipsObserved": 0
     },
     "passed": false,
-    "duration": 31062
+    "duration": 31087
   },
   "protocol-test": {
-    "timestamp": "2026-02-07T13:12:53.080Z",
+    "timestamp": "2026-02-07T13:43:33.507Z",
     "summary": {
       "failed": 23
     },
     "passed": false,
-    "duration": 4740
+    "duration": 4764
   },
   "rotation-test": {
-    "timestamp": "2026-02-07T12:58:50.035Z",
+    "timestamp": "2026-02-07T13:59:54.579Z",
     "summary": {
       "totalRequests": 0,
       "errors": 50,
       "uniqueIps": 0
     },
     "passed": false,
-    "duration": 10190
+    "duration": 10209
   },
   "sticky-stress": {
-    "timestamp": "2026-02-07T12:59:03.730Z",
+    "timestamp": "2026-02-07T14:00:08.276Z",
     "summary": {
       "failed": 0,
       "totalRequests": 0,

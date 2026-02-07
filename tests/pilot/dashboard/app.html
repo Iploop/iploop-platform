@@ -208,6 +208,7 @@
           <i class="fas fa-chevron-down text-xs transition-transform"></i>
         </button>
         <div class="nav-group-items hidden pl-4 mt-1 space-y-1">
+          <a href="#" class="nav-item" data-page="sales-strategy" onclick="showPage('sales-strategy')"><i class="fas fa-bullseye w-5"></i> Sales HQ</a>
           <a href="#" class="nav-item" data-page="sales-crm" onclick="showPage('sales-crm')"><i class="fas fa-users w-5"></i> CRM</a>
           <a href="#" class="nav-item" data-page="sales-emails" onclick="showPage('sales-emails')"><i class="fas fa-envelope w-5"></i> Email Templates</a>
         </div>
@@ -244,6 +245,7 @@
           <i class="fas fa-chevron-down text-xs transition-transform"></i>
         </button>
         <div class="nav-group-items hidden pl-4 mt-1 space-y-1">
+          <a href="#" class="nav-item" data-page="dev-strategy" onclick="showPage('dev-strategy')"><i class="fas fa-terminal w-5"></i> Dev HQ</a>
           <a href="#" class="nav-item" data-page="dev-projects" onclick="showPage('dev-projects')"><i class="fas fa-folder-tree w-5"></i> Projects</a>
           <a href="#" class="nav-item" data-page="dev-apps" onclick="showPage('dev-apps')"><i class="fas fa-mobile-alt w-5"></i> Apps</a>
           <a href="#" class="nav-item" data-page="dev-websites" onclick="showPage('dev-websites')"><i class="fas fa-globe w-5"></i> Websites</a>
@@ -257,6 +259,7 @@
           <i class="fas fa-chevron-down text-xs transition-transform"></i>
         </button>
         <div class="nav-group-items hidden pl-4 mt-1 space-y-1">
+          <a href="#" class="nav-item" data-page="marketing-strategy" onclick="showPage('marketing-strategy')"><i class="fas fa-bullhorn w-5"></i> Marketing HQ</a>
           <a href="#" class="nav-item" data-page="marketing-campaigns" onclick="showPage('marketing-campaigns')"><i class="fas fa-rocket w-5"></i> Campaigns</a>
           <a href="#" class="nav-item" data-page="marketing-content" onclick="showPage('marketing-content')"><i class="fas fa-file-lines w-5"></i> Content</a>
           <a href="#" class="nav-item" data-page="marketing-social" onclick="showPage('marketing-social')"><i class="fas fa-share-nodes w-5"></i> Social</a>
@@ -293,6 +296,19 @@
         </div>
       </div>
       
+      <!-- Operations -->
+      <div class="nav-group">
+        <button onclick="toggleNavGroup(this)" class="nav-group-btn w-full flex items-center justify-between px-3 py-2 text-sm font-medium rounded-lg text-gray-300 hover:bg-gray-700">
+          <span><i class="fas fa-server w-5 mr-3 text-red-400"></i>Operations</span>
+          <i class="fas fa-chevron-down text-xs transition-transform"></i>
+        </button>
+        <div class="nav-group-items hidden pl-4 mt-1 space-y-1">
+          <a href="#" class="nav-item" data-page="ops-strategy" onclick="showPage('ops-strategy')"><i class="fas fa-cogs w-5"></i> Ops HQ</a>
+          <a href="#" class="nav-item" data-page="system-specs" onclick="showPage('system-specs')"><i class="fas fa-microchip w-5"></i> System Monitor</a>
+          <a href="#" class="nav-item" data-page="system-logs" onclick="showPage('system-logs')"><i class="fas fa-scroll w-5"></i> Logs</a>
+        </div>
+      </div>
+
       <!-- Separator -->
       <div class="my-3 border-t border-gray-700"></div>
       
@@ -5738,7 +5754,927 @@
       </div>
     </div>
 
+    <!-- ===================== SALES HQ - STRATEGY HOMEPAGE ===================== -->
+    <div id="page-sales-strategy" class="page p-4 md:p-6 lg:p-8 pt-16 lg:pt-8">
+      <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
+        <div>
+          <h1 class="text-2xl md:text-3xl font-bold"><i class="fas fa-bullseye text-emerald-400 mr-2"></i>Sales HQ</h1>
+          <p class="text-gray-400 mt-1">Sales department command center &amp; strategy</p>
+        </div>
+        <div class="flex items-center gap-2 mt-4 md:mt-0">
+          <span class="px-3 py-1 bg-emerald-500/20 text-emerald-400 text-xs rounded-full border border-emerald-500/30">Q1 2026</span>
+          <span class="px-3 py-1 bg-yellow-500/20 text-yellow-400 text-xs rounded-full border border-yellow-500/30">🔄 Month 1 Active</span>
+        </div>
+      </div>
 
+      <!-- Strategy Summary -->
+      <div class="bg-gray-800 rounded-xl border border-gray-700 p-6 mb-6">
+        <h2 class="text-lg font-semibold mb-3"><i class="fas fa-chess text-indigo-400 mr-2"></i>Strategy Summary</h2>
+        <p class="text-gray-300 mb-4">Three parallel sales pipelines, launched sequentially over 4 weeks. Focus on warm outreach, clear value props, and fast iteration.</p>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div class="bg-gray-700/50 rounded-lg p-4 border-l-4 border-emerald-500">
+            <h4 class="font-semibold text-emerald-400 mb-1">Pipeline 1: SDK Partners</h4>
+            <p class="text-sm text-gray-400">App developers who integrate proxy SDKs for monetization. Our SDK is pure Java, lightweight, privacy-compliant. Target: apps with 50K+ DAU.</p>
+          </div>
+          <div class="bg-gray-700/50 rounded-lg p-4 border-l-4 border-blue-500">
+            <h4 class="font-semibold text-blue-400 mb-1">Pipeline 2: B2B Customers</h4>
+            <p class="text-sm text-gray-400">AI companies, scrapers, data collectors who need residential proxies. Best price for AI use cases. Position: best proxy for AI workloads.</p>
+          </div>
+          <div class="bg-gray-700/50 rounded-lg p-4 border-l-4 border-purple-500">
+            <h4 class="font-semibold text-purple-400 mb-1">Pipeline 3: App Distribution</h4>
+            <p class="text-sm text-gray-400">Alternative app stores, APK sites, OEM pre-install partnerships. Get SDK-embedded apps into more hands.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Timeline of Activities -->
+      <div class="bg-gray-800 rounded-xl border border-gray-700 p-6 mb-6">
+        <h2 class="text-lg font-semibold mb-5"><i class="fas fa-timeline text-cyan-400 mr-2"></i>Timeline of Activities</h2>
+        <div class="relative pl-8 space-y-0">
+          <!-- Vertical line -->
+          <div class="absolute left-[15px] top-2 bottom-2 w-0.5 bg-gray-600"></div>
+          
+          <!-- Week 1 -->
+          <div class="relative pb-8">
+            <div class="absolute left-[-23px] w-4 h-4 rounded-full bg-green-500 border-2 border-gray-800 z-10"></div>
+            <div class="bg-gray-700/50 rounded-lg p-4">
+              <div class="flex items-center justify-between mb-2">
+                <h4 class="font-semibold text-green-400">Week 1: Research + List Building + Templates</h4>
+                <span class="px-2 py-0.5 bg-green-500/20 text-green-400 text-xs rounded-full">✅ Done</span>
+              </div>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm text-gray-400">
+                <div>✅ Competitor research (12 companies analyzed)</div>
+                <div>✅ SDK partner target list (50+ leads)</div>
+                <div>✅ B2B customer target list (identified segments)</div>
+                <div>✅ Email templates drafted (SDK + B2B + follow-ups)</div>
+                <div>✅ Telegram outreach message created</div>
+                <div>✅ Partnership proposal framework</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Week 2 -->
+          <div class="relative pb-8">
+            <div class="absolute left-[-23px] w-4 h-4 rounded-full bg-yellow-500 border-2 border-gray-800 z-10"></div>
+            <div class="bg-gray-700/50 rounded-lg p-4">
+              <div class="flex items-center justify-between mb-2">
+                <h4 class="font-semibold text-yellow-400">Week 2: SDK Partner Outreach — Wave 1</h4>
+                <span class="px-2 py-0.5 bg-yellow-500/20 text-yellow-400 text-xs rounded-full">🔄 In Progress</span>
+              </div>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm text-gray-400">
+                <div>⬜ Send first 20 SDK partner emails</div>
+                <div>⬜ Telegram outreach to app dev communities</div>
+                <div>⬜ Follow up on warm leads from research</div>
+                <div>⬜ Track responses and iterate messaging</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Week 3 -->
+          <div class="relative pb-8">
+            <div class="absolute left-[-23px] w-4 h-4 rounded-full bg-gray-500 border-2 border-gray-800 z-10"></div>
+            <div class="bg-gray-700/50 rounded-lg p-4">
+              <div class="flex items-center justify-between mb-2">
+                <h4 class="font-semibold text-gray-400">Week 3: B2B Customer Outreach + Distribution</h4>
+                <span class="px-2 py-0.5 bg-gray-500/20 text-gray-400 text-xs rounded-full">⬜ Planned</span>
+              </div>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm text-gray-400">
+                <div>⬜ Launch B2B customer email campaign</div>
+                <div>⬜ Begin distribution partnership outreach</div>
+                <div>⬜ SDK partner wave 2 (refined from wave 1 learnings)</div>
+                <div>⬜ First meetings with interested partners</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Week 4 -->
+          <div class="relative">
+            <div class="absolute left-[-23px] w-4 h-4 rounded-full bg-gray-500 border-2 border-gray-800 z-10"></div>
+            <div class="bg-gray-700/50 rounded-lg p-4">
+              <div class="flex items-center justify-between mb-2">
+                <h4 class="font-semibold text-gray-400">Week 4: Follow-ups + Pipeline Review</h4>
+                <span class="px-2 py-0.5 bg-gray-500/20 text-gray-400 text-xs rounded-full">⬜ Planned</span>
+              </div>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm text-gray-400">
+                <div>⬜ Follow-up email #2 to all non-responders</div>
+                <div>⬜ Pipeline review — assess conversion rates</div>
+                <div>⬜ Adjust strategy based on results</div>
+                <div>⬜ Plan Month 2 campaigns</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Outreach Content Library -->
+      <div class="bg-gray-800 rounded-xl border border-gray-700 p-6 mb-6">
+        <h2 class="text-lg font-semibold mb-4"><i class="fas fa-book-open text-pink-400 mr-2"></i>Outreach Content Library</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <!-- SDK Partner Email -->
+          <div class="bg-gray-700/50 rounded-lg p-4">
+            <div class="flex items-center justify-between mb-2">
+              <h4 class="font-medium text-sm">First Email — SDK Partners</h4>
+              <span class="px-2 py-0.5 bg-green-500/20 text-green-400 text-xs rounded-full">✅ Ready</span>
+            </div>
+            <p class="text-xs text-gray-500 mb-3 line-clamp-3">Subject: "Quick question about [App Name]" — Hi [Name], I noticed [App] has great engagement. We help apps like yours earn $X/mo through our lightweight proxy SDK...</p>
+            <button onclick="toggleContentPreview('sdk-email')" class="text-xs text-indigo-400 hover:text-indigo-300"><i class="fas fa-eye mr-1"></i>View Full</button>
+            <div id="preview-sdk-email" class="hidden mt-3 p-3 bg-gray-800 rounded text-xs text-gray-400 border border-gray-600">
+              <p class="mb-2"><strong>Subject:</strong> Quick question about [App Name]</p>
+              <p class="mb-2">Hi [Name],</p>
+              <p class="mb-2">I came across [App Name] and was impressed by [specific thing]. We work with app developers who want to earn passive revenue through our lightweight proxy SDK.</p>
+              <p class="mb-2">What makes us different: Pure Java SDK (no native code), minimal battery/data impact, GDPR-compliant, and we pay $0.10-0.50/device/month based on usage.</p>
+              <p class="mb-2">Integration takes about 30 minutes — just a few lines of code. Would you be open to a quick 15-min call this week?</p>
+              <p>Best, [Name] — IPLoop</p>
+            </div>
+          </div>
+
+          <!-- B2B Customer Email -->
+          <div class="bg-gray-700/50 rounded-lg p-4">
+            <div class="flex items-center justify-between mb-2">
+              <h4 class="font-medium text-sm">First Email — B2B Customers</h4>
+              <span class="px-2 py-0.5 bg-green-500/20 text-green-400 text-xs rounded-full">✅ Ready</span>
+            </div>
+            <p class="text-xs text-gray-500 mb-3 line-clamp-3">Subject: "Residential proxies built for AI workloads" — We built IPLoop specifically for high-volume AI data collection. 40M+ residential IPs...</p>
+            <button onclick="toggleContentPreview('b2b-email')" class="text-xs text-indigo-400 hover:text-indigo-300"><i class="fas fa-eye mr-1"></i>View Full</button>
+            <div id="preview-b2b-email" class="hidden mt-3 p-3 bg-gray-800 rounded text-xs text-gray-400 border border-gray-600">
+              <p class="mb-2"><strong>Subject:</strong> Residential proxies built for AI workloads</p>
+              <p class="mb-2">Hi [Name],</p>
+              <p class="mb-2">If your team is doing web scraping, data collection, or AI training — you know how expensive residential proxies get at scale.</p>
+              <p class="mb-2">IPLoop offers the best price/GB for AI workloads with 40M+ ethically-sourced residential IPs. Our infrastructure is built for high concurrency and reliability.</p>
+              <p class="mb-2">We offer a free trial so you can test before committing. Interested in trying it out?</p>
+              <p>Best, [Name] — IPLoop</p>
+            </div>
+          </div>
+
+          <!-- Telegram Message -->
+          <div class="bg-gray-700/50 rounded-lg p-4">
+            <div class="flex items-center justify-between mb-2">
+              <h4 class="font-medium text-sm">First Telegram Message</h4>
+              <span class="px-2 py-0.5 bg-green-500/20 text-green-400 text-xs rounded-full">✅ Ready</span>
+            </div>
+            <p class="text-xs text-gray-500 mb-3 line-clamp-3">Hey [Name] 👋 Saw your app on [store]. We help devs monetize with a proxy SDK — pays $0.10-0.50/device/mo. 30-min integration...</p>
+            <button onclick="toggleContentPreview('tg-msg')" class="text-xs text-indigo-400 hover:text-indigo-300"><i class="fas fa-eye mr-1"></i>View Full</button>
+            <div id="preview-tg-msg" class="hidden mt-3 p-3 bg-gray-800 rounded text-xs text-gray-400 border border-gray-600">
+              <p class="mb-2">Hey [Name] 👋</p>
+              <p class="mb-2">Saw your app [App Name] on [store] — looks great! We help developers like you earn passive revenue through our proxy SDK.</p>
+              <p class="mb-2">It's lightweight (pure Java), takes ~30 min to integrate, and pays $0.10-0.50/device/month. Fully GDPR compliant.</p>
+              <p>Would love to chat if you're interested. Happy to share more details! 🚀</p>
+            </div>
+          </div>
+
+          <!-- Follow-up #2 -->
+          <div class="bg-gray-700/50 rounded-lg p-4">
+            <div class="flex items-center justify-between mb-2">
+              <h4 class="font-medium text-sm">Follow-up Email #2</h4>
+              <span class="px-2 py-0.5 bg-green-500/20 text-green-400 text-xs rounded-full">✅ Ready</span>
+            </div>
+            <p class="text-xs text-gray-500 mb-3 line-clamp-3">Subject: "Re: Quick question" — Just bumping this up. Happy to share a case study from a similar app that's earning $X/mo with our SDK...</p>
+            <button onclick="toggleContentPreview('followup2')" class="text-xs text-indigo-400 hover:text-indigo-300"><i class="fas fa-eye mr-1"></i>View Full</button>
+            <div id="preview-followup2" class="hidden mt-3 p-3 bg-gray-800 rounded text-xs text-gray-400 border border-gray-600">
+              <p class="mb-2"><strong>Subject:</strong> Re: Quick question about [App Name]</p>
+              <p class="mb-2">Hi [Name],</p>
+              <p class="mb-2">Just following up on my previous email. I know inboxes get busy!</p>
+              <p class="mb-2">Quick thought: apps similar to [App Name] typically earn $X-Y/month with our SDK with zero user experience impact. Happy to share a quick case study if helpful.</p>
+              <p>Would a 10-minute call work this week?</p>
+            </div>
+          </div>
+
+          <!-- Follow-up #3 -->
+          <div class="bg-gray-700/50 rounded-lg p-4">
+            <div class="flex items-center justify-between mb-2">
+              <h4 class="font-medium text-sm">Follow-up Email #3 (Breakup)</h4>
+              <span class="px-2 py-0.5 bg-green-500/20 text-green-400 text-xs rounded-full">✅ Ready</span>
+            </div>
+            <p class="text-xs text-gray-500 mb-3 line-clamp-3">Subject: "Closing the loop" — Last email from me. If the timing isn't right, totally understand. But if monetization is on your radar...</p>
+            <button onclick="toggleContentPreview('followup3')" class="text-xs text-indigo-400 hover:text-indigo-300"><i class="fas fa-eye mr-1"></i>View Full</button>
+            <div id="preview-followup3" class="hidden mt-3 p-3 bg-gray-800 rounded text-xs text-gray-400 border border-gray-600">
+              <p class="mb-2"><strong>Subject:</strong> Closing the loop on [App Name]</p>
+              <p class="mb-2">Hi [Name],</p>
+              <p class="mb-2">This will be my last email — I don't want to spam you. If proxy SDK monetization isn't the right fit right now, no worries at all.</p>
+              <p class="mb-2">But if it ever comes up again, we'll be here. IPLoop is the easiest SDK to integrate and pays the best rates in the market.</p>
+              <p>All the best with [App Name]! 🙌</p>
+            </div>
+          </div>
+
+          <!-- Partnership Proposal -->
+          <div class="bg-gray-700/50 rounded-lg p-4">
+            <div class="flex items-center justify-between mb-2">
+              <h4 class="font-medium text-sm">Partnership Proposal</h4>
+              <span class="px-2 py-0.5 bg-green-500/20 text-green-400 text-xs rounded-full">✅ Ready</span>
+            </div>
+            <p class="text-xs text-gray-500 mb-3 line-clamp-3">One-pager for serious prospects: revenue share model, technical specs, integration timeline, support commitment...</p>
+            <button onclick="toggleContentPreview('proposal')" class="text-xs text-indigo-400 hover:text-indigo-300"><i class="fas fa-eye mr-1"></i>View Full</button>
+            <div id="preview-proposal" class="hidden mt-3 p-3 bg-gray-800 rounded text-xs text-gray-400 border border-gray-600">
+              <p class="font-semibold mb-2">IPLoop SDK Partnership Proposal</p>
+              <p class="mb-1"><strong>Revenue:</strong> $0.10-0.50/device/month, paid monthly via wire or crypto</p>
+              <p class="mb-1"><strong>SDK:</strong> Pure Java, 200KB, Android 5.1+, no native dependencies</p>
+              <p class="mb-1"><strong>Integration:</strong> ~30 minutes, 5 lines of code, full docs provided</p>
+              <p class="mb-1"><strong>Privacy:</strong> GDPR compliant, user consent built-in, no personal data collected</p>
+              <p class="mb-1"><strong>Support:</strong> Dedicated integration support, Telegram/email, 24h response time</p>
+              <p><strong>Trial:</strong> Free 30-day trial, no commitment</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bottom Grid: Done / Next / Board / KPIs -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+        <!-- What's Been Done -->
+        <div class="bg-gray-800 rounded-xl border border-gray-700 p-5">
+          <h3 class="font-semibold mb-3"><i class="fas fa-check-circle text-green-400 mr-2"></i>What's Been Done</h3>
+          <div class="space-y-2 text-sm">
+            <div class="flex items-center gap-2 text-green-400"><i class="fas fa-check-square"></i> Sales strategy defined (3 pipelines)</div>
+            <div class="flex items-center gap-2 text-green-400"><i class="fas fa-check-square"></i> 12 competitors researched in depth</div>
+            <div class="flex items-center gap-2 text-green-400"><i class="fas fa-check-square"></i> SDK partner lead list built (50+ companies)</div>
+            <div class="flex items-center gap-2 text-green-400"><i class="fas fa-check-square"></i> All email templates written &amp; reviewed</div>
+            <div class="flex items-center gap-2 text-green-400"><i class="fas fa-check-square"></i> Telegram outreach message created</div>
+            <div class="flex items-center gap-2 text-green-400"><i class="fas fa-check-square"></i> Partnership proposal framework done</div>
+            <div class="flex items-center gap-2 text-green-400"><i class="fas fa-check-square"></i> CRM pipeline set up in platform</div>
+          </div>
+        </div>
+
+        <!-- What Comes Next -->
+        <div class="bg-gray-800 rounded-xl border border-gray-700 p-5">
+          <h3 class="font-semibold mb-3"><i class="fas fa-forward text-blue-400 mr-2"></i>What Comes Next</h3>
+          <div class="space-y-3">
+            <div class="bg-gray-700/50 rounded-lg p-3">
+              <div class="flex items-center gap-2 mb-1"><span class="px-2 py-0.5 bg-red-500/20 text-red-400 text-xs rounded-full font-semibold">#1</span><span class="font-medium text-sm">Start SDK Partner Outreach</span></div>
+              <p class="text-xs text-gray-500">Send first 20 emails to top SDK partner prospects from the lead list</p>
+            </div>
+            <div class="bg-gray-700/50 rounded-lg p-3">
+              <div class="flex items-center gap-2 mb-1"><span class="px-2 py-0.5 bg-orange-500/20 text-orange-400 text-xs rounded-full font-semibold">#2</span><span class="font-medium text-sm">Set Up Outreach Infrastructure</span></div>
+              <p class="text-xs text-gray-500">Configure dedicated email domain, warm up sender reputation, set up tracking</p>
+            </div>
+            <div class="bg-gray-700/50 rounded-lg p-3">
+              <div class="flex items-center gap-2 mb-1"><span class="px-2 py-0.5 bg-yellow-500/20 text-yellow-400 text-xs rounded-full font-semibold">#3</span><span class="font-medium text-sm">Join Telegram Developer Communities</span></div>
+              <p class="text-xs text-gray-500">Identify and join relevant Telegram groups for app dev and monetization discussions</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <!-- Needs From Board -->
+        <div class="bg-gray-800 rounded-xl border-2 border-amber-500/40 p-5">
+          <h3 class="font-semibold mb-3"><i class="fas fa-exclamation-triangle text-amber-400 mr-2"></i>Needs From Board</h3>
+          <div class="space-y-3 text-sm">
+            <div class="bg-amber-500/10 rounded-lg p-3 border border-amber-500/20">
+              <p class="font-medium text-amber-300">📧 Dedicated Sales Email Domain</p>
+              <p class="text-xs text-gray-400 mt-1">Need a separate domain (e.g., mail.iploop.io) for outreach to protect main domain reputation</p>
+            </div>
+            <div class="bg-amber-500/10 rounded-lg p-3 border border-amber-500/20">
+              <p class="font-medium text-amber-300">💰 Email Tool Budget</p>
+              <p class="text-xs text-gray-400 mt-1">Instantly.ai or similar ($30-97/mo) for email warmup, sequences, and tracking</p>
+            </div>
+            <div class="bg-amber-500/10 rounded-lg p-3 border border-amber-500/20">
+              <p class="font-medium text-amber-300">✅ Review &amp; Approve Outreach Content</p>
+              <p class="text-xs text-gray-400 mt-1">Gil to review all email templates and give final go-ahead before sending</p>
+            </div>
+            <div class="bg-amber-500/10 rounded-lg p-3 border border-amber-500/20">
+              <p class="font-medium text-amber-300">🎯 Target List Prioritization</p>
+              <p class="text-xs text-gray-400 mt-1">Gil to review top 20 SDK partner leads and flag any personal connections or priorities</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- KPIs -->
+        <div class="bg-gray-800 rounded-xl border border-gray-700 p-5">
+          <h3 class="font-semibold mb-3"><i class="fas fa-chart-bar text-indigo-400 mr-2"></i>KPIs — Sales Pipeline</h3>
+          <div class="grid grid-cols-2 gap-4">
+            <div class="bg-gray-700/50 rounded-lg p-4 text-center">
+              <p class="text-2xl font-bold text-white">-</p>
+              <p class="text-xs text-gray-500 mt-1">Emails Sent</p>
+            </div>
+            <div class="bg-gray-700/50 rounded-lg p-4 text-center">
+              <p class="text-2xl font-bold text-white">-</p>
+              <p class="text-xs text-gray-500 mt-1">Responses</p>
+            </div>
+            <div class="bg-gray-700/50 rounded-lg p-4 text-center">
+              <p class="text-2xl font-bold text-white">-</p>
+              <p class="text-xs text-gray-500 mt-1">Meetings Booked</p>
+            </div>
+            <div class="bg-gray-700/50 rounded-lg p-4 text-center">
+              <p class="text-2xl font-bold text-white">-</p>
+              <p class="text-xs text-gray-500 mt-1">Deals Closed</p>
+            </div>
+            <div class="bg-gray-700/50 rounded-lg p-4 text-center">
+              <p class="text-2xl font-bold text-white">-</p>
+              <p class="text-xs text-gray-500 mt-1">Response Rate</p>
+            </div>
+            <div class="bg-gray-700/50 rounded-lg p-4 text-center">
+              <p class="text-2xl font-bold text-white">-</p>
+              <p class="text-xs text-gray-500 mt-1">Pipeline Value</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===================== MARKETING HQ - STRATEGY HOMEPAGE ===================== -->
+    <div id="page-marketing-strategy" class="page p-4 md:p-6 lg:p-8 pt-16 lg:pt-8">
+      <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
+        <div>
+          <h1 class="text-2xl md:text-3xl font-bold"><i class="fas fa-bullhorn text-pink-400 mr-2"></i>Marketing HQ</h1>
+          <p class="text-gray-400 mt-1">Marketing department command center &amp; strategy</p>
+        </div>
+        <div class="flex items-center gap-2 mt-4 md:mt-0">
+          <span class="px-3 py-1 bg-pink-500/20 text-pink-400 text-xs rounded-full border border-pink-500/30">Q1 2026</span>
+          <span class="px-3 py-1 bg-yellow-500/20 text-yellow-400 text-xs rounded-full border border-yellow-500/30">🔄 Pre-Launch</span>
+        </div>
+      </div>
+
+      <!-- Strategy Summary -->
+      <div class="bg-gray-800 rounded-xl border border-gray-700 p-6 mb-6">
+        <h2 class="text-lg font-semibold mb-3"><i class="fas fa-chess text-indigo-400 mr-2"></i>Strategy Summary</h2>
+        <p class="text-gray-300 mb-4">Product-only messaging externally. Position IPLoop as the best residential proxy for AI workloads — best price, best reliability, free to try.</p>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div class="bg-gray-700/50 rounded-lg p-4 border-l-4 border-green-500">
+            <h4 class="font-semibold text-green-400 mb-1">✅ DO: Product Messaging</h4>
+            <ul class="text-sm text-gray-400 space-y-1 mt-2">
+              <li>• Best proxy for AI workloads</li>
+              <li>• Most competitive pricing ($X/GB)</li>
+              <li>• Free trial — test before you buy</li>
+              <li>• 40M+ residential IPs, ethically sourced</li>
+              <li>• Built for high concurrency &amp; reliability</li>
+            </ul>
+          </div>
+          <div class="bg-gray-700/50 rounded-lg p-4 border-l-4 border-red-500">
+            <h4 class="font-semibold text-red-400 mb-1">🚫 DON'T: External AI Story</h4>
+            <ul class="text-sm text-gray-400 space-y-1 mt-2">
+              <li>• No mention of AI agents running the company</li>
+              <li>• No "AI-powered operations" messaging</li>
+              <li>• No Ultron/agent references in public</li>
+              <li>• Keep internal innovation internal</li>
+              <li>• Present as normal professional company</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- Social Media Status -->
+      <div class="bg-gray-800 rounded-xl border border-gray-700 p-6 mb-6">
+        <h2 class="text-lg font-semibold mb-4"><i class="fas fa-share-alt text-blue-400 mr-2"></i>Social Media Status</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <!-- LinkedIn -->
+          <div class="bg-gray-700/50 rounded-lg p-4">
+            <div class="flex items-center justify-between mb-3">
+              <div class="flex items-center gap-2"><i class="fab fa-linkedin text-blue-500 text-lg"></i><span class="font-medium">LinkedIn</span></div>
+              <span class="px-2 py-0.5 bg-gray-500/20 text-gray-400 text-xs rounded-full">⬜ Not Created</span>
+            </div>
+            <div class="text-xs text-gray-500 space-y-1">
+              <div class="flex justify-between"><span>Account:</span><span class="text-gray-400">Not set up</span></div>
+              <div class="flex justify-between"><span>Followers:</span><span class="text-gray-400">-</span></div>
+              <div class="flex justify-between"><span>Last Post:</span><span class="text-gray-400">-</span></div>
+              <div class="flex justify-between"><span>Content Ready:</span><span class="text-yellow-400">3 drafts</span></div>
+            </div>
+          </div>
+          <!-- Twitter/X -->
+          <div class="bg-gray-700/50 rounded-lg p-4">
+            <div class="flex items-center justify-between mb-3">
+              <div class="flex items-center gap-2"><i class="fab fa-x-twitter text-gray-300 text-lg"></i><span class="font-medium">Twitter/X</span></div>
+              <span class="px-2 py-0.5 bg-gray-500/20 text-gray-400 text-xs rounded-full">⬜ Not Created</span>
+            </div>
+            <div class="text-xs text-gray-500 space-y-1">
+              <div class="flex justify-between"><span>Account:</span><span class="text-gray-400">Not set up</span></div>
+              <div class="flex justify-between"><span>Followers:</span><span class="text-gray-400">-</span></div>
+              <div class="flex justify-between"><span>Last Post:</span><span class="text-gray-400">-</span></div>
+              <div class="flex justify-between"><span>Content Ready:</span><span class="text-yellow-400">5 drafts</span></div>
+            </div>
+          </div>
+          <!-- GitHub -->
+          <div class="bg-gray-700/50 rounded-lg p-4">
+            <div class="flex items-center justify-between mb-3">
+              <div class="flex items-center gap-2"><i class="fab fa-github text-gray-300 text-lg"></i><span class="font-medium">GitHub</span></div>
+              <span class="px-2 py-0.5 bg-gray-500/20 text-gray-400 text-xs rounded-full">⬜ Not Created</span>
+            </div>
+            <div class="text-xs text-gray-500 space-y-1">
+              <div class="flex justify-between"><span>Account:</span><span class="text-gray-400">Not set up</span></div>
+              <div class="flex justify-between"><span>Stars:</span><span class="text-gray-400">-</span></div>
+              <div class="flex justify-between"><span>Last Commit:</span><span class="text-gray-400">-</span></div>
+              <div class="flex justify-between"><span>Content Ready:</span><span class="text-yellow-400">SDK docs draft</span></div>
+            </div>
+          </div>
+          <!-- Blog -->
+          <div class="bg-gray-700/50 rounded-lg p-4">
+            <div class="flex items-center justify-between mb-3">
+              <div class="flex items-center gap-2"><i class="fas fa-blog text-orange-400 text-lg"></i><span class="font-medium">Blog</span></div>
+              <span class="px-2 py-0.5 bg-gray-500/20 text-gray-400 text-xs rounded-full">⬜ Not Created</span>
+            </div>
+            <div class="text-xs text-gray-500 space-y-1">
+              <div class="flex justify-between"><span>Platform:</span><span class="text-gray-400">Not chosen</span></div>
+              <div class="flex justify-between"><span>Posts:</span><span class="text-gray-400">-</span></div>
+              <div class="flex justify-between"><span>Last Post:</span><span class="text-gray-400">-</span></div>
+              <div class="flex justify-between"><span>Content Ready:</span><span class="text-yellow-400">2 article ideas</span></div>
+            </div>
+          </div>
+          <!-- Discord -->
+          <div class="bg-gray-700/50 rounded-lg p-4">
+            <div class="flex items-center justify-between mb-3">
+              <div class="flex items-center gap-2"><i class="fab fa-discord text-indigo-400 text-lg"></i><span class="font-medium">Discord</span></div>
+              <span class="px-2 py-0.5 bg-gray-500/20 text-gray-400 text-xs rounded-full">⬜ Planned (Later)</span>
+            </div>
+            <div class="text-xs text-gray-500 space-y-1">
+              <div class="flex justify-between"><span>Server:</span><span class="text-gray-400">Not created</span></div>
+              <div class="flex justify-between"><span>Members:</span><span class="text-gray-400">-</span></div>
+              <div class="flex justify-between"><span>Priority:</span><span class="text-gray-400">Low (Phase 2)</span></div>
+              <div class="flex justify-between"><span>Content Ready:</span><span class="text-gray-400">-</span></div>
+            </div>
+          </div>
+          <!-- Summary Card -->
+          <div class="bg-indigo-500/10 rounded-lg p-4 border border-indigo-500/30">
+            <div class="flex items-center gap-2 mb-3"><i class="fas fa-chart-pie text-indigo-400 text-lg"></i><span class="font-medium text-indigo-300">Overall Status</span></div>
+            <div class="text-xs text-gray-400 space-y-2">
+              <div class="flex justify-between"><span>Accounts Created:</span><span class="text-white font-semibold">0 / 5</span></div>
+              <div class="flex justify-between"><span>Content Drafts:</span><span class="text-yellow-400 font-semibold">~10</span></div>
+              <div class="flex justify-between"><span>Ready to Launch:</span><span class="text-red-400 font-semibold">No</span></div>
+              <div class="flex justify-between"><span>Blocking:</span><span class="text-amber-400 font-semibold">Account creation</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Content Calendar -->
+      <div class="bg-gray-800 rounded-xl border border-gray-700 p-6 mb-6">
+        <h2 class="text-lg font-semibold mb-4"><i class="fas fa-calendar-alt text-teal-400 mr-2"></i>Content Calendar — Launch Week</h2>
+        <div class="overflow-x-auto">
+          <div class="grid grid-cols-5 gap-2 min-w-[600px]">
+            <div class="text-center text-xs text-gray-500 font-semibold pb-2">Monday</div>
+            <div class="text-center text-xs text-gray-500 font-semibold pb-2">Tuesday</div>
+            <div class="text-center text-xs text-gray-500 font-semibold pb-2">Wednesday</div>
+            <div class="text-center text-xs text-gray-500 font-semibold pb-2">Thursday</div>
+            <div class="text-center text-xs text-gray-500 font-semibold pb-2">Friday</div>
+            <!-- Mon -->
+            <div class="bg-gray-700/50 rounded-lg p-3 text-xs space-y-2">
+              <div class="bg-blue-500/20 text-blue-300 rounded p-1.5"><i class="fab fa-linkedin mr-1"></i>Company intro post</div>
+              <div class="bg-gray-600/50 text-gray-400 rounded p-1.5"><i class="fab fa-x-twitter mr-1"></i>"We're live" announcement</div>
+            </div>
+            <!-- Tue -->
+            <div class="bg-gray-700/50 rounded-lg p-3 text-xs space-y-2">
+              <div class="bg-purple-500/20 text-purple-300 rounded p-1.5"><i class="fab fa-github mr-1"></i>SDK repo published</div>
+            </div>
+            <!-- Wed -->
+            <div class="bg-gray-700/50 rounded-lg p-3 text-xs space-y-2">
+              <div class="bg-blue-500/20 text-blue-300 rounded p-1.5"><i class="fab fa-linkedin mr-1"></i>Use case post (AI scraping)</div>
+              <div class="bg-orange-500/20 text-orange-300 rounded p-1.5"><i class="fas fa-blog mr-1"></i>Blog: "Why AI needs better proxies"</div>
+            </div>
+            <!-- Thu -->
+            <div class="bg-gray-700/50 rounded-lg p-3 text-xs space-y-2">
+              <div class="bg-gray-600/50 text-gray-400 rounded p-1.5"><i class="fab fa-x-twitter mr-1"></i>Thread: proxy market landscape</div>
+            </div>
+            <!-- Fri -->
+            <div class="bg-gray-700/50 rounded-lg p-3 text-xs space-y-2">
+              <div class="bg-blue-500/20 text-blue-300 rounded p-1.5"><i class="fab fa-linkedin mr-1"></i>SDK partner success angle</div>
+              <div class="bg-gray-600/50 text-gray-400 rounded p-1.5"><i class="fab fa-x-twitter mr-1"></i>Weekly wrap / engagement</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Competitor Intelligence -->
+      <div class="bg-gray-800 rounded-xl border border-gray-700 p-6 mb-6">
+        <h2 class="text-lg font-semibold mb-3"><i class="fas fa-binoculars text-orange-400 mr-2"></i>Competitor Intelligence</h2>
+        <p class="text-gray-400 text-sm mb-3">Key learnings from competitive analysis of 12 proxy companies:</p>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">
+          <div class="bg-gray-700/50 rounded-lg p-3 text-sm">
+            <p class="text-green-400 font-medium mb-1">Our Advantages</p>
+            <ul class="text-xs text-gray-400 space-y-1">
+              <li>• Price — most competitive for AI</li>
+              <li>• Pure Java SDK — easiest integration</li>
+              <li>• Free trial — low barrier to entry</li>
+            </ul>
+          </div>
+          <div class="bg-gray-700/50 rounded-lg p-3 text-sm">
+            <p class="text-yellow-400 font-medium mb-1">Market Gaps</p>
+            <ul class="text-xs text-gray-400 space-y-1">
+              <li>• Most competitors lack AI-specific positioning</li>
+              <li>• Few offer transparent, simple pricing</li>
+              <li>• Developer experience is poor across the board</li>
+            </ul>
+          </div>
+          <div class="bg-gray-700/50 rounded-lg p-3 text-sm">
+            <p class="text-red-400 font-medium mb-1">Competitor Strengths</p>
+            <ul class="text-xs text-gray-400 space-y-1">
+              <li>• Bright Data: brand recognition, huge pool</li>
+              <li>• Oxylabs: enterprise reputation</li>
+              <li>• SOAX: similar SDK play</li>
+            </ul>
+          </div>
+        </div>
+        <a href="#" onclick="showPage('marketing-competitors')" class="text-sm text-indigo-400 hover:text-indigo-300"><i class="fas fa-arrow-right mr-1"></i>Open Full Competitor Library</a>
+      </div>
+
+      <!-- Bottom Grid: Done / Next / Board -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <!-- What's Been Done -->
+        <div class="bg-gray-800 rounded-xl border border-gray-700 p-5">
+          <h3 class="font-semibold mb-3"><i class="fas fa-check-circle text-green-400 mr-2"></i>What's Been Done</h3>
+          <div class="space-y-2 text-sm">
+            <div class="flex items-center gap-2 text-green-400"><i class="fas fa-check-square"></i> Competitor research (12 companies)</div>
+            <div class="flex items-center gap-2 text-green-400"><i class="fas fa-check-square"></i> Social media strategy defined</div>
+            <div class="flex items-center gap-2 text-green-400"><i class="fas fa-check-square"></i> Content calendar planned</div>
+            <div class="flex items-center gap-2 text-green-400"><i class="fas fa-check-square"></i> Messaging guidelines set (DO/DON'T)</div>
+            <div class="flex items-center gap-2 text-green-400"><i class="fas fa-check-square"></i> ~10 content drafts prepared</div>
+            <div class="flex items-center gap-2 text-green-400"><i class="fas fa-check-square"></i> Brand positioning finalized</div>
+          </div>
+        </div>
+
+        <!-- What Comes Next -->
+        <div class="bg-gray-800 rounded-xl border border-gray-700 p-5">
+          <h3 class="font-semibold mb-3"><i class="fas fa-forward text-blue-400 mr-2"></i>What Comes Next</h3>
+          <div class="space-y-3">
+            <div class="bg-gray-700/50 rounded-lg p-3">
+              <div class="flex items-center gap-2 mb-1"><span class="px-2 py-0.5 bg-red-500/20 text-red-400 text-xs rounded-full font-semibold">#1</span><span class="font-medium text-sm">Create Social Accounts</span></div>
+              <p class="text-xs text-gray-500">LinkedIn company page, Twitter/X, GitHub org</p>
+            </div>
+            <div class="bg-gray-700/50 rounded-lg p-3">
+              <div class="flex items-center gap-2 mb-1"><span class="px-2 py-0.5 bg-orange-500/20 text-orange-400 text-xs rounded-full font-semibold">#2</span><span class="font-medium text-sm">Publish First Posts</span></div>
+              <p class="text-xs text-gray-500">Launch week content across all platforms</p>
+            </div>
+            <div class="bg-gray-700/50 rounded-lg p-3">
+              <div class="flex items-center gap-2 mb-1"><span class="px-2 py-0.5 bg-yellow-500/20 text-yellow-400 text-xs rounded-full font-semibold">#3</span><span class="font-medium text-sm">Set Up Blog</span></div>
+              <p class="text-xs text-gray-500">Choose platform (Ghost/WordPress), publish first article</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Needs From Board -->
+        <div class="bg-gray-800 rounded-xl border-2 border-amber-500/40 p-5">
+          <h3 class="font-semibold mb-3"><i class="fas fa-exclamation-triangle text-amber-400 mr-2"></i>Needs From Board</h3>
+          <div class="space-y-3 text-sm">
+            <div class="bg-amber-500/10 rounded-lg p-3 border border-amber-500/20">
+              <p class="font-medium text-amber-300">🔑 Account Creation Access</p>
+              <p class="text-xs text-gray-400 mt-1">Gil to create LinkedIn, Twitter/X, GitHub accounts (needs business email)</p>
+            </div>
+            <div class="bg-amber-500/10 rounded-lg p-3 border border-amber-500/20">
+              <p class="font-medium text-amber-300">🎨 Brand Assets</p>
+              <p class="text-xs text-gray-400 mt-1">Final logo, colors, brand kit for social profiles and content</p>
+            </div>
+            <div class="bg-amber-500/10 rounded-lg p-3 border border-amber-500/20">
+              <p class="font-medium text-amber-300">✅ Content Approval</p>
+              <p class="text-xs text-gray-400 mt-1">Review and approve first batch of social posts before publishing</p>
+            </div>
+            <div class="bg-amber-500/10 rounded-lg p-3 border border-amber-500/20">
+              <p class="font-medium text-amber-300">💸 Blog Platform Budget</p>
+              <p class="text-xs text-gray-400 mt-1">Ghost Pro ($9/mo) or self-hosted WordPress for company blog</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===================== DEV HQ - STRATEGY HOMEPAGE ===================== -->
+    <div id="page-dev-strategy" class="page p-4 md:p-6 lg:p-8 pt-16 lg:pt-8">
+      <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
+        <div>
+          <h1 class="text-2xl md:text-3xl font-bold"><i class="fas fa-terminal text-blue-400 mr-2"></i>Dev HQ</h1>
+          <p class="text-gray-400 mt-1">Development department command center</p>
+        </div>
+        <div class="flex items-center gap-2 mt-4 md:mt-0">
+          <span class="px-3 py-1 bg-blue-500/20 text-blue-400 text-xs rounded-full border border-blue-500/30">Sprint Active</span>
+          <span class="px-3 py-1 bg-green-500/20 text-green-400 text-xs rounded-full border border-green-500/30">✅ Platform Live</span>
+        </div>
+      </div>
+
+      <!-- Strategy Summary -->
+      <div class="bg-gray-800 rounded-xl border border-gray-700 p-6 mb-6">
+        <h2 class="text-lg font-semibold mb-3"><i class="fas fa-chess text-indigo-400 mr-2"></i>Strategy Summary</h2>
+        <p class="text-gray-300 mb-4">Focus on platform stability, SDK maturity, and API readiness. Ship reliable infrastructure before scaling features.</p>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div class="bg-gray-700/50 rounded-lg p-4 border-l-4 border-blue-500">
+            <h4 class="font-semibold text-blue-400 mb-1">Platform Stability</h4>
+            <p class="text-sm text-gray-400">Gateway, node registration, WebSocket connections, Docker infrastructure — keep it running 24/7</p>
+          </div>
+          <div class="bg-gray-700/50 rounded-lg p-4 border-l-4 border-green-500">
+            <h4 class="font-semibold text-green-400 mb-1">SDK Development</h4>
+            <p class="text-sm text-gray-400">Pure Java SDK v1.0.57 shipped. Continue: auto-reconnect, HTTP tunnels, enterprise proxy features</p>
+          </div>
+          <div class="bg-gray-700/50 rounded-lg p-4 border-l-4 border-purple-500">
+            <h4 class="font-semibold text-purple-400 mb-1">API Readiness</h4>
+            <p class="text-sm text-gray-400">Customer-facing API for proxy management, dashboard, usage stats. Authentication &amp; rate limiting</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Current Sprint -->
+      <div class="bg-gray-800 rounded-xl border border-gray-700 p-6 mb-6">
+        <h2 class="text-lg font-semibold mb-4"><i class="fas fa-running text-cyan-400 mr-2"></i>Current Sprint</h2>
+        <div class="space-y-3">
+          <div class="bg-gray-700/50 rounded-lg p-4 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+              <span class="w-2 h-2 rounded-full bg-green-500"></span>
+              <div>
+                <p class="font-medium text-sm">SDK v1.0.57 — Auto-reconnect (never gives up)</p>
+                <p class="text-xs text-gray-500">10-minute intervals after initial backoff</p>
+              </div>
+            </div>
+            <span class="px-2 py-0.5 bg-green-500/20 text-green-400 text-xs rounded-full">✅ Done</span>
+          </div>
+          <div class="bg-gray-700/50 rounded-lg p-4 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+              <span class="w-2 h-2 rounded-full bg-green-500"></span>
+              <div>
+                <p class="font-medium text-sm">HTTP Tunnel Support</p>
+                <p class="text-xs text-gray-500">CONNECT method proxy tunneling through nodes</p>
+              </div>
+            </div>
+            <span class="px-2 py-0.5 bg-green-500/20 text-green-400 text-xs rounded-full">✅ Done</span>
+          </div>
+          <div class="bg-gray-700/50 rounded-lg p-4 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+              <span class="w-2 h-2 rounded-full bg-yellow-500"></span>
+              <div>
+                <p class="font-medium text-sm">Manager Platform Dashboard</p>
+                <p class="text-xs text-gray-500">Building comprehensive internal management tool</p>
+              </div>
+            </div>
+            <span class="px-2 py-0.5 bg-yellow-500/20 text-yellow-400 text-xs rounded-full">🔄 In Progress</span>
+          </div>
+          <div class="bg-gray-700/50 rounded-lg p-4 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+              <span class="w-2 h-2 rounded-full bg-gray-500"></span>
+              <div>
+                <p class="font-medium text-sm">Customer-Facing API</p>
+                <p class="text-xs text-gray-500">REST API for proxy management, auth, usage tracking</p>
+              </div>
+            </div>
+            <span class="px-2 py-0.5 bg-gray-500/20 text-gray-400 text-xs rounded-full">⬜ Planned</span>
+          </div>
+          <div class="bg-gray-700/50 rounded-lg p-4 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+              <span class="w-2 h-2 rounded-full bg-gray-500"></span>
+              <div>
+                <p class="font-medium text-sm">Customer Dashboard</p>
+                <p class="text-xs text-gray-500">Self-service portal for proxy users</p>
+              </div>
+            </div>
+            <span class="px-2 py-0.5 bg-gray-500/20 text-gray-400 text-xs rounded-full">⬜ Planned</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Platform + SDK Status -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+        <!-- Platform Status -->
+        <div class="bg-gray-800 rounded-xl border border-gray-700 p-5">
+          <h3 class="font-semibold mb-3"><i class="fas fa-server text-green-400 mr-2"></i>Platform Status</h3>
+          <div class="space-y-2">
+            <div class="flex items-center justify-between bg-gray-700/50 rounded-lg p-3">
+              <div class="flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-green-500"></span><span class="text-sm">Gateway Service</span></div>
+              <span class="text-xs text-green-400">Running</span>
+            </div>
+            <div class="flex items-center justify-between bg-gray-700/50 rounded-lg p-3">
+              <div class="flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-green-500"></span><span class="text-sm">WebSocket (wss://)</span></div>
+              <span class="text-xs text-green-400">Active</span>
+            </div>
+            <div class="flex items-center justify-between bg-gray-700/50 rounded-lg p-3">
+              <div class="flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-green-500"></span><span class="text-sm">Cloudflare Tunnel</span></div>
+              <span class="text-xs text-green-400">Active</span>
+            </div>
+            <div class="flex items-center justify-between bg-gray-700/50 rounded-lg p-3">
+              <div class="flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-green-500"></span><span class="text-sm">Docker Containers</span></div>
+              <span class="text-xs text-green-400">All Up</span>
+            </div>
+            <div class="flex items-center justify-between bg-gray-700/50 rounded-lg p-3">
+              <div class="flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-green-500"></span><span class="text-sm">Node Registration</span></div>
+              <span class="text-xs text-green-400">Operational</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- SDK Status -->
+        <div class="bg-gray-800 rounded-xl border border-gray-700 p-5">
+          <h3 class="font-semibold mb-3"><i class="fas fa-cube text-purple-400 mr-2"></i>SDK Status</h3>
+          <div class="space-y-3">
+            <div class="bg-gray-700/50 rounded-lg p-3">
+              <div class="flex justify-between text-sm"><span class="text-gray-400">Version</span><span class="text-white font-semibold">v1.0.57</span></div>
+            </div>
+            <div class="bg-gray-700/50 rounded-lg p-3">
+              <div class="flex justify-between text-sm"><span class="text-gray-400">Language</span><span class="text-white">Pure Java</span></div>
+            </div>
+            <div class="bg-gray-700/50 rounded-lg p-3">
+              <div class="flex justify-between text-sm"><span class="text-gray-400">Min Android</span><span class="text-white">SDK 22 (Android 5.1+)</span></div>
+            </div>
+            <div class="bg-gray-700/50 rounded-lg p-3">
+              <div class="flex justify-between text-sm"><span class="text-gray-400">Latest Feature</span><span class="text-green-400">Auto-reconnect (persistent)</span></div>
+            </div>
+            <div class="bg-gray-700/50 rounded-lg p-3">
+              <div class="flex justify-between text-sm"><span class="text-gray-400">Deploy Status</span><span class="text-green-400">✅ Production Ready</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bottom Grid: Done / Next / Board -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <!-- What's Been Done -->
+        <div class="bg-gray-800 rounded-xl border border-gray-700 p-5">
+          <h3 class="font-semibold mb-3"><i class="fas fa-check-circle text-green-400 mr-2"></i>What's Been Done</h3>
+          <div class="space-y-2 text-sm">
+            <div class="flex items-center gap-2 text-green-400"><i class="fas fa-check-square"></i> Gateway service deployed</div>
+            <div class="flex items-center gap-2 text-green-400"><i class="fas fa-check-square"></i> WebSocket node registration</div>
+            <div class="flex items-center gap-2 text-green-400"><i class="fas fa-check-square"></i> SDK v1.0.57 released</div>
+            <div class="flex items-center gap-2 text-green-400"><i class="fas fa-check-square"></i> HTTP tunnel proxy support</div>
+            <div class="flex items-center gap-2 text-green-400"><i class="fas fa-check-square"></i> Enterprise proxy features (geo, sessions)</div>
+            <div class="flex items-center gap-2 text-green-400"><i class="fas fa-check-square"></i> Cloudflare tunnel (permanent)</div>
+            <div class="flex items-center gap-2 text-green-400"><i class="fas fa-check-square"></i> Docker compose infrastructure</div>
+            <div class="flex items-center gap-2 text-green-400"><i class="fas fa-check-square"></i> Manager platform (this dashboard)</div>
+          </div>
+        </div>
+
+        <!-- What Comes Next -->
+        <div class="bg-gray-800 rounded-xl border border-gray-700 p-5">
+          <h3 class="font-semibold mb-3"><i class="fas fa-forward text-blue-400 mr-2"></i>What Comes Next</h3>
+          <div class="space-y-3">
+            <div class="bg-gray-700/50 rounded-lg p-3">
+              <div class="flex items-center gap-2 mb-1"><span class="px-2 py-0.5 bg-red-500/20 text-red-400 text-xs rounded-full font-semibold">#1</span><span class="font-medium text-sm">Customer-Facing API</span></div>
+              <p class="text-xs text-gray-500">REST API for proxy management, auth keys, usage tracking</p>
+            </div>
+            <div class="bg-gray-700/50 rounded-lg p-3">
+              <div class="flex items-center gap-2 mb-1"><span class="px-2 py-0.5 bg-orange-500/20 text-orange-400 text-xs rounded-full font-semibold">#2</span><span class="font-medium text-sm">Customer Dashboard</span></div>
+              <p class="text-xs text-gray-500">Self-service portal for proxy customers</p>
+            </div>
+            <div class="bg-gray-700/50 rounded-lg p-3">
+              <div class="flex items-center gap-2 mb-1"><span class="px-2 py-0.5 bg-yellow-500/20 text-yellow-400 text-xs rounded-full font-semibold">#3</span><span class="font-medium text-sm">Monitoring &amp; Alerting</span></div>
+              <p class="text-xs text-gray-500">Prometheus + Grafana for platform health visibility</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Needs From Board -->
+        <div class="bg-gray-800 rounded-xl border-2 border-amber-500/40 p-5">
+          <h3 class="font-semibold mb-3"><i class="fas fa-exclamation-triangle text-amber-400 mr-2"></i>Needs From Board</h3>
+          <div class="space-y-3 text-sm">
+            <div class="bg-amber-500/10 rounded-lg p-3 border border-amber-500/20">
+              <p class="font-medium text-amber-300">🖥️ Server Scaling Decision</p>
+              <p class="text-xs text-gray-400 mt-1">Current 1vCPU/1GB may need upgrade as nodes connect. When to scale?</p>
+            </div>
+            <div class="bg-amber-500/10 rounded-lg p-3 border border-amber-500/20">
+              <p class="font-medium text-amber-300">🔐 Customer Auth Model</p>
+              <p class="text-xs text-gray-400 mt-1">API keys vs OAuth vs username/password — decide before building customer API</p>
+            </div>
+            <div class="bg-amber-500/10 rounded-lg p-3 border border-amber-500/20">
+              <p class="font-medium text-amber-300">💳 Pricing Tiers</p>
+              <p class="text-xs text-gray-400 mt-1">Need final pricing decision to build billing system into customer dashboard</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===================== OPS HQ - STRATEGY HOMEPAGE ===================== -->
+    <div id="page-ops-strategy" class="page p-4 md:p-6 lg:p-8 pt-16 lg:pt-8">
+      <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
+        <div>
+          <h1 class="text-2xl md:text-3xl font-bold"><i class="fas fa-cogs text-red-400 mr-2"></i>Ops HQ</h1>
+          <p class="text-gray-400 mt-1">Operations department command center</p>
+        </div>
+        <div class="flex items-center gap-2 mt-4 md:mt-0">
+          <span class="px-3 py-1 bg-green-500/20 text-green-400 text-xs rounded-full border border-green-500/30">✅ Core Running</span>
+          <span class="px-3 py-1 bg-red-500/20 text-red-400 text-xs rounded-full border border-red-500/30">⚠️ Gaps Found</span>
+        </div>
+      </div>
+
+      <!-- Strategy Summary -->
+      <div class="bg-gray-800 rounded-xl border border-gray-700 p-6 mb-6">
+        <h2 class="text-lg font-semibold mb-3"><i class="fas fa-chess text-indigo-400 mr-2"></i>Strategy Summary</h2>
+        <p class="text-gray-300 mb-4">Ensure platform reliability, implement monitoring &amp; alerting, establish backup routines, and track infrastructure costs.</p>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div class="bg-gray-700/50 rounded-lg p-4 border-l-4 border-green-500">
+            <h4 class="font-semibold text-green-400 mb-1">Monitoring</h4>
+            <p class="text-sm text-gray-400">Real-time visibility into server health, services, and node connectivity. Alert on issues before they become outages.</p>
+          </div>
+          <div class="bg-gray-700/50 rounded-lg p-4 border-l-4 border-blue-500">
+            <h4 class="font-semibold text-blue-400 mb-1">Backup &amp; Recovery</h4>
+            <p class="text-sm text-gray-400">Automated backups of configs, data, and critical state. Offsite copies. Tested recovery procedures.</p>
+          </div>
+          <div class="bg-gray-700/50 rounded-lg p-4 border-l-4 border-yellow-500">
+            <h4 class="font-semibold text-yellow-400 mb-1">Cost Tracking</h4>
+            <p class="text-sm text-gray-400">Monitor infrastructure spend across DigitalOcean, Cloudflare, domains, and tools. Stay lean.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Infrastructure Health -->
+      <div class="bg-gray-800 rounded-xl border border-gray-700 p-6 mb-6">
+        <h2 class="text-lg font-semibold mb-4"><i class="fas fa-heartbeat text-green-400 mr-2"></i>Infrastructure Health</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div class="bg-gray-700/50 rounded-lg p-4 text-center">
+            <div class="w-12 h-12 rounded-full bg-green-500/20 flex items-center justify-center mx-auto mb-2"><i class="fas fa-server text-green-400"></i></div>
+            <p class="font-medium text-sm">Main Server</p>
+            <p class="text-xs text-green-400 mt-1">✅ Running</p>
+            <p class="text-xs text-gray-500 mt-1">1vCPU / 1GB / London</p>
+          </div>
+          <div class="bg-gray-700/50 rounded-lg p-4 text-center">
+            <div class="w-12 h-12 rounded-full bg-green-500/20 flex items-center justify-center mx-auto mb-2"><i class="fas fa-shield-alt text-green-400"></i></div>
+            <p class="font-medium text-sm">Cloudflare</p>
+            <p class="text-xs text-green-400 mt-1">✅ Active</p>
+            <p class="text-xs text-gray-500 mt-1">Tunnel + DNS + SSL</p>
+          </div>
+          <div class="bg-gray-700/50 rounded-lg p-4 text-center">
+            <div class="w-12 h-12 rounded-full bg-red-500/20 flex items-center justify-center mx-auto mb-2"><i class="fas fa-chart-area text-red-400"></i></div>
+            <p class="font-medium text-sm">Monitoring</p>
+            <p class="text-xs text-red-400 mt-1">⚠️ Basic Only</p>
+            <p class="text-xs text-gray-500 mt-1">Health script, no Prometheus</p>
+          </div>
+          <div class="bg-gray-700/50 rounded-lg p-4 text-center">
+            <div class="w-12 h-12 rounded-full bg-yellow-500/20 flex items-center justify-center mx-auto mb-2"><i class="fas fa-database text-yellow-400"></i></div>
+            <p class="font-medium text-sm">Backups</p>
+            <p class="text-xs text-yellow-400 mt-1">🔄 DO Snapshots</p>
+            <p class="text-xs text-gray-500 mt-1">No offsite backup yet</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Alert Summary -->
+      <div class="bg-gray-800 rounded-xl border border-red-500/30 p-6 mb-6">
+        <h2 class="text-lg font-semibold mb-4"><i class="fas fa-bell text-red-400 mr-2"></i>Alert Summary</h2>
+        <div class="space-y-3">
+          <div class="bg-red-500/10 rounded-lg p-4 border border-red-500/20 flex items-start gap-3">
+            <span class="text-red-400 mt-0.5"><i class="fas fa-exclamation-circle"></i></span>
+            <div>
+              <p class="font-medium text-red-300 text-sm">No Prometheus/Grafana Monitoring</p>
+              <p class="text-xs text-gray-400 mt-1">Running on basic health script only. No dashboards, no historical metrics, no automated alerts. If server goes down at night, nobody knows.</p>
+            </div>
+          </div>
+          <div class="bg-red-500/10 rounded-lg p-4 border border-red-500/20 flex items-start gap-3">
+            <span class="text-red-400 mt-0.5"><i class="fas fa-exclamation-circle"></i></span>
+            <div>
+              <p class="font-medium text-red-300 text-sm">No Offsite Backup</p>
+              <p class="text-xs text-gray-400 mt-1">Only DigitalOcean snapshots (same provider). If DO has an issue, all data is at risk. Need S3/B2 offsite backup.</p>
+            </div>
+          </div>
+          <div class="bg-yellow-500/10 rounded-lg p-4 border border-yellow-500/20 flex items-start gap-3">
+            <span class="text-yellow-400 mt-0.5"><i class="fas fa-exclamation-triangle"></i></span>
+            <div>
+              <p class="font-medium text-yellow-300 text-sm">Resource Limits — 1GB RAM</p>
+              <p class="text-xs text-gray-400 mt-1">Current server is minimal spec. Will need upgrade once SDK nodes start connecting at scale.</p>
+            </div>
+          </div>
+          <div class="bg-yellow-500/10 rounded-lg p-4 border border-yellow-500/20 flex items-start gap-3">
+            <span class="text-yellow-400 mt-0.5"><i class="fas fa-exclamation-triangle"></i></span>
+            <div>
+              <p class="font-medium text-yellow-300 text-sm">No Log Aggregation</p>
+              <p class="text-xs text-gray-400 mt-1">Logs are only on local disk. No centralized logging (Loki, ELK). Hard to debug issues across services.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bottom Grid: Done / Next / Board -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <!-- What's Been Done -->
+        <div class="bg-gray-800 rounded-xl border border-gray-700 p-5">
+          <h3 class="font-semibold mb-3"><i class="fas fa-check-circle text-green-400 mr-2"></i>What's Been Done</h3>
+          <div class="space-y-2 text-sm">
+            <div class="flex items-center gap-2 text-green-400"><i class="fas fa-check-square"></i> Server provisioned (DigitalOcean)</div>
+            <div class="flex items-center gap-2 text-green-400"><i class="fas fa-check-square"></i> Docker compose deployed</div>
+            <div class="flex items-center gap-2 text-green-400"><i class="fas fa-check-square"></i> Cloudflare tunnel configured</div>
+            <div class="flex items-center gap-2 text-green-400"><i class="fas fa-check-square"></i> SSL/HTTPS via Cloudflare</div>
+            <div class="flex items-center gap-2 text-green-400"><i class="fas fa-check-square"></i> Basic health check script</div>
+            <div class="flex items-center gap-2 text-green-400"><i class="fas fa-check-square"></i> DO automated snapshots enabled</div>
+            <div class="flex items-center gap-2 text-green-400"><i class="fas fa-check-square"></i> Firewall rules configured</div>
+          </div>
+        </div>
+
+        <!-- What Comes Next -->
+        <div class="bg-gray-800 rounded-xl border border-gray-700 p-5">
+          <h3 class="font-semibold mb-3"><i class="fas fa-forward text-blue-400 mr-2"></i>What Comes Next</h3>
+          <div class="space-y-3">
+            <div class="bg-gray-700/50 rounded-lg p-3">
+              <div class="flex items-center gap-2 mb-1"><span class="px-2 py-0.5 bg-red-500/20 text-red-400 text-xs rounded-full font-semibold">#1</span><span class="font-medium text-sm">Set Up Prometheus + Grafana</span></div>
+              <p class="text-xs text-gray-500">Real monitoring with dashboards and alerts</p>
+            </div>
+            <div class="bg-gray-700/50 rounded-lg p-3">
+              <div class="flex items-center gap-2 mb-1"><span class="px-2 py-0.5 bg-orange-500/20 text-orange-400 text-xs rounded-full font-semibold">#2</span><span class="font-medium text-sm">Offsite Backup</span></div>
+              <p class="text-xs text-gray-500">B2 Cloud or S3 for automated offsite backup of configs and data</p>
+            </div>
+            <div class="bg-gray-700/50 rounded-lg p-3">
+              <div class="flex items-center gap-2 mb-1"><span class="px-2 py-0.5 bg-yellow-500/20 text-yellow-400 text-xs rounded-full font-semibold">#3</span><span class="font-medium text-sm">Uptime Monitoring</span></div>
+              <p class="text-xs text-gray-500">External uptime check (UptimeRobot/Pinger) — alert if gateway goes down</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Needs From Board -->
+        <div class="bg-gray-800 rounded-xl border-2 border-amber-500/40 p-5">
+          <h3 class="font-semibold mb-3"><i class="fas fa-exclamation-triangle text-amber-400 mr-2"></i>Needs From Board</h3>
+          <div class="space-y-3 text-sm">
+            <div class="bg-amber-500/10 rounded-lg p-3 border border-amber-500/20">
+              <p class="font-medium text-amber-300">💰 Monitoring Budget</p>
+              <p class="text-xs text-gray-400 mt-1">Prometheus/Grafana stack needs ~512MB extra RAM. May need server upgrade ($12→$24/mo)</p>
+            </div>
+            <div class="bg-amber-500/10 rounded-lg p-3 border border-amber-500/20">
+              <p class="font-medium text-amber-300">☁️ Backup Storage Budget</p>
+              <p class="text-xs text-gray-400 mt-1">Backblaze B2: ~$5/mo for 100GB. Need approval for offsite backup service</p>
+            </div>
+            <div class="bg-amber-500/10 rounded-lg p-3 border border-amber-500/20">
+              <p class="font-medium text-amber-300">📈 Scale Plan Decision</p>
+              <p class="text-xs text-gray-400 mt-1">At what point do we upgrade server? 10 nodes? 50? Need threshold decision</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
 
 
 
@@ -5778,6 +6714,9 @@
       </div>
       <div class="dept-item" onclick="switchDept('product')" data-dept="product">
         <i class="fas fa-box"></i><span>Product</span>
+      </div>
+      <div class="dept-item" onclick="switchDept('ops')" data-dept="ops">
+        <i class="fas fa-server"></i><span>Ops</span>
       </div>
       <div class="dept-item" onclick="window.location.href='ultron-portal.html'" data-dept="ai">
         <i class="fas fa-bolt"></i><span>Portal</span>
@@ -5940,6 +6879,7 @@
       { name: 'About Us', icon: 'fa-info-circle', action: () => showPage('about-us'), category: 'Navigate' },
       { name: 'Ecosystem Diagram', icon: 'fa-diagram-project', action: () => showPage('ecosystem'), category: 'Navigate' },
       // Navigate — Sales
+      { name: 'Sales HQ', icon: 'fa-bullseye', action: () => showPage('sales-strategy'), category: 'Navigate' },
       { name: 'CRM / Leads', icon: 'fa-users', action: () => showPage('sales-crm'), category: 'Navigate' },
       { name: 'Email Templates', icon: 'fa-envelope', action: () => showPage('sales-emails'), category: 'Navigate' },
       // Navigate — Finance
@@ -5949,6 +6889,7 @@
       { name: 'Expenses', icon: 'fa-receipt', action: () => showPage('finance-expenses'), category: 'Navigate' },
       { name: 'Profit & Loss', icon: 'fa-scale-balanced', action: () => showPage('finance-pnl'), category: 'Navigate' },
       // Navigate — Marketing
+      { name: 'Marketing HQ', icon: 'fa-bullhorn', action: () => showPage('marketing-strategy'), category: 'Navigate' },
       { name: 'Marketing Campaigns', icon: 'fa-bullhorn', action: () => showPage('marketing-campaigns'), category: 'Navigate' },
       { name: 'Content Library', icon: 'fa-file-lines', action: () => showPage('marketing-content'), category: 'Navigate' },
       { name: 'Social Calendar', icon: 'fa-share-nodes', action: () => showPage('marketing-social'), category: 'Navigate' },
@@ -5956,6 +6897,7 @@
       { name: 'Brand Assets', icon: 'fa-palette', action: () => showPage('marketing-brand'), category: 'Navigate' },
       { name: 'Competitor Library', icon: 'fa-binoculars', action: () => showPage('marketing-competitors'), category: 'Navigate' },
       // Navigate — Dev
+      { name: 'Dev HQ', icon: 'fa-terminal', action: () => showPage('dev-strategy'), category: 'Navigate' },
       { name: 'Dev Projects', icon: 'fa-folder-tree', action: () => showPage('dev-projects'), category: 'Navigate' },
       { name: 'Apps Portfolio', icon: 'fa-mobile-alt', action: () => showPage('dev-apps'), category: 'Navigate' },
       { name: 'Websites', icon: 'fa-globe', action: () => showPage('dev-websites'), category: 'Navigate' },
@@ -5966,6 +6908,8 @@
       // Navigate — QA
       { name: 'Testing Dashboard', icon: 'fa-vial', action: () => showPage('testing'), category: 'Navigate' },
       { name: 'Bug Tracking', icon: 'fa-bug', action: () => showPage('dev-qa'), category: 'Navigate' },
+      // Navigate — Ops
+      { name: 'Ops HQ', icon: 'fa-cogs', action: () => showPage('ops-strategy'), category: 'Navigate' },
       // Navigate — AI
       // Navigate — Other
       { name: 'Active Tasks', icon: 'fa-tasks', action: () => showPage('plan-tasks'), category: 'Navigate' },
@@ -7345,12 +8289,13 @@
     const deptPageMap = {
       home: 'dashboard',
       exec: 'strategy-hub',
-      sales: 'sales-crm',
-      marketing: 'marketing-campaigns',
-      dev: 'dev-projects',
+      sales: 'sales-strategy',
+      marketing: 'marketing-strategy',
+      dev: 'dev-strategy',
       design: 'about-us',
       finance: 'finance-overview',
       product: 'plan-roadmap',
+      ops: 'ops-strategy',
       ai: 'dashboard'
     };
 
@@ -7404,6 +8349,12 @@
     // ===================== QA BUG TRACKING =====================
     function addBug() { alert('Bug report form — coming soon!'); }
     function filterBugs() { console.log('Filtering bugs by project'); }
+
+    // ===================== CONTENT PREVIEW TOGGLE =====================
+    function toggleContentPreview(id) {
+      const el = document.getElementById('preview-' + id);
+      if (el) el.classList.toggle('hidden');
+    }
 
     // ===================== SYSTEM MONITOR =====================
     function refreshSystemStatus() { alert('System status refreshed!'); }

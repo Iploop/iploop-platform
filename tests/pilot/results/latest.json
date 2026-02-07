@@ -8,29 +8,29 @@
     "duration": 8096
   },
   "leak-test": {
-    "timestamp": "2026-02-07T16:19:06.353Z",
+    "timestamp": "2026-02-07T16:49:46.990Z",
     "summary": {},
     "passed": false,
-    "duration": 263
+    "duration": 248
   },
   "stress-test": {
-    "timestamp": "2026-02-07T16:19:05.026Z",
+    "timestamp": "2026-02-07T16:49:45.682Z",
     "summary": {
-      "totalRequests": 686,
-      "failed": 686,
-      "throughput": 22.13,
+      "totalRequests": 668,
+      "failed": 668,
+      "throughput": 21.55,
       "ipsObserved": 0
     },
     "passed": false,
-    "duration": 31065
+    "duration": 31069
   },
   "protocol-test": {
-    "timestamp": "2026-02-07T16:19:12.169Z",
+    "timestamp": "2026-02-07T16:49:52.785Z",
     "summary": {
       "failed": 23
     },
     "passed": false,
-    "duration": 4756
+    "duration": 4740
   },
   "rotation-test": {
     "timestamp": "2026-02-07T16:02:18.674Z",

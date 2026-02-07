@@ -205,9 +205,6 @@
       <a href="#" class="nav-item active" data-page="team-feed" onclick="showPage('team-feed')">
         <i class="fas fa-house w-5 text-purple-400"></i> 🏠 Team Feed
       </a>
-      <a href="#" class="nav-item" data-page="ai-team" onclick="showPage('ai-team')">
-        <i class="fas fa-users w-5"></i> 👥 Team Directory
-      </a>
       <a href="#" class="nav-item" data-page="team-chat" onclick="showPage('team-chat')">
         <i class="fas fa-comments w-5"></i> 💬 Team Chat
       </a>
@@ -616,7 +613,7 @@
       </div>
       <div class="portal-section-title">👥 The Team</div>
       <div class="portal-nav-grid">
-        <div class="portal-nav-card" onclick="showPage('ai-team')"><div class="text-3xl mb-3">👥</div><h3 class="text-lg font-semibold mb-2">Agent Directory</h3><p class="text-gray-400 text-sm">All 27 agents. All awake. Grouped by department.</p></div>
+        <div class="portal-nav-card" onclick="showPage('ai-profiles')"><div class="text-3xl mb-3">👥</div><h3 class="text-lg font-semibold mb-2">Agent Profiles</h3><p class="text-gray-400 text-sm">All 27 agents with full profiles. Click any agent.</p></div>
         <div class="portal-nav-card" onclick="showPage('ai-profiles')"><div class="text-3xl mb-3">📝</div><h3 class="text-lg font-semibold mb-2">Agent Profiles</h3><p class="text-gray-400 text-sm">Full profiles for all 27 agents. Quotes, traits, departments.</p></div>
       </div>
       <div class="portal-section-title">🎯 Human Interface</div>
@@ -3317,7 +3314,7 @@
     // ===================== COMMAND PALETTE =====================
     const commands = [
       { name: 'Team Feed', icon: 'fa-house', action: () => showPage('team-feed'), category: 'Social' },
-      { name: 'Team Directory', icon: 'fa-users', action: () => showPage('ai-team'), category: 'Social' },
+      { name: 'Agent Profiles', icon: 'fa-users', action: () => showPage('ai-profiles'), category: 'Social' },
       { name: 'Team Chat', icon: 'fa-comments', action: () => showPage('team-chat'), category: 'Social' },
       { name: 'Team Stats', icon: 'fa-chart-bar', action: () => showPage('team-stats'), category: 'Social' },
       { name: 'Classified', icon: 'fa-lock', action: () => showPage('classified'), category: 'Social' },

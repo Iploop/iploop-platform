@@ -1,13 +1,10 @@
 {
   "lastRuns": {
-    "quick": 1770481153187,
+    "quick": 1770482993802,
     "feature": 1770480153377,
     "security": 1770477074128,
     "performance": 1770477978613,
     "full": 1770464191115
   },
-  "currentRun": {
-    "suite": "quick",
-    "startedAt": 1770482954560
-  }
+  "currentRun": null
 }

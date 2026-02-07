@@ -32,3 +32,242 @@ Data Transferred: 0.00 MB
   ECONNREFUSED: 49
 
 🔗 Session Stickiness Tests: 0 passed, 3 failed
+============================================================
+📈 Progress Report
+============================================================
+Duration: 10.0s
+Total Requests: 171
+Successful: 0 (0.00%)
+Failed: 171
+Throughput: 17.09 req/s
+Data Transferred: 0.00 MB
+
+🌐 Unique IPs Observed: 0
+
+❌ Errors:
+  ECONNREFUSED: 171
+
+🔗 Session Stickiness Tests: 0 passed, 9 failed
+============================================================
+📈 Progress Report
+============================================================
+Duration: 15.0s
+Total Requests: 299
+Successful: 0 (0.00%)
+Failed: 299
+Throughput: 19.93 req/s
+Data Transferred: 0.00 MB
+
+🌐 Unique IPs Observed: 0
+
+❌ Errors:
+  ECONNREFUSED: 299
+
+🔗 Session Stickiness Tests: 0 passed, 10 failed
+============================================================
+📈 Progress Report
+============================================================
+Duration: 20.0s
+Total Requests: 420
+Successful: 0 (0.00%)
+Failed: 420
+Throughput: 20.99 req/s
+Data Transferred: 0.00 MB
+
+🌐 Unique IPs Observed: 0
+
+❌ Errors:
+  ECONNREFUSED: 420
+
+🔗 Session Stickiness Tests: 0 passed, 14 failed
+============================================================
+📈 Progress Report
+============================================================
+Duration: 25.0s
+Total Requests: 543
+Successful: 0 (0.00%)
+Failed: 543
+Throughput: 21.72 req/s
+Data Transferred: 0.00 MB
+
+🌐 Unique IPs Observed: 0
+
+❌ Errors:
+  ECONNREFUSED: 543
+
+🔗 Session Stickiness Tests: 0 passed, 26 failed
+============================================================
+📈 Progress Report
+============================================================
+Duration: 30.0s
+Total Requests: 668
+Successful: 0 (0.00%)
+Failed: 668
+Throughput: 22.26 req/s
+Data Transferred: 0.00 MB
+
+🌐 Unique IPs Observed: 0
+
+❌ Errors:
+  ECONNREFUSED: 668
+
+🔗 Session Stickiness Tests: 0 passed, 32 failed
+============================================================
+📊 FINAL REPORT
+============================================================
+Duration: 31.0s
+Total Requests: 668
+Successful: 0 (0.00%)
+Failed: 668
+Throughput: 21.55 req/s
+Data Transferred: 0.00 MB
+🌐 Unique IPs Observed: 0
+
+❌ Errors:
+  ECONNREFUSED: 668
+
+🔗 Session Stickiness Tests: 0 passed, 32 failed
+
+============================================================
+🐛 BUG DETECTION SUMMARY
+============================================================
+⚠️  Success rate below 95%: 0.00%
+⚠️  Low IP diversity: only 0 unique IPs
+⚠️  Session stickiness failing: 32/32
+🔴 Connection refused errors: proxy may be down
+📁 Full report saved to: /root/clawd-secure/iploop-platform/tests/pilot/report_1770482985668.json
+📊 Results saved to: stress-test-2026-02-07T16-49-45-682Z.json
+──────────────────────────────────────────────────
+❌ Test stress-test FAILED in 31069ms
+❌ stress-test.js - 31.1s
+
+──────────────────────────────────────────────────
+🧪 Running: leak-test.js
+──────────────────────────────────────────────────
+🧪 Running test: leak-test
+──────────────────────────────────────────────────
+🔍 IPLoop IP Leak Detection Test
+==================================================
+
+Detecting server real IP...
+Server real IP: 178.128.172.81
+
+--- Test 1: Proxy IP Check ---
+❌ Error: 
+
+--- Test 2: Header Leak Check ---
+❌ Error:
+--- Test 3: Consistency Check ---
+api.ipify.org?format=json: Error -
+ip-api.com: Error -
+httpbin.org: Error -
+--- Test 4: Fingerprint Check ---
+Error: 
+
+==================================================
+LEAK TEST SUMMARY
+==================================================
+Issues found:
+🔴 IP check failed:
+📊 Results saved to: leak-test-2026-02-07T16-49-46-990Z.json
+
+──────────────────────────────────────────────────
+❌ Test leak-test FAILED in 248ms
+❌ leak-test.js - 0.3s
+
+──────────────────────────────────────────────────
+🧪 Running: protocol-test.js
+──────────────────────────────────────────────────
+🧪 Running test: protocol-test
+──────────────────────────────────────────────────
+📡 Protocol Comprehensive Test
+============================================================
+Proxy: localhost:8080
+Tests: 23
+============================================================
+
+GET request                        ...
+❌
+POST with JSON body                ...
+❌
+POST with form data                ...
+❌
+PUT request                        ...
+❌
+DELETE request                     ...
+❌
+HEAD request                       ...
+❌
+OPTIONS request                    ...
+❌
+Custom headers preserved           ...
+❌
+User-Agent preserved               ...
+❌
+Gzip compressed response           ...
+❌
+Deflate compressed response        ...
+❌
+Chunked response                   ...
+❌
+Follow redirect                    ...
+❌
+Multiple redirects (5)             ...
+❌
+Absolute redirect                  ...
+❌
+Set-Cookie header received         ...
+❌
+Send cookies                       ...
+❌
+Binary response (image)            ...
+❌
+Large response (100KB)             ...
+❌
+UTF-8 encoding                     ...
+❌
+Status 201 Created                 ...
+❌
+Status 204 No Content              ...
+❌
+Status 418 Teapot                  ...
+❌
+============================================================
+PROTOCOL TEST RESULTS
+============================================================
+Passed: 0/23
+Failed: 23
+
+Failed tests:
+  ❌ GET request: 
+  ❌ POST with JSON body: 
+  ❌ POST with form data: 
+  ❌ PUT request: 
+  ❌ DELETE request: 
+  ❌ HEAD request: 
+  ❌ OPTIONS request: 
+  ❌ Custom headers preserved: 
+  ❌ User-Agent preserved: 
+  ❌ Gzip compressed response: 
+  ❌ Deflate compressed response: 
+  ❌ Chunked response: 
+  ❌ Follow redirect: 
+  ❌ Multiple redirects (5): 
+  ❌ Absolute redirect: 
+  ❌ Set-Cookie header received: 
+  ❌ Send cookies: 
+  ❌ Binary response (image): 
+  ❌ Large response (100KB): 
+  ❌ UTF-8 encoding: 
+  ❌ Status 201 Created: 
+  ❌ Status 204 No Content: 
+  ❌ Status 418 Teapot:
+📊 Results saved to: protocol-test-2026-02-07T16-49-52-785Z.json
+
+──────────────────────────────────────────────────
+❌ Test protocol-test FAILED in 4740ms
+❌ protocol-test.js - 4.8s
+
+══════════════════════════════════════════════════
+📊 SUITE COMPLETE: 0/3 passed, 3 failed
+══════════════════════════════════════════════════

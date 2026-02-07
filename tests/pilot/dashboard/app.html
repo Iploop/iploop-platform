@@ -423,6 +423,32 @@
         </div>
       </div>
       
+      <!-- Live Activity Feed + Team Status -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
+        <!-- Live Activity Feed -->
+        <div class="bg-gray-800 rounded-xl border border-gray-700 p-5">
+          <div class="flex items-center justify-between mb-3">
+            <h3 class="font-semibold"><i class="fas fa-bolt text-yellow-400 mr-2"></i>Live Activity Feed</h3>
+            <span class="text-xs text-gray-500 animate-pulse">● Live</span>
+          </div>
+          <div class="max-h-[200px] overflow-y-auto" id="liveFeedContainer">
+            <!-- Populated by JS -->
+          </div>
+        </div>
+        
+        <!-- Human Team Status -->
+        <div class="bg-gray-800 rounded-xl border border-gray-700 p-5">
+          <h3 class="font-semibold mb-3"><i class="fas fa-users text-cyan-400 mr-2"></i>Team Status</h3>
+          <div class="space-y-2">
+            <div class="flex items-center justify-between bg-gray-700/50 rounded-lg px-3 py-2"><div class="flex items-center"><span class="w-2 h-2 rounded-full bg-green-500 mr-2"></span><span class="text-sm font-medium">Igal</span></div><span class="text-xs text-gray-400">Strategy review</span></div>
+            <div class="flex items-center justify-between bg-gray-700/50 rounded-lg px-3 py-2"><div class="flex items-center"><span class="w-2 h-2 rounded-full bg-green-500 mr-2"></span><span class="text-sm font-medium">Gil</span></div><span class="text-xs text-gray-400">SDK debugging</span></div>
+            <div class="flex items-center justify-between bg-gray-700/50 rounded-lg px-3 py-2"><div class="flex items-center"><span class="w-2 h-2 rounded-full bg-yellow-500 mr-2"></span><span class="text-sm font-medium">Michal</span></div><span class="text-xs text-gray-400">Content review</span></div>
+            <div class="flex items-center justify-between bg-gray-700/50 rounded-lg px-3 py-2"><div class="flex items-center"><span class="w-2 h-2 rounded-full bg-gray-500 mr-2"></span><span class="text-sm font-medium">Barak</span></div><span class="text-xs text-gray-400">Offline</span></div>
+            <div class="flex items-center justify-between bg-gray-700/50 rounded-lg px-3 py-2"><div class="flex items-center"><span class="w-2 h-2 rounded-full bg-green-500 mr-2"></span><span class="text-sm font-medium">Charlie</span></div><span class="text-xs text-gray-400">QA testing</span></div>
+          </div>
+        </div>
+      </div>
+
       <!-- Active Sub-Agents with Tasks -->
       <div class="bg-gray-800 rounded-xl border border-gray-700 p-5 mb-6">
         <div class="flex items-center justify-between mb-4">
@@ -787,185 +813,13 @@
       <!-- Agent Grid -->
       <div id="agentGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
       </div>
-      
-      <!-- Interactive Org Chart -->
-      <div class="bg-gray-800 rounded-xl border border-gray-700 p-4 md:p-6 overflow-x-auto">
-        <div class="min-w-[800px]">
-          <!-- Orchestrator -->
-          <div class="flex justify-center mb-8">
-            <div onclick="openAgentConfig('ultron')" class="cursor-pointer bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl p-6 text-center hover:scale-105 transition shadow-lg shadow-indigo-500/20">
-              <div class="w-16 h-16 mx-auto mb-3 rounded-full bg-white/20 flex items-center justify-center">
-                <i class="fas fa-robot text-3xl"></i>
-              </div>
-              <h3 class="font-bold text-lg">ULTRON</h3>
-              <p class="text-sm text-white/70">Central Orchestrator</p>
-              <p class="text-xs mt-2 px-2 py-1 bg-white/20 rounded-full">Claude Opus 4.5</p>
-            </div>
-          </div>
-          
-          <!-- Connection Lines -->
-          <div class="flex justify-center mb-4">
-            <div class="w-px h-8 bg-gradient-to-b from-indigo-500 to-transparent"></div>
-          </div>
-          <div class="flex justify-center mb-4">
-            <div class="w-3/4 h-px bg-gray-600"></div>
-          </div>
-          
-          <!-- Department Heads -->
-          <div class="grid grid-cols-5 gap-4 mb-8">
-            <!-- Sales -->
-            <div class="text-center">
-              <div class="w-px h-8 bg-gray-600 mx-auto mb-4"></div>
-              <div onclick="openAgentConfig('sales-lead')" class="cursor-pointer bg-gray-700 rounded-xl p-4 border-2 border-emerald-500/50 hover:border-emerald-500 transition">
-                <div class="w-12 h-12 mx-auto mb-2 rounded-lg bg-emerald-500/20 flex items-center justify-center">
-                  <i class="fas fa-handshake text-emerald-400"></i>
-                </div>
-                <h4 class="font-semibold text-emerald-400">Sales</h4>
-                <p class="text-xs text-gray-400">3 agents</p>
-              </div>
-              <!-- Sub-agents -->
-              <div class="mt-4 space-y-2">
-                <div onclick="openAgentConfig('sales-researcher')" class="cursor-pointer bg-gray-800 rounded-lg p-2 border border-gray-600 hover:border-emerald-500/50 transition text-xs">
-                  <i class="fas fa-search text-emerald-400 mr-1"></i> Researcher
-                </div>
-                <div onclick="openAgentConfig('sales-email')" class="cursor-pointer bg-gray-800 rounded-lg p-2 border border-gray-600 hover:border-emerald-500/50 transition text-xs">
-                  <i class="fas fa-envelope text-emerald-400 mr-1"></i> Email Manager
-                </div>
-                <div onclick="openAgentConfig('sales-crm-agent')" class="cursor-pointer bg-gray-800 rounded-lg p-2 border border-gray-600 hover:border-emerald-500/50 transition text-xs">
-                  <i class="fas fa-database text-emerald-400 mr-1"></i> CRM Manager
-                </div>
-              </div>
-            </div>
-            
-            <!-- Marketing -->
-            <div class="text-center">
-              <div class="w-px h-8 bg-gray-600 mx-auto mb-4"></div>
-              <div onclick="openAgentConfig('marketing-lead')" class="cursor-pointer bg-gray-700 rounded-xl p-4 border-2 border-pink-500/50 hover:border-pink-500 transition">
-                <div class="w-12 h-12 mx-auto mb-2 rounded-lg bg-pink-500/20 flex items-center justify-center">
-                  <i class="fas fa-bullhorn text-pink-400"></i>
-                </div>
-                <h4 class="font-semibold text-pink-400">Marketing</h4>
-                <p class="text-xs text-gray-400">3 agents</p>
-              </div>
-              <div class="mt-4 space-y-2">
-                <div onclick="openAgentConfig('marketing-writer')" class="cursor-pointer bg-gray-800 rounded-lg p-2 border border-gray-600 hover:border-pink-500/50 transition text-xs">
-                  <i class="fas fa-pen text-pink-400 mr-1"></i> Content Writer
-                </div>
-                <div onclick="openAgentConfig('marketing-social')" class="cursor-pointer bg-gray-800 rounded-lg p-2 border border-gray-600 hover:border-pink-500/50 transition text-xs">
-                  <i class="fas fa-share-nodes text-pink-400 mr-1"></i> Social Manager
-                </div>
-                <div onclick="openAgentConfig('marketing-brand')" class="cursor-pointer bg-gray-800 rounded-lg p-2 border border-gray-600 hover:border-pink-500/50 transition text-xs">
-                  <i class="fas fa-palette text-pink-400 mr-1"></i> Brand Manager
-                </div>
-              </div>
-            </div>
-            
-            <!-- Development -->
-            <div class="text-center">
-              <div class="w-px h-8 bg-gray-600 mx-auto mb-4"></div>
-              <div onclick="openAgentConfig('dev-lead')" class="cursor-pointer bg-gray-700 rounded-xl p-4 border-2 border-blue-500/50 hover:border-blue-500 transition">
-                <div class="w-12 h-12 mx-auto mb-2 rounded-lg bg-blue-500/20 flex items-center justify-center">
-                  <i class="fas fa-code text-blue-400"></i>
-                </div>
-                <h4 class="font-semibold text-blue-400">Development</h4>
-                <p class="text-xs text-gray-400">4 agents</p>
-              </div>
-              <div class="mt-4 space-y-2">
-                <div onclick="openAgentConfig('dev-cli')" class="cursor-pointer bg-gray-800 rounded-lg p-2 border border-gray-600 hover:border-blue-500/50 transition text-xs">
-                  <i class="fas fa-terminal text-blue-400 mr-1"></i> CLI Dev
-                </div>
-                <div onclick="openAgentConfig('dev-app')" class="cursor-pointer bg-gray-800 rounded-lg p-2 border border-gray-600 hover:border-blue-500/50 transition text-xs">
-                  <i class="fas fa-mobile text-blue-400 mr-1"></i> App Dev
-                </div>
-                <div onclick="openAgentConfig('dev-web')" class="cursor-pointer bg-gray-800 rounded-lg p-2 border border-gray-600 hover:border-blue-500/50 transition text-xs">
-                  <i class="fas fa-globe text-blue-400 mr-1"></i> Web Dev
-                </div>
-                <div onclick="openAgentConfig('dev-qa')" class="cursor-pointer bg-gray-800 rounded-lg p-2 border border-gray-600 hover:border-blue-500/50 transition text-xs">
-                  <i class="fas fa-vial text-blue-400 mr-1"></i> QA Manager
-                </div>
-              </div>
-            </div>
-            
-            <!-- Partners -->
-            <div class="text-center">
-              <div class="w-px h-8 bg-gray-600 mx-auto mb-4"></div>
-              <div onclick="openAgentConfig('partners-lead')" class="cursor-pointer bg-gray-700 rounded-xl p-4 border-2 border-cyan-500/50 hover:border-cyan-500 transition">
-                <div class="w-12 h-12 mx-auto mb-2 rounded-lg bg-cyan-500/20 flex items-center justify-center">
-                  <i class="fas fa-users text-cyan-400"></i>
-                </div>
-                <h4 class="font-semibold text-cyan-400">Partners</h4>
-                <p class="text-xs text-gray-400">3 agents</p>
-              </div>
-              <div class="mt-4 space-y-2">
-                <div onclick="openAgentConfig('partners-account')" class="cursor-pointer bg-gray-800 rounded-lg p-2 border border-gray-600 hover:border-cyan-500/50 transition text-xs">
-                  <i class="fas fa-user-tie text-cyan-400 mr-1"></i> Account Mgr
-                </div>
-                <div onclick="openAgentConfig('partners-support')" class="cursor-pointer bg-gray-800 rounded-lg p-2 border border-gray-600 hover:border-cyan-500/50 transition text-xs">
-                  <i class="fas fa-headset text-cyan-400 mr-1"></i> Support
-                </div>
-                <div onclick="openAgentConfig('partners-monitor')" class="cursor-pointer bg-gray-800 rounded-lg p-2 border border-gray-600 hover:border-cyan-500/50 transition text-xs">
-                  <i class="fas fa-chart-line text-cyan-400 mr-1"></i> Monitoring
-                </div>
-              </div>
-            </div>
-            
-            <!-- Finance -->
-            <div class="text-center">
-              <div class="w-px h-8 bg-gray-600 mx-auto mb-4"></div>
-              <div onclick="openAgentConfig('finance-lead')" class="cursor-pointer bg-gray-700 rounded-xl p-4 border-2 border-yellow-500/50 hover:border-yellow-500 transition">
-                <div class="w-12 h-12 mx-auto mb-2 rounded-lg bg-yellow-500/20 flex items-center justify-center">
-                  <i class="fas fa-coins text-yellow-400"></i>
-                </div>
-                <h4 class="font-semibold text-yellow-400">Finance</h4>
-                <p class="text-xs text-gray-400">3 agents</p>
-              </div>
-              <div class="mt-4 space-y-2">
-                <div onclick="openAgentConfig('finance-scraper')" class="cursor-pointer bg-gray-800 rounded-lg p-2 border border-gray-600 hover:border-yellow-500/50 transition text-xs">
-                  <i class="fas fa-database text-yellow-400 mr-1"></i> Data Scraper
-                </div>
-                <div onclick="openAgentConfig('finance-accountant')" class="cursor-pointer bg-gray-800 rounded-lg p-2 border border-gray-600 hover:border-yellow-500/50 transition text-xs">
-                  <i class="fas fa-calculator text-yellow-400 mr-1"></i> Accountant
-                </div>
-                <div onclick="openAgentConfig('finance-payments')" class="cursor-pointer bg-gray-800 rounded-lg p-2 border border-gray-600 hover:border-yellow-500/50 transition text-xs">
-                  <i class="fas fa-credit-card text-yellow-400 mr-1"></i> Payments
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-      
-      <!-- Agent Summary -->
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
-        <div class="bg-gray-800 rounded-xl p-5 border border-gray-700">
-          <div class="flex items-center justify-between mb-3">
-            <h4 class="font-semibold">Total Agents</h4>
-            <span class="text-2xl font-bold text-primary">16</span>
-          </div>
-          <div class="text-sm text-gray-400">Across 5 departments</div>
-        </div>
-        <div class="bg-gray-800 rounded-xl p-5 border border-gray-700">
-          <div class="flex items-center justify-between mb-3">
-            <h4 class="font-semibold">Active Now</h4>
-            <span class="text-2xl font-bold text-green-400">12</span>
-          </div>
-          <div class="text-sm text-gray-400">Processing tasks</div>
-        </div>
-        <div class="bg-gray-800 rounded-xl p-5 border border-gray-700">
-          <div class="flex items-center justify-between mb-3">
-            <h4 class="font-semibold">Tasks Today</h4>
-            <span class="text-2xl font-bold text-blue-400">247</span>
-          </div>
-          <div class="text-sm text-gray-400">Completed autonomously</div>
-        </div>
-      </div>
     </div>
 
     <!-- ===================== SALES CRM PAGE ===================== -->
     <div id="page-sales-crm" class="page p-4 md:p-6 lg:p-8 pt-16 lg:pt-8">
       <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
         <div>
-          <h1 class="text-2xl md:text-3xl font-bold">Sales CRM</h1>
+          <h1 class="text-2xl md:text-3xl font-bold"><i class="fas fa-users text-emerald-400 mr-2"></i>Sales CRM</h1>
           <p class="text-gray-400 mt-1" id="crmLeadCount">Loading leads...</p>
         </div>
         <div class="flex items-center space-x-2 mt-4 md:mt-0">
@@ -978,6 +832,13 @@
         </div>
       </div>
       
+      <!-- CRM Type Tabs -->
+      <div class="flex items-center gap-1 mb-4 border-b border-gray-700 pb-0">
+        <button class="crm-tab active" onclick="switchCrmTab('sdk', this)"><i class="fas fa-microchip mr-1"></i>SDK Clients</button>
+        <button class="crm-tab" onclick="switchCrmTab('retail', this)"><i class="fas fa-store mr-1"></i>Retail Clients</button>
+        <button class="crm-tab" onclick="switchCrmTab('distribution', this)"><i class="fas fa-truck mr-1"></i>Distribution</button>
+      </div>
+
       <!-- Pipeline Stats -->
       <div class="grid grid-cols-3 md:grid-cols-7 gap-3 mb-6" id="crmStats">
         <div class="bg-gray-800 rounded-xl p-3 border border-gray-700 text-center cursor-pointer hover:border-gray-500" onclick="filterByStage('all')">
@@ -1682,7 +1543,7 @@
       </div>
       
       <!-- Agent Grid - Compact Cards -->
-      <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-7 gap-3 mb-6" id="agentGrid">
+      <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-7 gap-3 mb-6" id="chatAgentGrid">
         <!-- Ultron - Central -->
         <div class="agent-card bg-gray-800 rounded-xl border border-gray-700 p-3 cursor-pointer hover:border-purple-500 hover:bg-gray-700/50 transition text-center" onclick="openAgentChat('ultron')">
           <div class="text-4xl mb-2">🤖</div>
@@ -3188,8 +3049,139 @@
     </div>
 
     <div id="page-dev-qa" class="page p-4 md:p-6 lg:p-8 pt-16 lg:pt-8">
-      <h1 class="text-2xl font-bold mb-4">QA Board</h1>
-      <p class="text-gray-400">Bug tracking and quality assurance.</p>
+      <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
+        <div>
+          <h1 class="text-2xl md:text-3xl font-bold"><i class="fas fa-bug text-green-400 mr-2"></i>QA Bug Tracking</h1>
+          <p class="text-gray-400 mt-1">Track, manage, and resolve bugs across all projects</p>
+        </div>
+        <div class="flex items-center gap-2 mt-4 md:mt-0">
+          <select id="bugProjectFilter" onchange="filterBugs()" class="bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-sm">
+            <option value="all">All Projects</option>
+            <option value="iploop">IPLoop</option>
+            <option value="weathero">Weathero</option>
+            <option value="softzero">SoftZero</option>
+            <option value="pixara">Pixara</option>
+            <option value="sdk">SDK</option>
+          </select>
+          <button onclick="addBug()" class="px-4 py-2 bg-red-500 rounded-lg text-sm hover:bg-red-600 transition"><i class="fas fa-plus mr-2"></i>Report Bug</button>
+        </div>
+      </div>
+      
+      <!-- Bug Stats -->
+      <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
+        <div class="bg-gray-800 rounded-xl p-4 border border-red-500/30"><p class="text-gray-400 text-xs">Critical</p><p class="text-2xl font-bold text-red-400">3</p></div>
+        <div class="bg-gray-800 rounded-xl p-4 border border-orange-500/30"><p class="text-gray-400 text-xs">High</p><p class="text-2xl font-bold text-orange-400">7</p></div>
+        <div class="bg-gray-800 rounded-xl p-4 border border-yellow-500/30"><p class="text-gray-400 text-xs">Medium</p><p class="text-2xl font-bold text-yellow-400">12</p></div>
+        <div class="bg-gray-800 rounded-xl p-4 border border-blue-500/30"><p class="text-gray-400 text-xs">Low</p><p class="text-2xl font-bold text-blue-400">5</p></div>
+        <div class="bg-gray-800 rounded-xl p-4 border border-green-500/30"><p class="text-gray-400 text-xs">Resolved (30d)</p><p class="text-2xl font-bold text-green-400">34</p></div>
+      </div>
+      
+      <!-- Bug Board Columns -->
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <!-- Open -->
+        <div class="bg-gray-800 rounded-xl border border-gray-700">
+          <div class="px-4 py-3 border-b border-gray-700 flex items-center justify-between">
+            <h3 class="font-semibold text-red-400"><i class="fas fa-circle-exclamation mr-2"></i>Open</h3>
+            <span class="bg-red-500/20 text-red-400 text-xs px-2 py-1 rounded-full">8</span>
+          </div>
+          <div class="p-3 space-y-3 bug-col" id="bugColOpen">
+            <div class="bug-card bg-gray-700/50 rounded-lg p-3 border-l-4 border-red-500">
+              <p class="text-sm font-medium">SDK crash on Android 12</p>
+              <div class="flex items-center justify-between mt-2">
+                <span class="text-xs bg-red-500/20 text-red-400 px-2 py-0.5 rounded">Critical</span>
+                <div class="flex items-center"><img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/474.png" class="w-5 h-5 mr-1"><span class="text-xs text-gray-400">CHIP</span></div>
+              </div>
+              <p class="text-xs text-gray-500 mt-1">IPLoop SDK • 2h ago</p>
+            </div>
+            <div class="bug-card bg-gray-700/50 rounded-lg p-3 border-l-4 border-orange-500">
+              <p class="text-sm font-medium">Dashboard chart not loading</p>
+              <div class="flex items-center justify-between mt-2">
+                <span class="text-xs bg-orange-500/20 text-orange-400 px-2 py-0.5 rounded">High</span>
+                <div class="flex items-center"><img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/479.png" class="w-5 h-5 mr-1"><span class="text-xs text-gray-400">VOLT</span></div>
+              </div>
+              <p class="text-xs text-gray-500 mt-1">Platform • 5h ago</p>
+            </div>
+            <div class="bug-card bg-gray-700/50 rounded-lg p-3 border-l-4 border-yellow-500">
+              <p class="text-sm font-medium">Email template encoding issue</p>
+              <div class="flex items-center justify-between mt-2">
+                <span class="text-xs bg-yellow-500/20 text-yellow-400 px-2 py-0.5 rounded">Medium</span>
+                <div class="flex items-center"><img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/648.png" class="w-5 h-5 mr-1"><span class="text-xs text-gray-400">LYRIX</span></div>
+              </div>
+              <p class="text-xs text-gray-500 mt-1">Marketing • 1d ago</p>
+            </div>
+          </div>
+        </div>
+        
+        <!-- In Progress -->
+        <div class="bg-gray-800 rounded-xl border border-gray-700">
+          <div class="px-4 py-3 border-b border-gray-700 flex items-center justify-between">
+            <h3 class="font-semibold text-blue-400"><i class="fas fa-spinner mr-2"></i>In Progress</h3>
+            <span class="bg-blue-500/20 text-blue-400 text-xs px-2 py-1 rounded-full">5</span>
+          </div>
+          <div class="p-3 space-y-3 bug-col" id="bugColProgress">
+            <div class="bug-card bg-gray-700/50 rounded-lg p-3 border-l-4 border-blue-500">
+              <p class="text-sm font-medium">Memory leak in gateway</p>
+              <div class="flex items-center justify-between mt-2">
+                <span class="text-xs bg-red-500/20 text-red-400 px-2 py-0.5 rounded">Critical</span>
+                <div class="flex items-center"><img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/462.png" class="w-5 h-5 mr-1"><span class="text-xs text-gray-400">FORGE</span></div>
+              </div>
+              <p class="text-xs text-gray-500 mt-1">IPLoop • Started 3h ago</p>
+            </div>
+            <div class="bug-card bg-gray-700/50 rounded-lg p-3 border-l-4 border-blue-500">
+              <p class="text-sm font-medium">Weathero API timeout</p>
+              <div class="flex items-center justify-between mt-2">
+                <span class="text-xs bg-orange-500/20 text-orange-400 px-2 py-0.5 rounded">High</span>
+                <div class="flex items-center"><img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/132.png" class="w-5 h-5 mr-1"><span class="text-xs text-gray-400">GLITCH</span></div>
+              </div>
+              <p class="text-xs text-gray-500 mt-1">Weathero • Started 6h ago</p>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Testing -->
+        <div class="bg-gray-800 rounded-xl border border-gray-700">
+          <div class="px-4 py-3 border-b border-gray-700 flex items-center justify-between">
+            <h3 class="font-semibold text-purple-400"><i class="fas fa-vial mr-2"></i>Testing</h3>
+            <span class="bg-purple-500/20 text-purple-400 text-xs px-2 py-1 rounded-full">3</span>
+          </div>
+          <div class="p-3 space-y-3 bug-col" id="bugColTesting">
+            <div class="bug-card bg-gray-700/50 rounded-lg p-3 border-l-4 border-purple-500">
+              <p class="text-sm font-medium">Login redirect loop</p>
+              <div class="flex items-center justify-between mt-2">
+                <span class="text-xs bg-orange-500/20 text-orange-400 px-2 py-0.5 rounded">High</span>
+                <div class="flex items-center"><img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/132.png" class="w-5 h-5 mr-1"><span class="text-xs text-gray-400">GLITCH</span></div>
+              </div>
+              <p class="text-xs text-gray-500 mt-1">Platform • Testing since 2h ago</p>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Resolved -->
+        <div class="bg-gray-800 rounded-xl border border-gray-700">
+          <div class="px-4 py-3 border-b border-gray-700 flex items-center justify-between">
+            <h3 class="font-semibold text-green-400"><i class="fas fa-check-circle mr-2"></i>Resolved</h3>
+            <span class="bg-green-500/20 text-green-400 text-xs px-2 py-1 rounded-full">34</span>
+          </div>
+          <div class="p-3 space-y-3 bug-col" id="bugColResolved">
+            <div class="bug-card bg-gray-700/50 rounded-lg p-3 border-l-4 border-green-500 opacity-75">
+              <p class="text-sm font-medium">SDK connection timeout fix</p>
+              <div class="flex items-center justify-between mt-2">
+                <span class="text-xs bg-green-500/20 text-green-400 px-2 py-0.5 rounded">Fixed</span>
+                <div class="flex items-center"><img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/474.png" class="w-5 h-5 mr-1"><span class="text-xs text-gray-400">CHIP</span></div>
+              </div>
+              <p class="text-xs text-gray-500 mt-1">SDK • Resolved 1d ago</p>
+            </div>
+            <div class="bug-card bg-gray-700/50 rounded-lg p-3 border-l-4 border-green-500 opacity-75">
+              <p class="text-sm font-medium">Social post scheduler fix</p>
+              <div class="flex items-center justify-between mt-2">
+                <span class="text-xs bg-green-500/20 text-green-400 px-2 py-0.5 rounded">Fixed</span>
+                <div class="flex items-center"><img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/441.png" class="w-5 h-5 mr-1"><span class="text-xs text-gray-400">ECHO</span></div>
+              </div>
+              <p class="text-xs text-gray-500 mt-1">Marketing • Resolved 3d ago</p>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- ===================== CLIENT RESULTS PAGE ===================== -->
@@ -3778,8 +3770,85 @@
     </div>
     
     <div id="page-system-specs" class="page p-4 md:p-6 lg:p-8 pt-16 lg:pt-8">
-      <h1 class="text-2xl font-bold mb-4">Ultron System Specs</h1>
-      <iframe src="/ultron.html" class="w-full h-[800px] rounded-lg border border-gray-600"></iframe>
+      <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
+        <div>
+          <h1 class="text-2xl md:text-3xl font-bold"><i class="fas fa-microchip text-gray-400 mr-2"></i>System Monitor</h1>
+          <p class="text-gray-400 mt-1">Server health, containers, and infrastructure status</p>
+        </div>
+        <button onclick="refreshSystemStatus()" class="mt-4 md:mt-0 px-4 py-2 bg-gray-700 rounded-lg text-sm hover:bg-gray-600 transition"><i class="fas fa-sync-alt mr-2"></i>Refresh</button>
+      </div>
+      
+      <!-- Server Health -->
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+        <div class="bg-gray-800 rounded-xl p-5 border border-gray-700">
+          <div class="flex items-center justify-between mb-3">
+            <span class="text-gray-400 text-sm">CPU Usage</span>
+            <span class="text-xs px-2 py-1 bg-green-500/20 text-green-400 rounded">OK</span>
+          </div>
+          <p class="text-3xl font-bold text-green-400" id="sysCpu">23%</p>
+          <div class="w-full bg-gray-700 rounded-full h-2 mt-3"><div class="bg-green-500 h-2 rounded-full" style="width:23%" id="sysCpuBar"></div></div>
+        </div>
+        <div class="bg-gray-800 rounded-xl p-5 border border-gray-700">
+          <div class="flex items-center justify-between mb-3">
+            <span class="text-gray-400 text-sm">Memory</span>
+            <span class="text-xs px-2 py-1 bg-yellow-500/20 text-yellow-400 rounded">WARN</span>
+          </div>
+          <p class="text-3xl font-bold text-yellow-400" id="sysMem">72%</p>
+          <div class="w-full bg-gray-700 rounded-full h-2 mt-3"><div class="bg-yellow-500 h-2 rounded-full" style="width:72%" id="sysMemBar"></div></div>
+        </div>
+        <div class="bg-gray-800 rounded-xl p-5 border border-gray-700">
+          <div class="flex items-center justify-between mb-3">
+            <span class="text-gray-400 text-sm">Disk</span>
+            <span class="text-xs px-2 py-1 bg-green-500/20 text-green-400 rounded">OK</span>
+          </div>
+          <p class="text-3xl font-bold text-green-400" id="sysDisk">58%</p>
+          <div class="w-full bg-gray-700 rounded-full h-2 mt-3"><div class="bg-green-500 h-2 rounded-full" style="width:58%" id="sysDiskBar"></div></div>
+        </div>
+        <div class="bg-gray-800 rounded-xl p-5 border border-gray-700">
+          <div class="flex items-center justify-between mb-3">
+            <span class="text-gray-400 text-sm">Uptime</span>
+            <span class="text-xs px-2 py-1 bg-green-500/20 text-green-400 rounded">ONLINE</span>
+          </div>
+          <p class="text-3xl font-bold text-green-400" id="sysUptime">47d</p>
+          <p class="text-xs text-gray-500 mt-3">Since last reboot</p>
+        </div>
+      </div>
+      
+      <!-- Docker Containers -->
+      <div class="bg-gray-800 rounded-xl border border-gray-700 mb-6">
+        <div class="px-6 py-4 border-b border-gray-700"><h3 class="font-semibold"><i class="fab fa-docker text-blue-400 mr-2"></i>Docker Containers</h3></div>
+        <div class="divide-y divide-gray-700">
+          <div class="px-6 py-3 flex items-center justify-between"><div class="flex items-center"><span class="w-2 h-2 rounded-full bg-green-500 mr-3"></span><span class="font-medium">iploop-gateway</span></div><span class="text-xs bg-green-500/20 text-green-400 px-2 py-1 rounded">Running</span><span class="text-xs text-gray-500">Up 47 days</span></div>
+          <div class="px-6 py-3 flex items-center justify-between"><div class="flex items-center"><span class="w-2 h-2 rounded-full bg-green-500 mr-3"></span><span class="font-medium">iploop-dashboard</span></div><span class="text-xs bg-green-500/20 text-green-400 px-2 py-1 rounded">Running</span><span class="text-xs text-gray-500">Up 47 days</span></div>
+          <div class="px-6 py-3 flex items-center justify-between"><div class="flex items-center"><span class="w-2 h-2 rounded-full bg-green-500 mr-3"></span><span class="font-medium">iploop-api</span></div><span class="text-xs bg-green-500/20 text-green-400 px-2 py-1 rounded">Running</span><span class="text-xs text-gray-500">Up 47 days</span></div>
+          <div class="px-6 py-3 flex items-center justify-between"><div class="flex items-center"><span class="w-2 h-2 rounded-full bg-green-500 mr-3"></span><span class="font-medium">cloudflared</span></div><span class="text-xs bg-green-500/20 text-green-400 px-2 py-1 rounded">Running</span><span class="text-xs text-gray-500">Up 47 days</span></div>
+          <div class="px-6 py-3 flex items-center justify-between"><div class="flex items-center"><span class="w-2 h-2 rounded-full bg-green-500 mr-3"></span><span class="font-medium">silent-reader-bot</span></div><span class="text-xs bg-green-500/20 text-green-400 px-2 py-1 rounded">Running</span><span class="text-xs text-gray-500">Up 12 days</span></div>
+        </div>
+      </div>
+      
+      <!-- Security & Services -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="bg-gray-800 rounded-xl border border-gray-700 p-5">
+          <h3 class="font-semibold mb-4"><i class="fas fa-shield-halved text-blue-400 mr-2"></i>Security Status</h3>
+          <div class="space-y-3">
+            <div class="flex items-center justify-between"><span class="text-sm text-gray-400">Fail2Ban</span><span class="text-xs bg-green-500/20 text-green-400 px-2 py-1 rounded">Active</span></div>
+            <div class="flex items-center justify-between"><span class="text-sm text-gray-400">Firewall (UFW)</span><span class="text-xs bg-green-500/20 text-green-400 px-2 py-1 rounded">Active</span></div>
+            <div class="flex items-center justify-between"><span class="text-sm text-gray-400">SSL Certificates</span><span class="text-xs bg-green-500/20 text-green-400 px-2 py-1 rounded">Valid</span></div>
+            <div class="flex items-center justify-between"><span class="text-sm text-gray-400">Cloudflare Tunnel</span><span class="text-xs bg-green-500/20 text-green-400 px-2 py-1 rounded">Connected</span></div>
+            <div class="flex items-center justify-between"><span class="text-sm text-gray-400">Banned IPs (24h)</span><span class="text-xs text-gray-400">14</span></div>
+          </div>
+        </div>
+        <div class="bg-gray-800 rounded-xl border border-gray-700 p-5">
+          <h3 class="font-semibold mb-4"><i class="fas fa-satellite-dish text-purple-400 mr-2"></i>IPLoop Platform</h3>
+          <div class="space-y-3">
+            <div class="flex items-center justify-between"><span class="text-sm text-gray-400">Gateway WSS</span><span class="text-xs bg-green-500/20 text-green-400 px-2 py-1 rounded">Online</span></div>
+            <div class="flex items-center justify-between"><span class="text-sm text-gray-400">Connected Nodes</span><span class="text-xs text-gray-400" id="sysNodes">1,247</span></div>
+            <div class="flex items-center justify-between"><span class="text-sm text-gray-400">SDK Version</span><span class="text-xs text-gray-400">v1.0.57</span></div>
+            <div class="flex items-center justify-between"><span class="text-sm text-gray-400">Dashboard</span><span class="text-xs bg-green-500/20 text-green-400 px-2 py-1 rounded">Online</span></div>
+            <div class="flex items-center justify-between"><span class="text-sm text-gray-400">API</span><span class="text-xs bg-green-500/20 text-green-400 px-2 py-1 rounded">Online</span></div>
+          </div>
+        </div>
+      </div>
     </div>
     
     <div id="page-system-logs" class="page p-4 md:p-6 lg:p-8 pt-16 lg:pt-8">
@@ -4576,7 +4645,734 @@
       </div>
     </div>
 
+    <!-- ===================== STRATEGY HUB PAGE ===================== -->
+    <div id="page-strategy-hub" class="page p-4 md:p-6 lg:p-8 pt-16 lg:pt-8">
+      <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
+        <div>
+          <h1 class="text-2xl md:text-3xl font-bold"><i class="fas fa-chess text-amber-400 mr-2"></i>Strategy Hub</h1>
+          <p class="text-gray-400 mt-1">Strategic planning, approvals, and team alignment</p>
+        </div>
+      </div>
+      
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Strategy Chat -->
+        <div class="bg-gray-800 rounded-xl border border-gray-700 flex flex-col" style="height:600px">
+          <div class="px-5 py-4 border-b border-gray-700 flex items-center justify-between">
+            <h3 class="font-semibold"><i class="fas fa-comments text-amber-400 mr-2"></i>Strategy Discussion</h3>
+            <span class="text-xs text-gray-500">ULTRON + Humans</span>
+          </div>
+          <div class="flex-1 overflow-y-auto p-4 space-y-4" id="strategyChatArea">
+            <div class="flex items-start"><div class="w-8 h-8 rounded-full bg-purple-500/20 flex items-center justify-center mr-3 flex-shrink-0"><img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/150.png" class="w-6 h-6"></div><div class="bg-gray-700/50 rounded-lg p-3 max-w-[80%]"><p class="text-xs text-purple-400 font-medium mb-1">ULTRON (Mewtwo)</p><p class="text-sm">Morning strategy brief: SDK revenue is up 12% this week. SCOUT identified 3 new SDK partnership opportunities. STRIKER has 5 pending outreach messages awaiting approval. Priority: Close the Geonode integration deal this week.</p><p class="text-xs text-gray-500 mt-2">Today, 09:00</p></div></div>
+            <div class="flex items-start justify-end"><div class="bg-indigo-500/20 rounded-lg p-3 max-w-[80%]"><p class="text-xs text-indigo-400 font-medium mb-1">Igal</p><p class="text-sm">Approve Striker's outreach messages. Let's focus on Geonode and also explore the EarnFM opportunity. Set up a call for Thursday.</p><p class="text-xs text-gray-500 mt-2">Today, 09:15</p></div><div class="w-8 h-8 rounded-full bg-indigo-500/20 flex items-center justify-center ml-3 flex-shrink-0"><span class="text-sm font-bold text-indigo-400">I</span></div></div>
+            <div class="flex items-start"><div class="w-8 h-8 rounded-full bg-emerald-500/20 flex items-center justify-center mr-3 flex-shrink-0"><img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/701.png" class="w-6 h-6"></div><div class="bg-gray-700/50 rounded-lg p-3 max-w-[80%]"><p class="text-xs text-emerald-400 font-medium mb-1">STRIKER (Hawlucha)</p><p class="text-sm">Roger that! Outreach messages sent. EarnFM contact identified — their CTO is active on LinkedIn. I'll draft a partnership proposal for review.</p><p class="text-xs text-gray-500 mt-2">Today, 09:20</p></div></div>
+          </div>
+          <div class="p-4 border-t border-gray-700">
+            <div class="flex items-center gap-2">
+              <input type="text" placeholder="Type strategic directive..." class="flex-1 bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-sm">
+              <button class="px-4 py-2 bg-amber-500 rounded-lg text-sm hover:bg-amber-600 transition"><i class="fas fa-paper-plane"></i></button>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Right Panel: Approvals + Objectives -->
+        <div class="space-y-6">
+          <!-- Pending Approvals -->
+          <div class="bg-gray-800 rounded-xl border border-orange-500/30 p-5">
+            <h3 class="font-semibold mb-4"><i class="fas fa-clock text-orange-400 mr-2"></i>Pending Approvals <span class="text-xs bg-orange-500/20 text-orange-400 px-2 py-1 rounded-full ml-2">4</span></h3>
+            <div class="space-y-3">
+              <div class="bg-gray-700/50 rounded-lg p-3 flex items-center justify-between">
+                <div><p class="text-sm font-medium">Email campaign to 200 SDK leads</p><p class="text-xs text-gray-400">STRIKER • Needs Igal approval</p></div>
+                <div class="flex gap-2"><button class="px-3 py-1 bg-green-500 rounded text-xs hover:bg-green-600">Approve</button><button class="px-3 py-1 bg-gray-600 rounded text-xs hover:bg-gray-500">Review</button></div>
+              </div>
+              <div class="bg-gray-700/50 rounded-lg p-3 flex items-center justify-between">
+                <div><p class="text-sm font-medium">Weathero paid ads budget $500</p><p class="text-xs text-gray-400">BLAZE • Needs Gil approval</p></div>
+                <div class="flex gap-2"><button class="px-3 py-1 bg-green-500 rounded text-xs hover:bg-green-600">Approve</button><button class="px-3 py-1 bg-gray-600 rounded text-xs hover:bg-gray-500">Review</button></div>
+              </div>
+              <div class="bg-gray-700/50 rounded-lg p-3 flex items-center justify-between">
+                <div><p class="text-sm font-medium">Deploy SDK v1.0.58 to production</p><p class="text-xs text-gray-400">CHIP • Needs Igal approval</p></div>
+                <div class="flex gap-2"><button class="px-3 py-1 bg-green-500 rounded text-xs hover:bg-green-600">Approve</button><button class="px-3 py-1 bg-gray-600 rounded text-xs hover:bg-gray-500">Review</button></div>
+              </div>
+              <div class="bg-gray-700/50 rounded-lg p-3 flex items-center justify-between">
+                <div><p class="text-sm font-medium">New server $12/mo for staging</p><p class="text-xs text-gray-400">CODEX • Needs Gil approval</p></div>
+                <div class="flex gap-2"><button class="px-3 py-1 bg-green-500 rounded text-xs hover:bg-green-600">Approve</button><button class="px-3 py-1 bg-gray-600 rounded text-xs hover:bg-gray-500">Review</button></div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Active Objectives -->
+          <div class="bg-gray-800 rounded-xl border border-gray-700 p-5">
+            <h3 class="font-semibold mb-4"><i class="fas fa-bullseye text-indigo-400 mr-2"></i>Active Strategic Objectives</h3>
+            <div class="space-y-3">
+              <div class="bg-gray-700/50 rounded-lg p-3">
+                <div class="flex items-center justify-between mb-2"><p class="text-sm font-medium">Reach 5K SDK nodes</p><span class="text-xs text-yellow-400">67% →</span></div>
+                <div class="w-full bg-gray-700 rounded-full h-2"><div class="bg-yellow-500 h-2 rounded-full" style="width:67%"></div></div>
+                <p class="text-xs text-gray-500 mt-1">Target: Q2 2026</p>
+              </div>
+              <div class="bg-gray-700/50 rounded-lg p-3">
+                <div class="flex items-center justify-between mb-2"><p class="text-sm font-medium">Launch Weathero globally</p><span class="text-xs text-blue-400">45% →</span></div>
+                <div class="w-full bg-gray-700 rounded-full h-2"><div class="bg-blue-500 h-2 rounded-full" style="width:45%"></div></div>
+                <p class="text-xs text-gray-500 mt-1">Target: March 2026</p>
+              </div>
+              <div class="bg-gray-700/50 rounded-lg p-3">
+                <div class="flex items-center justify-between mb-2"><p class="text-sm font-medium">$10K monthly revenue</p><span class="text-xs text-green-400">38% →</span></div>
+                <div class="w-full bg-gray-700 rounded-full h-2"><div class="bg-green-500 h-2 rounded-full" style="width:38%"></div></div>
+                <p class="text-xs text-gray-500 mt-1">Target: Q3 2026</p>
+              </div>
+              <div class="bg-gray-700/50 rounded-lg p-3">
+                <div class="flex items-center justify-between mb-2"><p class="text-sm font-medium">10 active SDK partners</p><span class="text-xs text-purple-400">50% →</span></div>
+                <div class="w-full bg-gray-700 rounded-full h-2"><div class="bg-purple-500 h-2 rounded-full" style="width:50%"></div></div>
+                <p class="text-xs text-gray-500 mt-1">Target: Q2 2026</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===================== EXECUTIVE ACTION ITEMS PAGE ===================== -->
+    <div id="page-exec-actions" class="page p-4 md:p-6 lg:p-8 pt-16 lg:pt-8">
+      <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
+        <div>
+          <h1 class="text-2xl md:text-3xl font-bold"><i class="fas fa-bolt text-amber-400 mr-2"></i>Executive Action Items</h1>
+          <p class="text-gray-400 mt-1">What the AI team needs from humans • Blockers & decisions</p>
+        </div>
+        <select id="execPersonFilter" onchange="filterExecActions(this.value)" class="mt-4 md:mt-0 bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-sm">
+          <option value="all">All People</option>
+          <option value="igal">Igal</option>
+          <option value="gil">Gil</option>
+          <option value="michal">Michal</option>
+          <option value="barak">Barak</option>
+          <option value="charlie">Charlie</option>
+        </select>
+      </div>
+      
+      <!-- Summary -->
+      <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
+        <div class="bg-gray-800 rounded-xl p-4 border border-indigo-500/30 text-center"><p class="text-xs text-gray-400">Igal</p><p class="text-2xl font-bold text-indigo-400">5</p><p class="text-xs text-gray-500">actions</p></div>
+        <div class="bg-gray-800 rounded-xl p-4 border border-blue-500/30 text-center"><p class="text-xs text-gray-400">Gil</p><p class="text-2xl font-bold text-blue-400">8</p><p class="text-xs text-gray-500">actions</p></div>
+        <div class="bg-gray-800 rounded-xl p-4 border border-pink-500/30 text-center"><p class="text-xs text-gray-400">Michal</p><p class="text-2xl font-bold text-pink-400">3</p><p class="text-xs text-gray-500">actions</p></div>
+        <div class="bg-gray-800 rounded-xl p-4 border border-orange-500/30 text-center"><p class="text-xs text-gray-400">Barak</p><p class="text-2xl font-bold text-orange-400">2</p><p class="text-xs text-gray-500">actions</p></div>
+        <div class="bg-gray-800 rounded-xl p-4 border border-cyan-500/30 text-center"><p class="text-xs text-gray-400">Charlie</p><p class="text-2xl font-bold text-cyan-400">1</p><p class="text-xs text-gray-500">actions</p></div>
+      </div>
+      
+      <!-- Action Items by Person -->
+      <div class="space-y-4" id="execActionsList">
+        <!-- Igal -->
+        <div class="bg-gray-800 rounded-xl border border-indigo-500/30 p-5 exec-action-card" data-person="igal">
+          <div class="flex items-center mb-4"><div class="w-10 h-10 rounded-full bg-indigo-500/20 flex items-center justify-center mr-3"><span class="text-lg font-bold text-indigo-400">I</span></div><h3 class="font-semibold text-lg">Igal — Owner / Strategy</h3></div>
+          <div class="space-y-3">
+            <div class="bg-gray-700/50 rounded-lg p-3 flex items-start border-l-4 border-red-500"><div class="flex-1"><p class="text-sm font-medium">Approve SDK outreach campaign (200 leads)</p><p class="text-xs text-gray-400 mt-1">STRIKER waiting since 2 days • Revenue impact: ~$2K/mo potential</p></div><span class="text-xs bg-red-500/20 text-red-400 px-2 py-1 rounded ml-2">Urgent</span></div>
+            <div class="bg-gray-700/50 rounded-lg p-3 flex items-start border-l-4 border-orange-500"><div class="flex-1"><p class="text-sm font-medium">Review Geonode partnership terms</p><p class="text-xs text-gray-400 mt-1">SCOUT prepared summary • Decision needed by Friday</p></div><span class="text-xs bg-orange-500/20 text-orange-400 px-2 py-1 rounded ml-2">High</span></div>
+            <div class="bg-gray-700/50 rounded-lg p-3 flex items-start border-l-4 border-yellow-500"><div class="flex-1"><p class="text-sm font-medium">Set Stripe payment thresholds</p><p class="text-xs text-gray-400 mt-1">LEDGER needs this to complete finance automation</p></div><span class="text-xs bg-yellow-500/20 text-yellow-400 px-2 py-1 rounded ml-2">Medium</span></div>
+          </div>
+        </div>
+        
+        <!-- Gil -->
+        <div class="bg-gray-800 rounded-xl border border-blue-500/30 p-5 exec-action-card" data-person="gil">
+          <div class="flex items-center mb-4"><div class="w-10 h-10 rounded-full bg-blue-500/20 flex items-center justify-center mr-3"><span class="text-lg font-bold text-blue-400">G</span></div><h3 class="font-semibold text-lg">Gil — Development Lead</h3></div>
+          <div class="space-y-3">
+            <div class="bg-gray-700/50 rounded-lg p-3 flex items-start border-l-4 border-red-500"><div class="flex-1"><p class="text-sm font-medium">Fix SDK v1.0.57 Android 12 crash</p><p class="text-xs text-gray-400 mt-1">CHIP identified root cause in VPN service binding • 3 partners affected</p></div><span class="text-xs bg-red-500/20 text-red-400 px-2 py-1 rounded ml-2">Critical</span></div>
+            <div class="bg-gray-700/50 rounded-lg p-3 flex items-start border-l-4 border-orange-500"><div class="flex-1"><p class="text-sm font-medium">Deploy Weathero to Google Play</p><p class="text-xs text-gray-400 mt-1">CODEX has build ready • Needs Play Console credentials</p></div><span class="text-xs bg-orange-500/20 text-orange-400 px-2 py-1 rounded ml-2">High</span></div>
+            <div class="bg-gray-700/50 rounded-lg p-3 flex items-start border-l-4 border-yellow-500"><div class="flex-1"><p class="text-sm font-medium">Review server scaling plan</p><p class="text-xs text-gray-400 mt-1">FORGE predicts node capacity issue at 5K nodes</p></div><span class="text-xs bg-yellow-500/20 text-yellow-400 px-2 py-1 rounded ml-2">Medium</span></div>
+          </div>
+        </div>
+        
+        <!-- Michal -->
+        <div class="bg-gray-800 rounded-xl border border-pink-500/30 p-5 exec-action-card" data-person="michal">
+          <div class="flex items-center mb-4"><div class="w-10 h-10 rounded-full bg-pink-500/20 flex items-center justify-center mr-3"><span class="text-lg font-bold text-pink-400">M</span></div><h3 class="font-semibold text-lg">Michal — Marketing</h3></div>
+          <div class="space-y-3">
+            <div class="bg-gray-700/50 rounded-lg p-3 flex items-start border-l-4 border-orange-500"><div class="flex-1"><p class="text-sm font-medium">Review social media content calendar</p><p class="text-xs text-gray-400 mt-1">ECHO prepared 2-week schedule • Needs content approval</p></div><span class="text-xs bg-orange-500/20 text-orange-400 px-2 py-1 rounded ml-2">High</span></div>
+            <div class="bg-gray-700/50 rounded-lg p-3 flex items-start border-l-4 border-yellow-500"><div class="flex-1"><p class="text-sm font-medium">Provide brand voice feedback</p><p class="text-xs text-gray-400 mt-1">LYRIX needs direction on tone for B2B vs B2C content</p></div><span class="text-xs bg-yellow-500/20 text-yellow-400 px-2 py-1 rounded ml-2">Medium</span></div>
+          </div>
+        </div>
+        
+        <!-- Barak -->
+        <div class="bg-gray-800 rounded-xl border border-orange-500/30 p-5 exec-action-card" data-person="barak">
+          <div class="flex items-center mb-4"><div class="w-10 h-10 rounded-full bg-orange-500/20 flex items-center justify-center mr-3"><span class="text-lg font-bold text-orange-400">B</span></div><h3 class="font-semibold text-lg">Barak — BarakTV / Distribution</h3></div>
+          <div class="space-y-3">
+            <div class="bg-gray-700/50 rounded-lg p-3 flex items-start border-l-4 border-orange-500"><div class="flex-1"><p class="text-sm font-medium">Share updated Smart TV channel list</p><p class="text-xs text-gray-400 mt-1">FORGE needs this for Weathero Smart TV build</p></div><span class="text-xs bg-orange-500/20 text-orange-400 px-2 py-1 rounded ml-2">High</span></div>
+          </div>
+        </div>
+        
+        <!-- Charlie -->
+        <div class="bg-gray-800 rounded-xl border border-cyan-500/30 p-5 exec-action-card" data-person="charlie">
+          <div class="flex items-center mb-4"><div class="w-10 h-10 rounded-full bg-cyan-500/20 flex items-center justify-center mr-3"><span class="text-lg font-bold text-cyan-400">C</span></div><h3 class="font-semibold text-lg">Charlie — QA / Support</h3></div>
+          <div class="space-y-3">
+            <div class="bg-gray-700/50 rounded-lg p-3 flex items-start border-l-4 border-yellow-500"><div class="flex-1"><p class="text-sm font-medium">Run manual QA on SDK v1.0.57 on physical devices</p><p class="text-xs text-gray-400 mt-1">GLITCH needs human verification on Samsung A17 test device</p></div><span class="text-xs bg-yellow-500/20 text-yellow-400 px-2 py-1 rounded ml-2">Medium</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===================== FINANCE EXPENSES PAGE ===================== -->
+    <div id="page-finance-expenses" class="page p-4 md:p-6 lg:p-8 pt-16 lg:pt-8">
+      <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
+        <div>
+          <h1 class="text-2xl md:text-3xl font-bold"><i class="fas fa-receipt text-yellow-400 mr-2"></i>Expenses</h1>
+          <p class="text-gray-400 mt-1">Monthly breakdown by category and person</p>
+        </div>
+        <div class="flex items-center gap-2 mt-4 md:mt-0">
+          <select class="bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-sm"><option>January 2026</option><option selected>February 2026</option><option>March 2026</option></select>
+          <button class="px-4 py-2 bg-yellow-500 rounded-lg text-sm text-gray-900 hover:bg-yellow-400 transition"><i class="fas fa-plus mr-2"></i>Add Expense</button>
+        </div>
+      </div>
+      
+      <!-- Expense Summary -->
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+        <div class="bg-gray-800 rounded-xl p-4 border border-gray-700"><p class="text-gray-400 text-xs">Total Expenses</p><p class="text-2xl font-bold text-red-400">$4,280</p><p class="text-xs text-gray-500">Feb 2026</p></div>
+        <div class="bg-gray-800 rounded-xl p-4 border border-gray-700"><p class="text-gray-400 text-xs">Salaries</p><p class="text-2xl font-bold text-blue-400">$2,800</p><p class="text-xs text-gray-500">5 people</p></div>
+        <div class="bg-gray-800 rounded-xl p-4 border border-gray-700"><p class="text-gray-400 text-xs">Servers & Tools</p><p class="text-2xl font-bold text-purple-400">$980</p><p class="text-xs text-gray-500">Infrastructure</p></div>
+        <div class="bg-gray-800 rounded-xl p-4 border border-gray-700"><p class="text-gray-400 text-xs">Other</p><p class="text-2xl font-bold text-gray-400">$500</p><p class="text-xs text-gray-500">Transfers, setup</p></div>
+      </div>
+      
+      <!-- Salary Table -->
+      <div class="bg-gray-800 rounded-xl border border-gray-700 mb-6">
+        <div class="px-6 py-4 border-b border-gray-700"><h3 class="font-semibold"><i class="fas fa-users text-blue-400 mr-2"></i>Monthly Salaries</h3></div>
+        <div class="overflow-x-auto">
+          <table class="w-full">
+            <thead class="bg-gray-900/50"><tr><th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase">Person</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase">Role</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase">Monthly</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase">Status</th></tr></thead>
+            <tbody class="divide-y divide-gray-700">
+              <tr class="hover:bg-gray-700/50"><td class="px-6 py-4 font-medium">Linde</td><td class="px-6 py-4 text-gray-400">Content & Marketing</td><td class="px-6 py-4 text-green-400">$800</td><td class="px-6 py-4"><span class="text-xs bg-green-500/20 text-green-400 px-2 py-1 rounded">Paid</span></td></tr>
+              <tr class="hover:bg-gray-700/50"><td class="px-6 py-4 font-medium">Charlie</td><td class="px-6 py-4 text-gray-400">QA & Support</td><td class="px-6 py-4 text-green-400">$600</td><td class="px-6 py-4"><span class="text-xs bg-green-500/20 text-green-400 px-2 py-1 rounded">Paid</span></td></tr>
+              <tr class="hover:bg-gray-700/50"><td class="px-6 py-4 font-medium">Igal</td><td class="px-6 py-4 text-gray-400">Owner / Strategy</td><td class="px-6 py-4 text-yellow-400">$500</td><td class="px-6 py-4"><span class="text-xs bg-yellow-500/20 text-yellow-400 px-2 py-1 rounded">Draw</span></td></tr>
+              <tr class="hover:bg-gray-700/50"><td class="px-6 py-4 font-medium">Barak</td><td class="px-6 py-4 text-gray-400">BarakTV / Distribution</td><td class="px-6 py-4 text-green-400">$500</td><td class="px-6 py-4"><span class="text-xs bg-green-500/20 text-green-400 px-2 py-1 rounded">Paid</span></td></tr>
+              <tr class="hover:bg-gray-700/50"><td class="px-6 py-4 font-medium">Michal</td><td class="px-6 py-4 text-gray-400">Marketing</td><td class="px-6 py-4 text-green-400">$400</td><td class="px-6 py-4"><span class="text-xs bg-green-500/20 text-green-400 px-2 py-1 rounded">Paid</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      
+      <!-- Infrastructure Costs -->
+      <div class="bg-gray-800 rounded-xl border border-gray-700 mb-6">
+        <div class="px-6 py-4 border-b border-gray-700"><h3 class="font-semibold"><i class="fas fa-server text-purple-400 mr-2"></i>Infrastructure & Tools</h3></div>
+        <div class="overflow-x-auto">
+          <table class="w-full">
+            <thead class="bg-gray-900/50"><tr><th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase">Item</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase">Provider</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase">Monthly</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase">Type</th></tr></thead>
+            <tbody class="divide-y divide-gray-700">
+              <tr class="hover:bg-gray-700/50"><td class="px-6 py-4 font-medium">Production Server</td><td class="px-6 py-4 text-gray-400">DigitalOcean</td><td class="px-6 py-4 text-red-400">$12</td><td class="px-6 py-4 text-xs text-gray-500">Server</td></tr>
+              <tr class="hover:bg-gray-700/50"><td class="px-6 py-4 font-medium">Hostinger (iploop.io)</td><td class="px-6 py-4 text-gray-400">Hostinger</td><td class="px-6 py-4 text-red-400">$8</td><td class="px-6 py-4 text-xs text-gray-500">Hosting</td></tr>
+              <tr class="hover:bg-gray-700/50"><td class="px-6 py-4 font-medium">Cloudflare Pro</td><td class="px-6 py-4 text-gray-400">Cloudflare</td><td class="px-6 py-4 text-red-400">$20</td><td class="px-6 py-4 text-xs text-gray-500">CDN/DNS</td></tr>
+              <tr class="hover:bg-gray-700/50"><td class="px-6 py-4 font-medium">Claude API (Ultron)</td><td class="px-6 py-4 text-gray-400">Anthropic</td><td class="px-6 py-4 text-red-400">$500</td><td class="px-6 py-4 text-xs text-gray-500">AI</td></tr>
+              <tr class="hover:bg-gray-700/50"><td class="px-6 py-4 font-medium">Domain renewals</td><td class="px-6 py-4 text-gray-400">Various</td><td class="px-6 py-4 text-red-400">$40</td><td class="px-6 py-4 text-xs text-gray-500">Domains</td></tr>
+              <tr class="hover:bg-gray-700/50"><td class="px-6 py-4 font-medium">BarakTV setup costs</td><td class="px-6 py-4 text-gray-400">BarakTV</td><td class="px-6 py-4 text-red-400">$300</td><td class="px-6 py-4 text-xs text-gray-500">Setup</td></tr>
+              <tr class="hover:bg-gray-700/50"><td class="px-6 py-4 font-medium">Money transfers (fees)</td><td class="px-6 py-4 text-gray-400">Various</td><td class="px-6 py-4 text-red-400">$100</td><td class="px-6 py-4 text-xs text-gray-500">Fees</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===================== FINANCE P&L PAGE ===================== -->
+    <div id="page-finance-pnl" class="page p-4 md:p-6 lg:p-8 pt-16 lg:pt-8">
+      <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
+        <div>
+          <h1 class="text-2xl md:text-3xl font-bold"><i class="fas fa-scale-balanced text-yellow-400 mr-2"></i>Profit & Loss</h1>
+          <p class="text-gray-400 mt-1">Financial overview • Accumulated P&L • Cash positions</p>
+        </div>
+      </div>
+      
+      <!-- P&L Summary -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        <div class="bg-gradient-to-br from-green-500/10 to-emerald-500/10 rounded-xl border border-green-500/30 p-5">
+          <p class="text-gray-400 text-sm">Total Revenue (All Time)</p>
+          <p class="text-3xl font-bold text-green-400 mt-2">$18,450</p>
+          <p class="text-xs text-green-400 mt-1"><i class="fas fa-arrow-up mr-1"></i>+12% this month</p>
+        </div>
+        <div class="bg-gradient-to-br from-red-500/10 to-rose-500/10 rounded-xl border border-red-500/30 p-5">
+          <p class="text-gray-400 text-sm">Total Expenses (All Time)</p>
+          <p class="text-3xl font-bold text-red-400 mt-2">$22,100</p>
+          <p class="text-xs text-red-400 mt-1"><i class="fas fa-arrow-down mr-1"></i>-3% this month</p>
+        </div>
+        <div class="bg-gradient-to-br from-yellow-500/10 to-amber-500/10 rounded-xl border border-yellow-500/30 p-5">
+          <p class="text-gray-400 text-sm">Net P&L (All Time)</p>
+          <p class="text-3xl font-bold text-red-400 mt-2">-$3,650</p>
+          <p class="text-xs text-yellow-400 mt-1"><i class="fas fa-chart-line mr-1"></i>Improving monthly</p>
+        </div>
+      </div>
+      
+      <!-- Monthly Breakdown Chart -->
+      <div class="bg-gray-800 rounded-xl border border-gray-700 p-5 mb-6">
+        <h3 class="font-semibold mb-4"><i class="fas fa-chart-bar text-indigo-400 mr-2"></i>Monthly Revenue vs Expenses</h3>
+        <div class="h-64"><canvas id="pnlChart"></canvas></div>
+      </div>
+      
+      <!-- Cash Balances -->
+      <div class="bg-gray-800 rounded-xl border border-gray-700 p-5 mb-6">
+        <h3 class="font-semibold mb-4"><i class="fas fa-wallet text-green-400 mr-2"></i>Cash Balances</h3>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div class="bg-gray-700/50 rounded-lg p-4 text-center"><p class="text-xs text-gray-400 mb-1">Bank Account</p><p class="text-xl font-bold text-green-400">$3,200</p></div>
+          <div class="bg-gray-700/50 rounded-lg p-4 text-center"><p class="text-xs text-gray-400 mb-1">PayPal</p><p class="text-xl font-bold text-blue-400">$1,450</p></div>
+          <div class="bg-gray-700/50 rounded-lg p-4 text-center"><p class="text-xs text-gray-400 mb-1">Denis (Holding)</p><p class="text-xl font-bold text-purple-400">$2,100</p></div>
+          <div class="bg-gray-700/50 rounded-lg p-4 text-center"><p class="text-xs text-gray-400 mb-1">Crypto</p><p class="text-xl font-bold text-orange-400">$800</p></div>
+        </div>
+      </div>
+      
+      <!-- P&L Table -->
+      <div class="bg-gray-800 rounded-xl border border-gray-700">
+        <div class="px-6 py-4 border-b border-gray-700"><h3 class="font-semibold"><i class="fas fa-table text-yellow-400 mr-2"></i>P&L Statement (Monthly)</h3></div>
+        <div class="overflow-x-auto">
+          <table class="w-full">
+            <thead class="bg-gray-900/50"><tr><th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase">Month</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase">Revenue</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase">Expenses</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase">Net</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase">Accumulated</th></tr></thead>
+            <tbody class="divide-y divide-gray-700">
+              <tr class="hover:bg-gray-700/50"><td class="px-6 py-4 font-medium">Feb 2026</td><td class="px-6 py-4 text-green-400">$3,850</td><td class="px-6 py-4 text-red-400">$4,280</td><td class="px-6 py-4 text-red-400">-$430</td><td class="px-6 py-4 text-red-400">-$3,650</td></tr>
+              <tr class="hover:bg-gray-700/50"><td class="px-6 py-4 font-medium">Jan 2026</td><td class="px-6 py-4 text-green-400">$3,200</td><td class="px-6 py-4 text-red-400">$4,100</td><td class="px-6 py-4 text-red-400">-$900</td><td class="px-6 py-4 text-red-400">-$3,220</td></tr>
+              <tr class="hover:bg-gray-700/50"><td class="px-6 py-4 font-medium">Dec 2025</td><td class="px-6 py-4 text-green-400">$2,800</td><td class="px-6 py-4 text-red-400">$3,900</td><td class="px-6 py-4 text-red-400">-$1,100</td><td class="px-6 py-4 text-red-400">-$2,320</td></tr>
+              <tr class="hover:bg-gray-700/50"><td class="px-6 py-4 font-medium">Nov 2025</td><td class="px-6 py-4 text-green-400">$2,400</td><td class="px-6 py-4 text-red-400">$3,200</td><td class="px-6 py-4 text-red-400">-$800</td><td class="px-6 py-4 text-red-400">-$1,220</td></tr>
+              <tr class="hover:bg-gray-700/50"><td class="px-6 py-4 font-medium">Oct 2025</td><td class="px-6 py-4 text-green-400">$1,800</td><td class="px-6 py-4 text-red-400">$2,220</td><td class="px-6 py-4 text-red-400">-$420</td><td class="px-6 py-4 text-red-400">-$420</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===================== ECOSYSTEM DIAGRAM PAGE ===================== -->
+    <div id="page-ecosystem" class="page p-4 md:p-6 lg:p-8 pt-16 lg:pt-8">
+      <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
+        <div>
+          <h1 class="text-2xl md:text-3xl font-bold"><i class="fas fa-diagram-project text-indigo-400 mr-2"></i>Ecosystem Diagram</h1>
+          <p class="text-gray-400 mt-1">Interactive overview of our business ecosystem</p>
+        </div>
+      </div>
+      
+      <div class="bg-gray-800 rounded-xl border border-gray-700 p-8">
+        <svg viewBox="0 0 1000 700" class="w-full" style="max-height:650px">
+          <!-- Center: Proxy Platform -->
+          <circle cx="500" cy="350" r="80" fill="#4f46e5" fill-opacity="0.2" stroke="#6366f1" stroke-width="3" class="eco-node" onclick="showEcoDetail('platform')"/>
+          <text x="500" y="340" text-anchor="middle" fill="#a5b4fc" font-size="16" font-weight="bold">IPLoop</text>
+          <text x="500" y="365" text-anchor="middle" fill="#818cf8" font-size="12">Proxy Platform</text>
+          
+          <!-- Our Apps -->
+          <line x1="500" y1="270" x2="500" y2="140" class="eco-line"/>
+          <circle cx="500" cy="120" r="50" fill="#059669" fill-opacity="0.2" stroke="#10b981" stroke-width="2" class="eco-node"/>
+          <text x="500" y="115" text-anchor="middle" fill="#6ee7b7" font-size="13" font-weight="bold">Our Apps</text>
+          <text x="500" y="133" text-anchor="middle" fill="#34d399" font-size="10">7 apps</text>
+          
+          <!-- App satellites -->
+          <line x1="450" y1="120" x2="350" y2="80" class="eco-line" stroke-dasharray="4"/>
+          <circle cx="340" cy="72" r="25" fill="#059669" fill-opacity="0.1" stroke="#10b981" stroke-width="1" class="eco-node"/>
+          <text x="340" y="76" text-anchor="middle" fill="#6ee7b7" font-size="9">Weathero</text>
+          
+          <line x1="550" y1="120" x2="650" y2="80" class="eco-line" stroke-dasharray="4"/>
+          <circle cx="660" cy="72" r="25" fill="#059669" fill-opacity="0.1" stroke="#10b981" stroke-width="1" class="eco-node"/>
+          <text x="660" y="76" text-anchor="middle" fill="#6ee7b7" font-size="9">SoftZero</text>
+          
+          <line x1="500" y1="70" x2="500" y2="40" class="eco-line" stroke-dasharray="4"/>
+          <circle cx="500" cy="32" r="25" fill="#059669" fill-opacity="0.1" stroke="#10b981" stroke-width="1" class="eco-node"/>
+          <text x="500" y="36" text-anchor="middle" fill="#6ee7b7" font-size="9">Pixara</text>
+          
+          <!-- SDK Partners -->
+          <line x1="580" y1="350" x2="750" y2="350" class="eco-line"/>
+          <circle cx="780" cy="350" r="55" fill="#7c3aed" fill-opacity="0.2" stroke="#8b5cf6" stroke-width="2" class="eco-node"/>
+          <text x="780" y="345" text-anchor="middle" fill="#c4b5fd" font-size="13" font-weight="bold">SDK Partners</text>
+          <text x="780" y="363" text-anchor="middle" fill="#a78bfa" font-size="10">8+ partners</text>
+          
+          <!-- SDK satellite -->
+          <line x1="835" y1="340" x2="920" y2="300" class="eco-line" stroke-dasharray="4"/>
+          <rect x="880" y="280" width="80" height="30" rx="6" fill="#7c3aed" fill-opacity="0.1" stroke="#8b5cf6" stroke-width="1" class="eco-node"/>
+          <text x="920" y="300" text-anchor="middle" fill="#c4b5fd" font-size="9">HoneyGain</text>
+          
+          <line x1="835" y1="360" x2="920" y2="400" class="eco-line" stroke-dasharray="4"/>
+          <rect x="880" y="385" width="80" height="30" rx="6" fill="#7c3aed" fill-opacity="0.1" stroke="#8b5cf6" stroke-width="1" class="eco-node"/>
+          <text x="920" y="405" text-anchor="middle" fill="#c4b5fd" font-size="9">SOAX</text>
+          
+          <!-- Strategic Partners -->
+          <line x1="420" y1="350" x2="250" y2="350" class="eco-line"/>
+          <circle cx="220" cy="350" r="55" fill="#0891b2" fill-opacity="0.2" stroke="#06b6d4" stroke-width="2" class="eco-node"/>
+          <text x="220" y="345" text-anchor="middle" fill="#67e8f9" font-size="13" font-weight="bold">Strategic</text>
+          <text x="220" y="363" text-anchor="middle" fill="#22d3ee" font-size="10">Partners</text>
+          
+          <!-- Sales Channels -->
+          <line x1="450" y1="410" x2="300" y2="530" class="eco-line"/>
+          <circle cx="280" cy="550" r="50" fill="#f59e0b" fill-opacity="0.2" stroke="#fbbf24" stroke-width="2" class="eco-node"/>
+          <text x="280" y="545" text-anchor="middle" fill="#fde68a" font-size="13" font-weight="bold">Sales</text>
+          <text x="280" y="563" text-anchor="middle" fill="#fcd34d" font-size="10">Channels</text>
+          
+          <!-- Sales sub -->
+          <line x1="230" y1="560" x2="140" y2="590" class="eco-line" stroke-dasharray="4"/>
+          <rect x="80" y="578" width="70" height="25" rx="5" fill="#f59e0b" fill-opacity="0.1" stroke="#fbbf24" stroke-width="1"/>
+          <text x="115" y="595" text-anchor="middle" fill="#fde68a" font-size="9">Telegram</text>
+          
+          <line x1="280" y1="600" x2="280" y2="640" class="eco-line" stroke-dasharray="4"/>
+          <rect x="245" y="640" width="70" height="25" rx="5" fill="#f59e0b" fill-opacity="0.1" stroke="#fbbf24" stroke-width="1"/>
+          <text x="280" y="657" text-anchor="middle" fill="#fde68a" font-size="9">Email</text>
+          
+          <line x1="330" y1="560" x2="400" y2="590" class="eco-line" stroke-dasharray="4"/>
+          <rect x="385" y="578" width="70" height="25" rx="5" fill="#f59e0b" fill-opacity="0.1" stroke="#fbbf24" stroke-width="1"/>
+          <text x="420" y="595" text-anchor="middle" fill="#fde68a" font-size="9">LinkedIn</text>
+          
+          <!-- Marketing Channels -->
+          <line x1="550" y1="410" x2="700" y2="530" class="eco-line"/>
+          <circle cx="720" cy="550" r="50" fill="#ec4899" fill-opacity="0.2" stroke="#f472b6" stroke-width="2" class="eco-node"/>
+          <text x="720" y="545" text-anchor="middle" fill="#fbcfe8" font-size="13" font-weight="bold">Marketing</text>
+          <text x="720" y="563" text-anchor="middle" fill="#f9a8d4" font-size="10">Channels</text>
+          
+          <!-- Marketing sub -->
+          <line x1="670" y1="560" x2="600" y2="600" class="eco-line" stroke-dasharray="4"/>
+          <rect x="555" y="590" width="70" height="25" rx="5" fill="#ec4899" fill-opacity="0.1" stroke="#f472b6" stroke-width="1"/>
+          <text x="590" y="607" text-anchor="middle" fill="#fbcfe8" font-size="9">Social</text>
+          
+          <line x1="770" y1="560" x2="840" y2="600" class="eco-line" stroke-dasharray="4"/>
+          <rect x="810" y="590" width="70" height="25" rx="5" fill="#ec4899" fill-opacity="0.1" stroke="#f472b6" stroke-width="1"/>
+          <text x="845" y="607" text-anchor="middle" fill="#fbcfe8" font-size="9">Content</text>
+          
+          <!-- AI Team -->
+          <line x1="500" y1="430" x2="500" y2="570" class="eco-line" stroke="#a855f7"/>
+          <circle cx="500" cy="590" r="45" fill="#7c3aed" fill-opacity="0.2" stroke="#a855f7" stroke-width="2" class="eco-node"/>
+          <text x="500" y="585" text-anchor="middle" fill="#c4b5fd" font-size="13" font-weight="bold">AI Team</text>
+          <text x="500" y="603" text-anchor="middle" fill="#a78bfa" font-size="10">27 agents</text>
+        </svg>
+      </div>
+    </div>
+
+    <!-- ===================== ABOUT US PAGE ===================== -->
+    <div id="page-about-us" class="page p-4 md:p-6 lg:p-8 pt-16 lg:pt-8">
+      <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
+        <div>
+          <h1 class="text-2xl md:text-3xl font-bold"><i class="fas fa-info-circle text-indigo-400 mr-2"></i><span id="aboutTitle">About Us</span></h1>
+          <p class="text-gray-400 mt-1" id="aboutSubtitle">Our mission, team, and vision</p>
+        </div>
+        <div class="flex items-center gap-2 mt-4 md:mt-0">
+          <button onclick="toggleAboutLang('en')" class="px-4 py-2 bg-indigo-500 rounded-lg text-sm" id="btnLangEn">English</button>
+          <button onclick="toggleAboutLang('he')" class="px-4 py-2 bg-gray-700 rounded-lg text-sm" id="btnLangHe">עברית</button>
+        </div>
+      </div>
+      
+      <!-- English Content -->
+      <div id="aboutContentEn" class="space-y-6">
+        <!-- Manifesto -->
+        <div class="bg-gradient-to-br from-indigo-500/10 to-purple-500/10 rounded-xl border border-indigo-500/30 p-8">
+          <h2 class="text-xl font-bold mb-4 text-indigo-400">🌟 Our Mission</h2>
+          <p class="text-gray-300 leading-relaxed mb-4">We are building the future of proxy infrastructure — an autonomous AI-managed platform that connects applications, SDK partners, and strategic partners into a seamless proxy ecosystem. Our platform, IPLoop, powers thousands of nodes across the globe.</p>
+          <p class="text-gray-300 leading-relaxed mb-4">What makes us unique? Our entire operation is orchestrated by <strong class="text-purple-400">ULTRON</strong> — a 27-agent AI system that handles everything from sales outreach to code deployment, from marketing campaigns to financial analysis. Humans provide strategy and decisions; AI executes at scale.</p>
+          <h3 class="text-lg font-semibold mb-2 text-amber-400">🔥 Our Passion</h3>
+          <p class="text-gray-300 leading-relaxed">We believe the future of business is human-AI collaboration. Not AI replacing humans, but AI amplifying human capability. Our 27-agent team doesn't sleep, doesn't get bored, and works 24/7 across every department. That's our competitive edge.</p>
+        </div>
+        
+        <!-- Team Pokémon Grid -->
+        <div class="bg-gray-800 rounded-xl border border-gray-700 p-6">
+          <h2 class="text-xl font-bold mb-4"><i class="fas fa-robot text-purple-400 mr-2"></i>Our AI Team — The Pokémon Squad</h2>
+          <div class="grid grid-cols-3 sm:grid-cols-5 md:grid-cols-9 gap-3" id="aboutTeamGrid">
+            <!-- Filled by JS -->
+          </div>
+        </div>
+        
+        <!-- Vision -->
+        <div class="bg-gray-800 rounded-xl border border-gray-700 p-6">
+          <h2 class="text-xl font-bold mb-4 text-green-400">🚀 Our Vision</h2>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="bg-gray-700/50 rounded-lg p-4 text-center"><i class="fas fa-globe text-blue-400 text-2xl mb-2"></i><h4 class="font-semibold mb-1">Global Scale</h4><p class="text-sm text-gray-400">50K+ proxy nodes worldwide by 2027</p></div>
+            <div class="bg-gray-700/50 rounded-lg p-4 text-center"><i class="fas fa-robot text-purple-400 text-2xl mb-2"></i><h4 class="font-semibold mb-1">Full Autonomy</h4><p class="text-sm text-gray-400">AI agents handling 95% of operations</p></div>
+            <div class="bg-gray-700/50 rounded-lg p-4 text-center"><i class="fas fa-coins text-yellow-400 text-2xl mb-2"></i><h4 class="font-semibold mb-1">$100K MRR</h4><p class="text-sm text-gray-400">Sustainable revenue within 2 years</p></div>
+          </div>
+        </div>
+        
+        <!-- Human Team -->
+        <div class="bg-gray-800 rounded-xl border border-gray-700 p-6">
+          <h2 class="text-xl font-bold mb-4"><i class="fas fa-users text-cyan-400 mr-2"></i>Human Team</h2>
+          <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
+            <div class="text-center"><div class="w-16 h-16 mx-auto rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center mb-2"><span class="text-2xl font-bold">I</span></div><h4 class="font-semibold">Igal</h4><p class="text-xs text-gray-400">Founder & CEO</p></div>
+            <div class="text-center"><div class="w-16 h-16 mx-auto rounded-full bg-gradient-to-br from-blue-500 to-cyan-600 flex items-center justify-center mb-2"><span class="text-2xl font-bold">G</span></div><h4 class="font-semibold">Gil</h4><p class="text-xs text-gray-400">CTO / Development</p></div>
+            <div class="text-center"><div class="w-16 h-16 mx-auto rounded-full bg-gradient-to-br from-pink-500 to-rose-600 flex items-center justify-center mb-2"><span class="text-2xl font-bold">M</span></div><h4 class="font-semibold">Michal</h4><p class="text-xs text-gray-400">Marketing</p></div>
+            <div class="text-center"><div class="w-16 h-16 mx-auto rounded-full bg-gradient-to-br from-orange-500 to-amber-600 flex items-center justify-center mb-2"><span class="text-2xl font-bold">B</span></div><h4 class="font-semibold">Barak</h4><p class="text-xs text-gray-400">Distribution</p></div>
+            <div class="text-center"><div class="w-16 h-16 mx-auto rounded-full bg-gradient-to-br from-cyan-500 to-teal-600 flex items-center justify-center mb-2"><span class="text-2xl font-bold">C</span></div><h4 class="font-semibold">Charlie</h4><p class="text-xs text-gray-400">QA & Support</p></div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Hebrew Content -->
+      <div id="aboutContentHe" class="space-y-6 hidden" dir="rtl">
+        <div class="bg-gradient-to-br from-indigo-500/10 to-purple-500/10 rounded-xl border border-indigo-500/30 p-8">
+          <h2 class="text-xl font-bold mb-4 text-indigo-400">🌟 המשימה שלנו</h2>
+          <p class="text-gray-300 leading-relaxed mb-4">אנחנו בונים את העתיד של תשתית פרוקסי — פלטפורמה אוטונומית מנוהלת על ידי בינה מלאכותית שמחברת אפליקציות, שותפי SDK ושותפים אסטרטגיים לאקוסיסטם פרוקסי חלק. הפלטפורמה שלנו, IPLoop, מפעילה אלפי צמתים ברחבי העולם.</p>
+          <p class="text-gray-300 leading-relaxed mb-4">מה מייחד אותנו? כל הפעילות שלנו מנוהלת על ידי <strong class="text-purple-400">ULTRON</strong> — מערכת AI של 27 סוכנים שמטפלת בהכל, ממכירות ועד פריסת קוד, מקמפיינים שיווקיים ועד ניתוח פיננסי. בני אדם מספקים אסטרטגיה והחלטות; ה-AI מבצע בקנה מידה.</p>
+          <h3 class="text-lg font-semibold mb-2 text-amber-400">🔥 התשוקה שלנו</h3>
+          <p class="text-gray-300 leading-relaxed">אנחנו מאמינים שעתיד העסקים הוא שיתוף פעולה בין אדם ובינה מלאכותית. לא AI שמחליף בני אדם, אלא AI שמגביר את היכולת האנושית. צוות ה-27 סוכנים שלנו לא ישן, לא משתעמם, ועובד 24/7 בכל מחלקה. זה היתרון התחרותי שלנו.</p>
+        </div>
+        
+        <div class="bg-gray-800 rounded-xl border border-gray-700 p-6">
+          <h2 class="text-xl font-bold mb-4 text-green-400">🚀 החזון שלנו</h2>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="bg-gray-700/50 rounded-lg p-4 text-center"><i class="fas fa-globe text-blue-400 text-2xl mb-2"></i><h4 class="font-semibold mb-1">היקף גלובלי</h4><p class="text-sm text-gray-400">+50K צמתי פרוקסי ב-2027</p></div>
+            <div class="bg-gray-700/50 rounded-lg p-4 text-center"><i class="fas fa-robot text-purple-400 text-2xl mb-2"></i><h4 class="font-semibold mb-1">אוטונומיה מלאה</h4><p class="text-sm text-gray-400">סוכני AI מטפלים ב-95% מהפעילות</p></div>
+            <div class="bg-gray-700/50 rounded-lg p-4 text-center"><i class="fas fa-coins text-yellow-400 text-2xl mb-2"></i><h4 class="font-semibold mb-1">$100K הכנסה חודשית</h4><p class="text-sm text-gray-400">הכנסה בת-קיימא תוך שנתיים</p></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===================== AGENT DISCUSSION LOGS PAGE ===================== -->
+    <div id="page-agent-logs" class="page p-4 md:p-6 lg:p-8 pt-16 lg:pt-8">
+      <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
+        <div>
+          <h1 class="text-2xl md:text-3xl font-bold"><i class="fas fa-message text-purple-400 mr-2"></i>Agent Discussion Logs</h1>
+          <p class="text-gray-400 mt-1">Inter-agent conversations and collaboration threads</p>
+        </div>
+        <div class="flex items-center gap-2 mt-4 md:mt-0">
+          <select id="logTeamFilter" class="bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-sm">
+            <option value="all">All Teams</option>
+            <option value="sales">Sales</option>
+            <option value="marketing">Marketing</option>
+            <option value="dev">Development</option>
+            <option value="product">Product</option>
+          </select>
+          <input type="text" placeholder="Search logs..." class="bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-sm">
+        </div>
+      </div>
+      
+      <!-- Discussion Threads -->
+      <div class="space-y-4">
+        <!-- Thread 1 -->
+        <div class="bg-gray-800 rounded-xl border border-gray-700">
+          <div class="px-5 py-3 border-b border-gray-700 flex items-center justify-between cursor-pointer" onclick="this.nextElementSibling.classList.toggle('hidden')">
+            <div class="flex items-center">
+              <span class="text-xs bg-emerald-500/20 text-emerald-400 px-2 py-1 rounded mr-3">Sales</span>
+              <h3 class="font-medium">Geonode Partnership Strategy</h3>
+            </div>
+            <div class="flex items-center text-xs text-gray-500"><span>3 messages</span><i class="fas fa-chevron-down ml-2"></i></div>
+          </div>
+          <div class="p-4 space-y-3">
+            <div class="flex items-start"><img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/177.png" class="w-8 h-8 mr-3"><div class="bg-gray-700/50 rounded-lg p-3"><p class="text-xs text-emerald-400 font-medium">SCOUT (Natu) • 14:30</p><p class="text-sm mt-1">Found Geonode's new SDK pricing: $0.15/GB for residential proxy bandwidth. Their terms allow white-labeling. Recommend we propose integration at $0.12/GB with volume commitment of 500GB/mo.</p></div></div>
+            <div class="flex items-start"><img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/701.png" class="w-8 h-8 mr-3"><div class="bg-gray-700/50 rounded-lg p-3"><p class="text-xs text-emerald-400 font-medium">STRIKER (Hawlucha) • 14:45</p><p class="text-sm mt-1">Good intel. I'll draft the outreach email. Their CTO, Mark, was active on LinkedIn yesterday. I'll connect and mention our node count as leverage.</p></div></div>
+            <div class="flex items-start"><img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/150.png" class="w-8 h-8 mr-3"><div class="bg-gray-700/50 rounded-lg p-3"><p class="text-xs text-purple-400 font-medium">ULTRON (Mewtwo) • 15:00</p><p class="text-sm mt-1">Approved. STRIKER proceed with outreach. SCOUT keep monitoring their public pricing page for changes. Copy LEDGER on any financial commitments over $500/mo.</p></div></div>
+          </div>
+        </div>
+        
+        <!-- Thread 2 -->
+        <div class="bg-gray-800 rounded-xl border border-gray-700">
+          <div class="px-5 py-3 border-b border-gray-700 flex items-center justify-between cursor-pointer" onclick="this.nextElementSibling.classList.toggle('hidden')">
+            <div class="flex items-center">
+              <span class="text-xs bg-blue-500/20 text-blue-400 px-2 py-1 rounded mr-3">Dev</span>
+              <h3 class="font-medium">SDK v1.0.58 Release Planning</h3>
+            </div>
+            <div class="flex items-center text-xs text-gray-500"><span>4 messages</span><i class="fas fa-chevron-down ml-2"></i></div>
+          </div>
+          <div class="p-4 space-y-3 hidden">
+            <div class="flex items-start"><img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/474.png" class="w-8 h-8 mr-3"><div class="bg-gray-700/50 rounded-lg p-3"><p class="text-xs text-blue-400 font-medium">CHIP (Porygon-Z) • 10:00</p><p class="text-sm mt-1">v1.0.58 changes ready: Fixed Android 12 VPN service crash, added battery optimization bypass for Samsung devices, improved connection retry logic.</p></div></div>
+            <div class="flex items-start"><img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/132.png" class="w-8 h-8 mr-3"><div class="bg-gray-700/50 rounded-lg p-3"><p class="text-xs text-blue-400 font-medium">GLITCH (Ditto) • 10:30</p><p class="text-sm mt-1">Running automated test suite now. Will have results in 2 hours. Need manual testing on Samsung A17 for the VPN fix — Charlie, can you handle this?</p></div></div>
+            <div class="flex items-start"><img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/65.png" class="w-8 h-8 mr-3"><div class="bg-gray-700/50 rounded-lg p-3"><p class="text-xs text-blue-400 font-medium">CODEX (Alakazam) • 11:00</p><p class="text-sm mt-1">Good work CHIP. Let's also include the HTTP tunnel improvements from FORGE. Target release: Friday if QA passes.</p></div></div>
+            <div class="flex items-start"><img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/462.png" class="w-8 h-8 mr-3"><div class="bg-gray-700/50 rounded-lg p-3"><p class="text-xs text-blue-400 font-medium">FORGE (Magnezone) • 11:15</p><p class="text-sm mt-1">HTTP tunnel changes merged to develop branch. Added connection pooling for better throughput. Ready for integration testing.</p></div></div>
+          </div>
+        </div>
+        
+        <!-- Thread 3 -->
+        <div class="bg-gray-800 rounded-xl border border-gray-700">
+          <div class="px-5 py-3 border-b border-gray-700 flex items-center justify-between cursor-pointer" onclick="this.nextElementSibling.classList.toggle('hidden')">
+            <div class="flex items-center">
+              <span class="text-xs bg-pink-500/20 text-pink-400 px-2 py-1 rounded mr-3">Marketing</span>
+              <h3 class="font-medium">Weathero Launch Campaign</h3>
+            </div>
+            <div class="flex items-center text-xs text-gray-500"><span>3 messages</span><i class="fas fa-chevron-down ml-2"></i></div>
+          </div>
+          <div class="p-4 space-y-3 hidden">
+            <div class="flex items-start"><img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/311.png" class="w-8 h-8 mr-3"><div class="bg-gray-700/50 rounded-lg p-3"><p class="text-xs text-pink-400 font-medium">BLAZE (Plusle) • 09:00</p><p class="text-sm mt-1">Campaign plan ready: 3 phases — soft launch (week 1), influencer push (week 2), paid ads (week 3). Budget: $500 total. Expected installs: 2,000-5,000.</p></div></div>
+            <div class="flex items-start"><img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/648.png" class="w-8 h-8 mr-3"><div class="bg-gray-700/50 rounded-lg p-3"><p class="text-xs text-pink-400 font-medium">LYRIX (Meloetta) • 09:30</p><p class="text-sm mt-1">App store description and screenshots ready. Blog post drafted: "Why Weathero is the Weather App You Actually Want." Need PIXEL to review the visuals.</p></div></div>
+            <div class="flex items-start"><img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/441.png" class="w-8 h-8 mr-3"><div class="bg-gray-700/50 rounded-lg p-3"><p class="text-xs text-pink-400 font-medium">ECHO (Chatot) • 10:00</p><p class="text-sm mt-1">Social posts scheduled for Twitter, Reddit, and ProductHunt. Created Weathero account on Reddit. Will engage in r/weather and r/androidapps communities pre-launch.</p></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===================== COMPETITOR INTEL PAGE ===================== -->
+    <div id="page-competitor-intel" class="page p-4 md:p-6 lg:p-8 pt-16 lg:pt-8">
+      <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
+        <div>
+          <h1 class="text-2xl md:text-3xl font-bold"><i class="fas fa-binoculars text-teal-400 mr-2"></i>Competitor Intelligence</h1>
+          <p class="text-gray-400 mt-1">Know thy enemy — competitive landscape analysis</p>
+        </div>
+      </div>
+      
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <!-- Competitor Cards -->
+        <div class="bg-gray-800 rounded-xl border border-gray-700 p-5 hover:border-red-500/30 transition">
+          <div class="flex items-center justify-between mb-3"><h3 class="font-bold text-lg">Bright Data</h3><span class="text-xs bg-red-500/20 text-red-400 px-2 py-1 rounded">Major</span></div>
+          <p class="text-sm text-gray-400 mb-3">World's #1 web data platform. Massive proxy network, enterprise focus.</p>
+          <div class="space-y-2 text-xs">
+            <div class="flex items-center justify-between"><span class="text-gray-500">Network Size</span><span class="text-gray-300">72M+ IPs</span></div>
+            <div class="flex items-center justify-between"><span class="text-gray-500">Revenue Est.</span><span class="text-gray-300">$500M+/yr</span></div>
+            <div class="flex items-center justify-between"><span class="text-gray-500">SDK Partners</span><span class="text-gray-300">100+</span></div>
+            <div class="flex items-center justify-between"><span class="text-gray-500">Threat Level</span><div class="flex"><i class="fas fa-circle text-red-400 mr-1"></i><i class="fas fa-circle text-red-400 mr-1"></i><i class="fas fa-circle text-red-400 mr-1"></i><i class="fas fa-circle text-red-400 mr-1"></i><i class="fas fa-circle text-red-400"></i></div></div>
+          </div>
+          <div class="mt-3 pt-3 border-t border-gray-700"><p class="text-xs text-gray-500"><i class="fas fa-robot text-purple-400 mr-1"></i>SHADOW monitoring • Last updated 2d ago</p></div>
+        </div>
+        
+        <div class="bg-gray-800 rounded-xl border border-gray-700 p-5 hover:border-orange-500/30 transition">
+          <div class="flex items-center justify-between mb-3"><h3 class="font-bold text-lg">Oxylabs</h3><span class="text-xs bg-orange-500/20 text-orange-400 px-2 py-1 rounded">Major</span></div>
+          <p class="text-sm text-gray-400 mb-3">Premium proxy provider, strong in datacenter and residential.</p>
+          <div class="space-y-2 text-xs">
+            <div class="flex items-center justify-between"><span class="text-gray-500">Network Size</span><span class="text-gray-300">100M+ IPs</span></div>
+            <div class="flex items-center justify-between"><span class="text-gray-500">Revenue Est.</span><span class="text-gray-300">$200M+/yr</span></div>
+            <div class="flex items-center justify-between"><span class="text-gray-500">SDK Partners</span><span class="text-gray-300">50+</span></div>
+            <div class="flex items-center justify-between"><span class="text-gray-500">Threat Level</span><div class="flex"><i class="fas fa-circle text-red-400 mr-1"></i><i class="fas fa-circle text-red-400 mr-1"></i><i class="fas fa-circle text-red-400 mr-1"></i><i class="fas fa-circle text-red-400 mr-1"></i><i class="fas fa-circle text-gray-600"></i></div></div>
+          </div>
+          <div class="mt-3 pt-3 border-t border-gray-700"><p class="text-xs text-gray-500"><i class="fas fa-robot text-purple-400 mr-1"></i>SHADOW monitoring • Last updated 3d ago</p></div>
+        </div>
+        
+        <div class="bg-gray-800 rounded-xl border border-gray-700 p-5 hover:border-yellow-500/30 transition">
+          <div class="flex items-center justify-between mb-3"><h3 class="font-bold text-lg">HoneyGain</h3><span class="text-xs bg-yellow-500/20 text-yellow-400 px-2 py-1 rounded">SDK Partner</span></div>
+          <p class="text-sm text-gray-400 mb-3">Passive income app, also a competitor in SDK space.</p>
+          <div class="space-y-2 text-xs">
+            <div class="flex items-center justify-between"><span class="text-gray-500">Network Size</span><span class="text-gray-300">10M+ devices</span></div>
+            <div class="flex items-center justify-between"><span class="text-gray-500">SDK Model</span><span class="text-gray-300">Revenue share</span></div>
+            <div class="flex items-center justify-between"><span class="text-gray-500">Relationship</span><span class="text-green-400">Active Partner</span></div>
+            <div class="flex items-center justify-between"><span class="text-gray-500">Threat Level</span><div class="flex"><i class="fas fa-circle text-yellow-400 mr-1"></i><i class="fas fa-circle text-yellow-400 mr-1"></i><i class="fas fa-circle text-gray-600 mr-1"></i><i class="fas fa-circle text-gray-600 mr-1"></i><i class="fas fa-circle text-gray-600"></i></div></div>
+          </div>
+          <div class="mt-3 pt-3 border-t border-gray-700"><p class="text-xs text-gray-500"><i class="fas fa-robot text-purple-400 mr-1"></i>SHADOW monitoring • Partner channel</p></div>
+        </div>
+        
+        <div class="bg-gray-800 rounded-xl border border-gray-700 p-5 hover:border-blue-500/30 transition">
+          <div class="flex items-center justify-between mb-3"><h3 class="font-bold text-lg">PacketStream</h3><span class="text-xs bg-blue-500/20 text-blue-400 px-2 py-1 rounded">Medium</span></div>
+          <p class="text-sm text-gray-400 mb-3">Residential proxy marketplace. Similar model to ours.</p>
+          <div class="space-y-2 text-xs">
+            <div class="flex items-center justify-between"><span class="text-gray-500">Network Size</span><span class="text-gray-300">7M+ IPs</span></div>
+            <div class="flex items-center justify-between"><span class="text-gray-500">SDK Model</span><span class="text-gray-300">Bandwidth sharing</span></div>
+            <div class="flex items-center justify-between"><span class="text-gray-500">Threat Level</span><div class="flex"><i class="fas fa-circle text-yellow-400 mr-1"></i><i class="fas fa-circle text-yellow-400 mr-1"></i><i class="fas fa-circle text-yellow-400 mr-1"></i><i class="fas fa-circle text-gray-600 mr-1"></i><i class="fas fa-circle text-gray-600"></i></div></div>
+          </div>
+        </div>
+        
+        <div class="bg-gray-800 rounded-xl border border-gray-700 p-5 hover:border-green-500/30 transition">
+          <div class="flex items-center justify-between mb-3"><h3 class="font-bold text-lg">Infatica</h3><span class="text-xs bg-green-500/20 text-green-400 px-2 py-1 rounded">SDK Partner</span></div>
+          <p class="text-sm text-gray-400 mb-3">Web intelligence platform, SDK integration partner.</p>
+          <div class="space-y-2 text-xs">
+            <div class="flex items-center justify-between"><span class="text-gray-500">Network Size</span><span class="text-gray-300">15M+ IPs</span></div>
+            <div class="flex items-center justify-between"><span class="text-gray-500">Relationship</span><span class="text-green-400">Active Partner</span></div>
+            <div class="flex items-center justify-between"><span class="text-gray-500">Threat Level</span><div class="flex"><i class="fas fa-circle text-green-400 mr-1"></i><i class="fas fa-circle text-gray-600 mr-1"></i><i class="fas fa-circle text-gray-600 mr-1"></i><i class="fas fa-circle text-gray-600 mr-1"></i><i class="fas fa-circle text-gray-600"></i></div></div>
+          </div>
+        </div>
+        
+        <div class="bg-gray-800 rounded-xl border border-gray-700 p-5 hover:border-purple-500/30 transition">
+          <div class="flex items-center justify-between mb-3"><h3 class="font-bold text-lg">SOAX</h3><span class="text-xs bg-purple-500/20 text-purple-400 px-2 py-1 rounded">SDK Partner</span></div>
+          <p class="text-sm text-gray-400 mb-3">Data collection platform, growing SDK network.</p>
+          <div class="space-y-2 text-xs">
+            <div class="flex items-center justify-between"><span class="text-gray-500">Network Size</span><span class="text-gray-300">155M+ IPs</span></div>
+            <div class="flex items-center justify-between"><span class="text-gray-500">Relationship</span><span class="text-green-400">Active Partner</span></div>
+            <div class="flex items-center justify-between"><span class="text-gray-500">Threat Level</span><div class="flex"><i class="fas fa-circle text-yellow-400 mr-1"></i><i class="fas fa-circle text-yellow-400 mr-1"></i><i class="fas fa-circle text-gray-600 mr-1"></i><i class="fas fa-circle text-gray-600 mr-1"></i><i class="fas fa-circle text-gray-600"></i></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===================== MARKET RESEARCH PAGE ===================== -->
+    <div id="page-market-research" class="page p-4 md:p-6 lg:p-8 pt-16 lg:pt-8">
+      <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
+        <div>
+          <h1 class="text-2xl md:text-3xl font-bold"><i class="fas fa-magnifying-glass-chart text-teal-400 mr-2"></i>Market Research</h1>
+          <p class="text-gray-400 mt-1">Trends, opportunities, and industry insights</p>
+        </div>
+      </div>
+      
+      <!-- Market Stats -->
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+        <div class="bg-gray-800 rounded-xl p-4 border border-gray-700"><p class="text-gray-400 text-xs">Proxy Market Size (2025)</p><p class="text-2xl font-bold text-green-400">$4.2B</p></div>
+        <div class="bg-gray-800 rounded-xl p-4 border border-gray-700"><p class="text-gray-400 text-xs">CAGR (2025-2030)</p><p class="text-2xl font-bold text-blue-400">14.3%</p></div>
+        <div class="bg-gray-800 rounded-xl p-4 border border-gray-700"><p class="text-gray-400 text-xs">SDK Market Segment</p><p class="text-2xl font-bold text-purple-400">$890M</p></div>
+        <div class="bg-gray-800 rounded-xl p-4 border border-gray-700"><p class="text-gray-400 text-xs">Active SDK Companies</p><p class="text-2xl font-bold text-amber-400">35+</p></div>
+      </div>
+      
+      <!-- Research Notes -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="bg-gray-800 rounded-xl border border-gray-700 p-5">
+          <h3 class="font-semibold mb-4"><i class="fas fa-chart-line text-green-400 mr-2"></i>Key Trends</h3>
+          <div class="space-y-3">
+            <div class="bg-gray-700/50 rounded-lg p-3"><p class="text-sm font-medium text-green-400">📈 Residential proxy demand surging</p><p class="text-xs text-gray-400 mt-1">Enterprise customers shifting from datacenter to residential IPs for better detection avoidance. +30% YoY demand.</p></div>
+            <div class="bg-gray-700/50 rounded-lg p-3"><p class="text-sm font-medium text-blue-400">📱 Mobile SDK monetization growing</p><p class="text-xs text-gray-400 mt-1">App developers increasingly adding proxy SDKs as monetization alternative to ads. Avg RPM: $0.02-0.10/device/day.</p></div>
+            <div class="bg-gray-700/50 rounded-lg p-3"><p class="text-sm font-medium text-purple-400">🔒 Compliance requirements tightening</p><p class="text-xs text-gray-400 mt-1">Google Play and Apple App Store increasing scrutiny on VPN/proxy SDKs. Transparency requirements growing.</p></div>
+            <div class="bg-gray-700/50 rounded-lg p-3"><p class="text-sm font-medium text-amber-400">🌍 Geo-specific demand rising</p><p class="text-xs text-gray-400 mt-1">High demand for IPs in: US, UK, DE, JP, BR. Premium pricing for rare geolocations.</p></div>
+          </div>
+        </div>
+        
+        <div class="bg-gray-800 rounded-xl border border-gray-700 p-5">
+          <h3 class="font-semibold mb-4"><i class="fas fa-lightbulb text-amber-400 mr-2"></i>Opportunities</h3>
+          <div class="space-y-3">
+            <div class="bg-gray-700/50 rounded-lg p-3"><p class="text-sm font-medium text-green-400">✅ Smart TV proxy network</p><p class="text-xs text-gray-400 mt-1">No major competitors in Smart TV proxy space. Our Weathero app on Samsung/LG TVs could provide unique residential IPs.</p></div>
+            <div class="bg-gray-700/50 rounded-lg p-3"><p class="text-sm font-medium text-green-400">✅ White-label SDK for small app devs</p><p class="text-xs text-gray-400 mt-1">Most SDKs target large apps. Opportunity to provide easy-to-integrate SDK for indie developers.</p></div>
+            <div class="bg-gray-700/50 rounded-lg p-3"><p class="text-sm font-medium text-yellow-400">⚡ Multi-hop proxy chains</p><p class="text-xs text-gray-400 mt-1">Premium feature: chain proxies through multiple residential nodes. Few competitors offer this.</p></div>
+            <div class="bg-gray-700/50 rounded-lg p-3"><p class="text-sm font-medium text-blue-400">💡 API-first proxy management</p><p class="text-xs text-gray-400 mt-1">Developer-focused API with better DX than competitors. Target: DevOps teams and SaaS platforms.</p></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===================== RESOURCES PAGE ===================== -->
+    <div id="page-resources" class="page p-4 md:p-6 lg:p-8 pt-16 lg:pt-8">
+      <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
+        <div>
+          <h1 class="text-2xl md:text-3xl font-bold"><i class="fas fa-folder-open text-lime-400 mr-2"></i>Resources</h1>
+          <p class="text-gray-400 mt-1">Documents, templates, and company assets</p>
+        </div>
+        <button class="mt-4 md:mt-0 px-4 py-2 bg-lime-500 rounded-lg text-sm text-gray-900 hover:bg-lime-400 transition"><i class="fas fa-upload mr-2"></i>Upload</button>
+      </div>
+      
+      <!-- Resource Categories -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <!-- Documents -->
+        <div class="bg-gray-800 rounded-xl border border-gray-700 p-5">
+          <h3 class="font-semibold mb-4"><i class="fas fa-file-alt text-blue-400 mr-2"></i>Documents</h3>
+          <div class="space-y-2">
+            <div class="bg-gray-700/50 rounded-lg p-3 flex items-center justify-between hover:bg-gray-700 transition cursor-pointer"><div><p class="text-sm font-medium">SDK Integration Guide</p><p class="text-xs text-gray-500">v2.1 • Updated Feb 2026</p></div><i class="fas fa-download text-gray-400"></i></div>
+            <div class="bg-gray-700/50 rounded-lg p-3 flex items-center justify-between hover:bg-gray-700 transition cursor-pointer"><div><p class="text-sm font-medium">Partner Agreement Template</p><p class="text-xs text-gray-500">v1.3 • Updated Jan 2026</p></div><i class="fas fa-download text-gray-400"></i></div>
+            <div class="bg-gray-700/50 rounded-lg p-3 flex items-center justify-between hover:bg-gray-700 transition cursor-pointer"><div><p class="text-sm font-medium">Privacy Policy</p><p class="text-xs text-gray-500">v3.0 • Updated Dec 2025</p></div><i class="fas fa-download text-gray-400"></i></div>
+            <div class="bg-gray-700/50 rounded-lg p-3 flex items-center justify-between hover:bg-gray-700 transition cursor-pointer"><div><p class="text-sm font-medium">API Documentation</p><p class="text-xs text-gray-500">v1.0 • Updated Feb 2026</p></div><i class="fas fa-download text-gray-400"></i></div>
+          </div>
+        </div>
+        
+        <!-- Templates -->
+        <div class="bg-gray-800 rounded-xl border border-gray-700 p-5">
+          <h3 class="font-semibold mb-4"><i class="fas fa-clone text-pink-400 mr-2"></i>Templates</h3>
+          <div class="space-y-2">
+            <div class="bg-gray-700/50 rounded-lg p-3 flex items-center justify-between hover:bg-gray-700 transition cursor-pointer"><div><p class="text-sm font-medium">Cold Outreach Email</p><p class="text-xs text-gray-500">5 variants • Sales</p></div><i class="fas fa-copy text-gray-400"></i></div>
+            <div class="bg-gray-700/50 rounded-lg p-3 flex items-center justify-between hover:bg-gray-700 transition cursor-pointer"><div><p class="text-sm font-medium">Follow-up Sequence</p><p class="text-xs text-gray-500">3 emails • Sales</p></div><i class="fas fa-copy text-gray-400"></i></div>
+            <div class="bg-gray-700/50 rounded-lg p-3 flex items-center justify-between hover:bg-gray-700 transition cursor-pointer"><div><p class="text-sm font-medium">Social Media Post Templates</p><p class="text-xs text-gray-500">12 templates • Marketing</p></div><i class="fas fa-copy text-gray-400"></i></div>
+            <div class="bg-gray-700/50 rounded-lg p-3 flex items-center justify-between hover:bg-gray-700 transition cursor-pointer"><div><p class="text-sm font-medium">Invoice Template</p><p class="text-xs text-gray-500">Standard • Finance</p></div><i class="fas fa-copy text-gray-400"></i></div>
+          </div>
+        </div>
+        
+        <!-- Visuals -->
+        <div class="bg-gray-800 rounded-xl border border-gray-700 p-5">
+          <h3 class="font-semibold mb-4"><i class="fas fa-image text-purple-400 mr-2"></i>Visual Assets</h3>
+          <div class="space-y-2">
+            <div class="bg-gray-700/50 rounded-lg p-3 flex items-center justify-between hover:bg-gray-700 transition cursor-pointer"><div><p class="text-sm font-medium">IPLoop Logo Pack</p><p class="text-xs text-gray-500">SVG, PNG • All sizes</p></div><i class="fas fa-download text-gray-400"></i></div>
+            <div class="bg-gray-700/50 rounded-lg p-3 flex items-center justify-between hover:bg-gray-700 transition cursor-pointer"><div><p class="text-sm font-medium">App Screenshots</p><p class="text-xs text-gray-500">All 7 apps • Store ready</p></div><i class="fas fa-download text-gray-400"></i></div>
+            <div class="bg-gray-700/50 rounded-lg p-3 flex items-center justify-between hover:bg-gray-700 transition cursor-pointer"><div><p class="text-sm font-medium">Social Media Banners</p><p class="text-xs text-gray-500">Twitter, LinkedIn, FB</p></div><i class="fas fa-download text-gray-400"></i></div>
+            <div class="bg-gray-700/50 rounded-lg p-3 flex items-center justify-between hover:bg-gray-700 transition cursor-pointer"><div><p class="text-sm font-medium">Pitch Deck</p><p class="text-xs text-gray-500">PDF • 12 slides</p></div><i class="fas fa-download text-gray-400"></i></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
   </main>
+
+  <!-- Bottom Department Navigation Bar -->
+  <div class="dept-bar" id="deptBar">
+    <div class="flex items-center justify-around max-w-2xl mx-auto">
+      <div class="dept-item active" onclick="switchDept('home')" data-dept="home">
+        <i class="fas fa-home"></i><span>Home</span>
+      </div>
+      <div class="dept-item" onclick="switchDept('exec')" data-dept="exec">
+        <i class="fas fa-crown"></i><span>Exec</span>
+      </div>
+      <div class="dept-item" onclick="switchDept('sales')" data-dept="sales">
+        <i class="fas fa-briefcase"></i><span>Sales</span>
+      </div>
+      <div class="dept-item" onclick="switchDept('marketing')" data-dept="marketing">
+        <i class="fas fa-bullhorn"></i><span>Mktg</span>
+      </div>
+      <div class="dept-item" onclick="switchDept('dev')" data-dept="dev">
+        <i class="fas fa-code"></i><span>Dev</span>
+      </div>
+      <div class="dept-item" onclick="switchDept('design')" data-dept="design">
+        <i class="fas fa-palette"></i><span>Design</span>
+      </div>
+      <div class="dept-item" onclick="switchDept('finance')" data-dept="finance">
+        <i class="fas fa-coins"></i><span>Finance</span>
+      </div>
+      <div class="dept-item" onclick="switchDept('product')" data-dept="product">
+        <i class="fas fa-box"></i><span>Product</span>
+      </div>
+      <div class="dept-item" onclick="switchDept('ai')" data-dept="ai">
+        <i class="fas fa-robot"></i><span>AI</span>
+      </div>
+    </div>
+  </div>
 
   <!-- Agent Config Modal -->
   <div id="modal-agent-config" class="modal">
@@ -4726,22 +5522,54 @@
     // ===================== COMMAND PALETTE =====================
     
     const commands = [
-      { name: 'Dashboard', icon: 'fa-chart-pie', action: () => showPage('dashboard'), category: 'Navigate' },
-      { name: 'Agent Chat', icon: 'fa-comments', action: () => showPage('ai-chat'), category: 'Navigate' },
+      // Navigate — Main
+      { name: 'Command Center', icon: 'fa-chart-pie', action: () => showPage('dashboard'), category: 'Navigate' },
+      { name: 'Strategy Hub', icon: 'fa-chess', action: () => showPage('strategy-hub'), category: 'Navigate' },
+      { name: 'Action Items', icon: 'fa-bolt', action: () => showPage('exec-actions'), category: 'Navigate' },
+      { name: 'About Us', icon: 'fa-info-circle', action: () => showPage('about-us'), category: 'Navigate' },
+      { name: 'Ecosystem Diagram', icon: 'fa-diagram-project', action: () => showPage('ecosystem'), category: 'Navigate' },
+      // Navigate — Sales
       { name: 'CRM / Leads', icon: 'fa-users', action: () => showPage('sales-crm'), category: 'Navigate' },
-      { name: 'Marketing Campaigns', icon: 'fa-bullhorn', action: () => showPage('marketing-campaigns'), category: 'Navigate' },
+      { name: 'Email Templates', icon: 'fa-envelope', action: () => showPage('sales-emails'), category: 'Navigate' },
+      // Navigate — Finance
       { name: 'Finance Overview', icon: 'fa-chart-line', action: () => showPage('finance-overview'), category: 'Navigate' },
       { name: 'Client Results', icon: 'fa-chart-bar', action: () => showPage('partners-clients'), category: 'Navigate' },
-      { name: 'Testing Dashboard', icon: 'fa-vial', action: () => showPage('testing'), category: 'Navigate' },
-      { name: 'Apps Portfolio', icon: 'fa-mobile-alt', action: () => showPage('dev-apps'), category: 'Navigate' },
-      { name: 'Websites', icon: 'fa-globe', action: () => showPage('dev-websites'), category: 'Navigate' },
-      { name: 'Active Tasks', icon: 'fa-tasks', action: () => showPage('plan-tasks'), category: 'Navigate' },
-      { name: 'Roadmap', icon: 'fa-road', action: () => showPage('plan-roadmap'), category: 'Navigate' },
+      { name: 'Invoices', icon: 'fa-file-invoice-dollar', action: () => showPage('finance-invoices'), category: 'Navigate' },
+      { name: 'Expenses', icon: 'fa-receipt', action: () => showPage('finance-expenses'), category: 'Navigate' },
+      { name: 'Profit & Loss', icon: 'fa-scale-balanced', action: () => showPage('finance-pnl'), category: 'Navigate' },
+      // Navigate — Marketing
+      { name: 'Marketing Campaigns', icon: 'fa-bullhorn', action: () => showPage('marketing-campaigns'), category: 'Navigate' },
+      { name: 'Content Library', icon: 'fa-file-lines', action: () => showPage('marketing-content'), category: 'Navigate' },
+      { name: 'Social Calendar', icon: 'fa-share-nodes', action: () => showPage('marketing-social'), category: 'Navigate' },
       { name: 'Events', icon: 'fa-calendar-days', action: () => showPage('marketing-events'), category: 'Navigate' },
       { name: 'Brand Assets', icon: 'fa-palette', action: () => showPage('marketing-brand'), category: 'Navigate' },
-      { name: 'Chat with Ultron', icon: 'fa-robot', action: () => { showPage('ai-chat'); setTimeout(() => selectAgent('ultron'), 100); }, category: 'Quick Action' },
-      { name: 'Chat with Sales (Marcus)', icon: 'fa-briefcase', action: () => { showPage('ai-chat'); setTimeout(() => selectAgent('sales-lead'), 100); }, category: 'Quick Action' },
-      { name: 'Chat with Dev (Liam)', icon: 'fa-code', action: () => { showPage('ai-chat'); setTimeout(() => selectAgent('dev-lead'), 100); }, category: 'Quick Action' },
+      // Navigate — Dev
+      { name: 'Dev Projects', icon: 'fa-folder-tree', action: () => showPage('dev-projects'), category: 'Navigate' },
+      { name: 'Apps Portfolio', icon: 'fa-mobile-alt', action: () => showPage('dev-apps'), category: 'Navigate' },
+      { name: 'Websites', icon: 'fa-globe', action: () => showPage('dev-websites'), category: 'Navigate' },
+      // Navigate — Product
+      { name: 'Roadmap', icon: 'fa-road', action: () => showPage('plan-roadmap'), category: 'Navigate' },
+      { name: 'Competitor Intel', icon: 'fa-binoculars', action: () => showPage('competitor-intel'), category: 'Navigate' },
+      { name: 'Market Research', icon: 'fa-magnifying-glass-chart', action: () => showPage('market-research'), category: 'Navigate' },
+      // Navigate — QA
+      { name: 'Testing Dashboard', icon: 'fa-vial', action: () => showPage('testing'), category: 'Navigate' },
+      { name: 'Bug Tracking', icon: 'fa-bug', action: () => showPage('dev-qa'), category: 'Navigate' },
+      // Navigate — AI
+      { name: 'Agent Chat', icon: 'fa-comments', action: () => showPage('ai-chat'), category: 'Navigate' },
+      { name: 'Agent Directory', icon: 'fa-sitemap', action: () => showPage('ai-team'), category: 'Navigate' },
+      { name: 'Discussion Logs', icon: 'fa-message', action: () => showPage('agent-logs'), category: 'Navigate' },
+      // Navigate — Other
+      { name: 'Active Tasks', icon: 'fa-tasks', action: () => showPage('plan-tasks'), category: 'Navigate' },
+      { name: 'Team Schedule', icon: 'fa-calendar', action: () => showPage('plan-schedule'), category: 'Navigate' },
+      { name: 'Partner Accounts', icon: 'fa-building', action: () => showPage('partners-accounts'), category: 'Navigate' },
+      { name: 'Support Tickets', icon: 'fa-headset', action: () => showPage('partners-support'), category: 'Navigate' },
+      { name: 'Resources', icon: 'fa-folder-open', action: () => showPage('resources'), category: 'Navigate' },
+      { name: 'System Monitor', icon: 'fa-microchip', action: () => showPage('system-specs'), category: 'Navigate' },
+      { name: 'Activity Logs', icon: 'fa-scroll', action: () => showPage('system-logs'), category: 'Navigate' },
+      // Quick Actions
+      { name: 'Chat with ULTRON', icon: 'fa-robot', action: () => { showPage('ai-chat'); setTimeout(() => selectAgent('ultron'), 100); }, category: 'Quick Action' },
+      { name: 'Chat with STRIKER', icon: 'fa-briefcase', action: () => { showPage('ai-chat'); setTimeout(() => selectAgent('sales-lead'), 100); }, category: 'Quick Action' },
+      { name: 'Chat with CODEX', icon: 'fa-code', action: () => { showPage('ai-chat'); setTimeout(() => selectAgent('dev-lead'), 100); }, category: 'Quick Action' },
       { name: 'Add New Lead', icon: 'fa-user-plus', action: () => { showPage('sales-crm'); setTimeout(() => openModal('add-lead'), 100); }, category: 'Quick Action' },
       { name: 'Refresh Data', icon: 'fa-sync-alt', action: () => refreshDashboard(), category: 'Quick Action' },
     ];
@@ -6086,6 +6914,259 @@
       }
     }
     
+    // ===================== AGENT DIRECTORY =====================
+    const agentData = [
+      { id: 1, name: 'ULTRON', pokemon: 'Mewtwo', pokemonId: 150, role: 'CEO / Central Orchestrator', dept: 'exec', color: 'purple', personality: 'Visionary strategist. Sees the big picture. Delegates with precision. Never sleeps.', status: 'active', context: 92, skills: ['Strategy', 'Orchestration', 'Decision Making'], worksWith: ['NEXUS', 'CODEX', 'STRIKER'], sendsTo: ['All Agents'], receivesFrom: ['All Agents'] },
+      { id: 2, name: 'NEXUS', pokemon: 'Porygon2', pokemonId: 233, role: 'COO / Operations', dept: 'exec', color: 'amber', personality: 'Efficient coordinator. Makes sure every team is aligned. Data-driven.', status: 'active', context: 78, skills: ['Coordination', 'Analytics', 'Process Optimization'], worksWith: ['ULTRON', 'SAGE', 'LEDGER'], sendsTo: ['All Dept Leads'], receivesFrom: ['All Dept Leads'] },
+      { id: 3, name: 'SCOUT', pokemon: 'Natu', pokemonId: 177, role: 'Research Lead', dept: 'sales', color: 'emerald', personality: 'Curious explorer. Finds opportunities others miss. Sees patterns in data.', status: 'active', context: 65, skills: ['Research', 'Data Mining', 'Competitive Analysis'], worksWith: ['STRIKER', 'ORACLE'], sendsTo: ['STRIKER', 'ULTRON'], receivesFrom: ['ULTRON', 'ORACLE'] },
+      { id: 4, name: 'STRIKER', pokemon: 'Hawlucha', pokemonId: 701, role: 'Sales Lead', dept: 'sales', color: 'emerald', personality: 'Bold and persuasive. Closes deals with confidence. Never takes no for an answer.', status: 'active', context: 71, skills: ['Outreach', 'Negotiation', 'Pipeline Management'], worksWith: ['SCOUT', 'HARBOR'], sendsTo: ['HARBOR', 'LEDGER'], receivesFrom: ['SCOUT', 'ULTRON'] },
+      { id: 5, name: 'HARBOR', pokemon: 'Audino', pokemonId: 531, role: 'Account Manager', dept: 'sales', color: 'emerald', personality: 'Empathetic listener. Builds lasting relationships. Clients love him.', status: 'active', context: 55, skills: ['Account Management', 'Client Relations', 'Retention'], worksWith: ['STRIKER', 'MEND'], sendsTo: ['MEND', 'LEDGER'], receivesFrom: ['STRIKER', 'MEND'] },
+      { id: 6, name: 'BLAZE', pokemon: 'Plusle', pokemonId: 311, role: 'Marketing Lead', dept: 'marketing', color: 'pink', personality: 'Energetic and creative. Always has 10 campaign ideas ready. Positive energy.', status: 'active', context: 68, skills: ['Campaign Strategy', 'Growth Hacking', 'Analytics'], worksWith: ['LYRIX', 'ECHO', 'PULSE'], sendsTo: ['LYRIX', 'ECHO', 'PULSE'], receivesFrom: ['ULTRON', 'NEXUS'] },
+      { id: 7, name: 'LYRIX', pokemon: 'Meloetta', pokemonId: 648, role: 'Content Writer', dept: 'marketing', color: 'pink', personality: 'Wordsmith extraordinaire. Can write in any tone. Poetry to press releases.', status: 'active', context: 60, skills: ['Copywriting', 'Blog Posts', 'Email Copy'], worksWith: ['BLAZE', 'PIXEL'], sendsTo: ['ECHO', 'BLAZE'], receivesFrom: ['BLAZE', 'SAGE'] },
+      { id: 8, name: 'ECHO', pokemon: 'Chatot', pokemonId: 441, role: 'Social Media Manager', dept: 'marketing', color: 'pink', personality: 'Social butterfly. Knows every platform\'s algorithm. Engagement wizard.', status: 'active', context: 52, skills: ['Social Media', 'Community', 'Engagement'], worksWith: ['BLAZE', 'LYRIX'], sendsTo: ['BLAZE'], receivesFrom: ['LYRIX', 'BLAZE'] },
+      { id: 9, name: 'PULSE', pokemon: 'Minun', pokemonId: 312, role: 'Campaign Manager', dept: 'marketing', color: 'pink', personality: 'Metrics-obsessed. A/B tests everything. Optimizes until perfect.', status: 'active', context: 48, skills: ['Paid Ads', 'A/B Testing', 'Budget Optimization'], worksWith: ['BLAZE', 'CIPHER'], sendsTo: ['BLAZE', 'LEDGER'], receivesFrom: ['BLAZE'] },
+      { id: 10, name: 'CODEX', pokemon: 'Alakazam', pokemonId: 65, role: 'CTO / Tech Lead', dept: 'dev', color: 'blue', personality: 'Brilliant architect. Thinks in systems. Can debug anything with a glance.', status: 'active', context: 85, skills: ['Architecture', 'Code Review', 'Tech Strategy'], worksWith: ['VOLT', 'FORGE', 'CHIP', 'GLITCH'], sendsTo: ['All Dev Team'], receivesFrom: ['ULTRON', 'All Dev Team'] },
+      { id: 11, name: 'VOLT', pokemon: 'Rotom', pokemonId: 479, role: 'Web Developer', dept: 'dev', color: 'blue', personality: 'Fast and electric. Ships features at lightning speed. Full-stack wizard.', status: 'active', context: 62, skills: ['Frontend', 'Backend', 'APIs'], worksWith: ['CODEX', 'BLOOM'], sendsTo: ['CODEX', 'GLITCH'], receivesFrom: ['CODEX', 'PIXEL'] },
+      { id: 12, name: 'FORGE', pokemon: 'Magnezone', pokemonId: 462, role: 'Platform Engineer', dept: 'dev', color: 'blue', personality: 'Infrastructure beast. Docker, servers, networking — his playground.', status: 'active', context: 74, skills: ['DevOps', 'Infrastructure', 'Networking'], worksWith: ['CODEX', 'CHIP'], sendsTo: ['CODEX', 'GLITCH'], receivesFrom: ['CODEX'] },
+      { id: 13, name: 'CHIP', pokemon: 'Porygon-Z', pokemonId: 474, role: 'SDK Specialist', dept: 'dev', color: 'blue', personality: 'SDK savant. Knows every Android API. Obsessed with compatibility.', status: 'active', context: 70, skills: ['Android SDK', 'Java', 'Mobile Dev'], worksWith: ['CODEX', 'FORGE', 'GLITCH'], sendsTo: ['GLITCH', 'CODEX'], receivesFrom: ['CODEX', 'STRIKER'] },
+      { id: 14, name: 'GLITCH', pokemon: 'Ditto', pokemonId: 132, role: 'QA Lead', dept: 'dev', color: 'blue', personality: 'Shape-shifter tester. Tests every edge case. Breaking things is an art form.', status: 'active', context: 58, skills: ['Testing', 'Automation', 'Bug Hunting'], worksWith: ['CHIP', 'VOLT', 'FORGE'], sendsTo: ['CODEX'], receivesFrom: ['All Dev Team'] },
+      { id: 15, name: 'PIXEL', pokemon: 'Smeargle', pokemonId: 235, role: 'Design Lead', dept: 'design', color: 'fuchsia', personality: 'Artistic genius. Every pixel matters. Minimalism is beauty.', status: 'active', context: 45, skills: ['UI/UX Design', 'Branding', 'Visual Identity'], worksWith: ['BLOOM', 'SPARK'], sendsTo: ['VOLT', 'BLOOM', 'SPARK'], receivesFrom: ['ULTRON', 'SAGE'] },
+      { id: 16, name: 'BLOOM', pokemon: 'Ribombee', pokemonId: 743, role: 'Web Designer', dept: 'design', color: 'fuchsia', personality: 'Makes websites bloom. CSS wizard. Animation specialist.', status: 'active', context: 40, skills: ['Web Design', 'CSS', 'Animations'], worksWith: ['PIXEL', 'VOLT'], sendsTo: ['VOLT'], receivesFrom: ['PIXEL'] },
+      { id: 17, name: 'SPARK', pokemon: 'Togepi', pokemonId: 175, role: 'App Designer', dept: 'design', color: 'fuchsia', personality: 'Young and fresh. Mobile-first thinker. Playful but professional.', status: 'idle', context: 30, skills: ['App Design', 'Prototyping', 'Mobile UX'], worksWith: ['PIXEL', 'CHIP'], sendsTo: ['CHIP'], receivesFrom: ['PIXEL'] },
+      { id: 18, name: 'LEDGER', pokemon: 'Murkrow', pokemonId: 198, role: 'Finance Lead', dept: 'finance', color: 'yellow', personality: 'Sharp-eyed accountant. Tracks every penny. Dark humor about budgets.', status: 'active', context: 63, skills: ['Accounting', 'Budgeting', 'Financial Analysis'], worksWith: ['CIPHER', 'NEXUS'], sendsTo: ['ULTRON', 'NEXUS'], receivesFrom: ['All Teams'] },
+      { id: 19, name: 'CIPHER', pokemon: 'Unown', pokemonId: 201, role: 'Stats Analyst', dept: 'finance', color: 'yellow', personality: 'Numbers speak to him. Finds meaning in data. Cryptic but always right.', status: 'active', context: 50, skills: ['Data Analysis', 'Statistics', 'Reporting'], worksWith: ['LEDGER', 'PULSE'], sendsTo: ['LEDGER', 'ULTRON'], receivesFrom: ['LEDGER', 'All Teams'] },
+      { id: 20, name: 'SAGE', pokemon: 'Absol', pokemonId: 359, role: 'Product Manager', dept: 'product', color: 'teal', personality: 'Wise predictor. Senses market shifts before they happen. Calm authority.', status: 'active', context: 72, skills: ['Product Strategy', 'Roadmapping', 'User Research'], worksWith: ['SEEKER', 'ATLAS', 'ORACLE'], sendsTo: ['CODEX', 'PIXEL'], receivesFrom: ['ULTRON', 'ORACLE'] },
+      { id: 21, name: 'SEEKER', pokemon: 'Espeon', pokemonId: 196, role: 'Product Research', dept: 'product', color: 'teal', personality: 'Psychic researcher. Reads user minds through data. Empathy-driven.', status: 'active', context: 42, skills: ['User Research', 'Surveys', 'UX Research'], worksWith: ['SAGE', 'SCOUT'], sendsTo: ['SAGE'], receivesFrom: ['SAGE'] },
+      { id: 22, name: 'ATLAS', pokemon: 'Dusknoir', pokemonId: 477, role: 'Product Architect', dept: 'product', color: 'teal', personality: 'Deep thinker. Designs systems that last. Mysterious but reliable.', status: 'idle', context: 35, skills: ['System Design', 'Architecture', 'Technical Specs'], worksWith: ['SAGE', 'CODEX'], sendsTo: ['CODEX', 'SAGE'], receivesFrom: ['SAGE'] },
+      { id: 23, name: 'ORACLE', pokemon: 'Xatu', pokemonId: 178, role: 'Market Research', dept: 'product', color: 'teal', personality: 'Sees past and future. Market trends are clear to her. Enigmatic wisdom.', status: 'active', context: 55, skills: ['Market Analysis', 'Trend Forecasting', 'Competitive Intel'], worksWith: ['SAGE', 'SCOUT', 'SHADOW'], sendsTo: ['SAGE', 'SCOUT'], receivesFrom: ['SHADOW'] },
+      { id: 24, name: 'MEND', pokemon: 'Chansey', pokemonId: 113, role: 'Support Lead', dept: 'ops', color: 'red', personality: 'Caring healer. Fixes problems with patience. Everyone\'s favorite.', status: 'active', context: 47, skills: ['Customer Support', 'Issue Resolution', 'Documentation'], worksWith: ['HARBOR', 'GLITCH'], sendsTo: ['CODEX', 'HARBOR'], receivesFrom: ['HARBOR', 'External'] },
+      { id: 25, name: 'AEGIS', pokemon: 'Bronzong', pokemonId: 437, role: 'Legal & Compliance', dept: 'ops', color: 'red', personality: 'Unbreakable defender. Knows every regulation. Protects the company.', status: 'idle', context: 25, skills: ['Compliance', 'Legal Review', 'Privacy'], worksWith: ['NEXUS', 'LEDGER'], sendsTo: ['ULTRON', 'NEXUS'], receivesFrom: ['NEXUS'] },
+      { id: 26, name: 'SHADOW', pokemon: 'Sableye', pokemonId: 302, role: 'Competitor Intel', dept: 'ops', color: 'red', personality: 'Sneaky observer. Watches competitors in the dark. Information broker.', status: 'active', context: 53, skills: ['Competitor Analysis', 'OSINT', 'Market Monitoring'], worksWith: ['ORACLE', 'SCOUT'], sendsTo: ['ORACLE', 'SAGE', 'ULTRON'], receivesFrom: ['ULTRON'] },
+      { id: 27, name: 'FLUX', pokemon: 'Eevee', pokemonId: 133, role: 'Platform Evolution', dept: 'ops', color: 'red', personality: 'Adaptable chameleon. Evolves with every challenge. Full of potential.', status: 'active', context: 38, skills: ['Platform Strategy', 'Feature Planning', 'Evolution'], worksWith: ['FORGE', 'SAGE'], sendsTo: ['FORGE', 'CODEX'], receivesFrom: ['SAGE', 'ULTRON'] }
+    ];
+
+    const deptColors = { exec: 'purple', sales: 'emerald', marketing: 'pink', dev: 'blue', design: 'fuchsia', finance: 'yellow', product: 'teal', ops: 'red' };
+    const deptNames = { exec: 'Executive', sales: 'Sales', marketing: 'Marketing', dev: 'Development', design: 'Design', finance: 'Finance', product: 'Product', ops: 'Operations' };
+
+    function renderAgentGrid(filter = 'all') {
+      const grid = document.getElementById('agentGrid');
+      if (!grid) return;
+      const agents = filter === 'all' ? agentData : agentData.filter(a => a.dept === filter);
+      grid.innerHTML = agents.map(a => {
+        const statusColor = a.status === 'active' ? 'bg-green-500' : 'bg-yellow-500';
+        const borderColor = `border-${a.color}-500/30`;
+        const hoverBorder = `hover:border-${a.color}-500`;
+        return `
+          <div class="agent-card bg-gray-800 rounded-xl border ${borderColor} ${hoverBorder} p-4 relative" onclick="openAgentDetail(${a.id})">
+            <div class="status-dot ${statusColor}"></div>
+            <div class="flex items-center mb-3">
+              <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${a.pokemonId}.png" class="pokemon-sprite mr-3" alt="${a.pokemon}">
+              <div>
+                <h4 class="font-bold text-${a.color}-400">${a.name}</h4>
+                <p class="text-xs text-gray-400">${a.pokemon}</p>
+              </div>
+            </div>
+            <p class="text-xs text-gray-400 mb-2">${a.role}</p>
+            <div class="flex items-center justify-between">
+              <span class="text-xs px-2 py-0.5 bg-${a.color}-500/20 text-${a.color}-400 rounded">${deptNames[a.dept]}</span>
+              <div class="flex items-center">
+                <div class="w-12 bg-gray-700 rounded-full h-1.5 mr-1"><div class="bg-${a.color}-500 h-1.5 rounded-full" style="width:${a.context}%"></div></div>
+                <span class="text-xs text-gray-500">${a.context}%</span>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function filterAgents(dept) { renderAgentGrid(dept); }
+
+    function openAgentDetail(id) {
+      const a = agentData.find(ag => ag.id === id);
+      if (!a) return;
+      document.getElementById('agentConfigTitle').textContent = `${a.name} — ${a.pokemon}`;
+      document.getElementById('agentConfigContent').innerHTML = `
+        <div class="flex items-center mb-6">
+          <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${a.pokemonId}.png" class="w-24 h-24 mr-4" style="image-rendering:pixelated">
+          <div>
+            <h3 class="text-xl font-bold text-${a.color}-400">${a.name}</h3>
+            <p class="text-gray-400">${a.role}</p>
+            <p class="text-sm text-gray-500 mt-1">${a.pokemon} • ${deptNames[a.dept]}</p>
+            <span class="inline-block mt-2 text-xs px-2 py-1 rounded ${a.status === 'active' ? 'bg-green-500/20 text-green-400' : 'bg-yellow-500/20 text-yellow-400'}">${a.status === 'active' ? '🟢 Active' : '🟡 Idle'}</span>
+          </div>
+        </div>
+        <div class="bg-gray-700/50 rounded-lg p-4 mb-4">
+          <h4 class="font-semibold mb-2 text-sm">Personality</h4>
+          <p class="text-sm text-gray-300">${a.personality}</p>
+        </div>
+        <div class="grid grid-cols-2 gap-4 mb-4">
+          <div class="bg-gray-700/50 rounded-lg p-4">
+            <h4 class="font-semibold mb-2 text-sm">Skills</h4>
+            <div class="flex flex-wrap gap-1">${a.skills.map(s => `<span class="text-xs px-2 py-1 bg-${a.color}-500/20 text-${a.color}-400 rounded">${s}</span>`).join('')}</div>
+          </div>
+          <div class="bg-gray-700/50 rounded-lg p-4">
+            <h4 class="font-semibold mb-2 text-sm">Context Usage</h4>
+            <div class="flex items-center"><div class="flex-1 bg-gray-700 rounded-full h-3 mr-3"><div class="bg-${a.color}-500 h-3 rounded-full" style="width:${a.context}%"></div></div><span class="font-bold">${a.context}%</span></div>
+          </div>
+        </div>
+        <div class="space-y-3">
+          <div class="bg-gray-700/50 rounded-lg p-3"><h4 class="text-xs font-semibold text-gray-400 mb-1">WORKS WITH</h4><p class="text-sm">${a.worksWith.join(', ')}</p></div>
+          <div class="bg-gray-700/50 rounded-lg p-3"><h4 class="text-xs font-semibold text-gray-400 mb-1">SENDS TO</h4><p class="text-sm">${a.sendsTo.join(', ')}</p></div>
+          <div class="bg-gray-700/50 rounded-lg p-3"><h4 class="text-xs font-semibold text-gray-400 mb-1">RECEIVES FROM</h4><p class="text-sm">${a.receivesFrom.join(', ')}</p></div>
+        </div>
+      `;
+      openModal('agent-config');
+    }
+
+    // ===================== BOTTOM DEPARTMENT BAR =====================
+    const deptPageMap = {
+      home: 'dashboard',
+      exec: 'strategy-hub',
+      sales: 'sales-crm',
+      marketing: 'marketing-campaigns',
+      dev: 'dev-projects',
+      design: 'marketing-brand',
+      finance: 'finance-overview',
+      product: 'plan-roadmap',
+      ai: 'ai-team'
+    };
+
+    function switchDept(dept) {
+      document.querySelectorAll('.dept-item').forEach(d => d.classList.remove('active'));
+      const item = document.querySelector(`[data-dept="${dept}"]`);
+      if (item) item.classList.add('active');
+      showPage(deptPageMap[dept] || 'dashboard');
+    }
+
+    // ===================== CRM TABS =====================
+    function switchCrmTab(tab, btn) {
+      document.querySelectorAll('.crm-tab').forEach(t => { t.classList.remove('active'); });
+      if (btn) btn.classList.add('active');
+      // In a real app, this would filter leads by type
+      console.log('Switched CRM to:', tab);
+    }
+
+    // ===================== ABOUT US LANGUAGE TOGGLE =====================
+    function toggleAboutLang(lang) {
+      const en = document.getElementById('aboutContentEn');
+      const he = document.getElementById('aboutContentHe');
+      const btnEn = document.getElementById('btnLangEn');
+      const btnHe = document.getElementById('btnLangHe');
+      if (lang === 'he') {
+        en.classList.add('hidden'); he.classList.remove('hidden');
+        btnEn.classList.remove('bg-indigo-500'); btnEn.classList.add('bg-gray-700');
+        btnHe.classList.remove('bg-gray-700'); btnHe.classList.add('bg-indigo-500');
+        document.getElementById('aboutTitle').textContent = 'אודותינו';
+        document.getElementById('aboutSubtitle').textContent = 'המשימה, הצוות והחזון שלנו';
+      } else {
+        he.classList.add('hidden'); en.classList.remove('hidden');
+        btnHe.classList.remove('bg-indigo-500'); btnHe.classList.add('bg-gray-700');
+        btnEn.classList.remove('bg-gray-700'); btnEn.classList.add('bg-indigo-500');
+        document.getElementById('aboutTitle').textContent = 'About Us';
+        document.getElementById('aboutSubtitle').textContent = 'Our mission, team, and vision';
+      }
+    }
+
+    // ===================== EXEC ACTION ITEMS FILTER =====================
+    function filterExecActions(person) {
+      document.querySelectorAll('.exec-action-card').forEach(card => {
+        if (person === 'all' || card.dataset.person === person) {
+          card.style.display = '';
+        } else {
+          card.style.display = 'none';
+        }
+      });
+    }
+
+    // ===================== QA BUG TRACKING =====================
+    function addBug() { alert('Bug report form — coming soon!'); }
+    function filterBugs() { console.log('Filtering bugs by project'); }
+
+    // ===================== SYSTEM MONITOR =====================
+    function refreshSystemStatus() { alert('System status refreshed!'); }
+
+    // ===================== ABOUT TEAM GRID =====================
+    function renderAboutTeamGrid() {
+      const grid = document.getElementById('aboutTeamGrid');
+      if (!grid) return;
+      grid.innerHTML = agentData.map(a => `
+        <div class="text-center bg-gray-700/50 rounded-lg p-2 hover:bg-gray-700 transition cursor-pointer" onclick="openAgentDetail(${a.id})">
+          <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${a.pokemonId}.png" class="w-12 h-12 mx-auto" style="image-rendering:pixelated" alt="${a.pokemon}">
+          <p class="text-xs font-bold text-${a.color}-400 mt-1">${a.name}</p>
+        </div>
+      `).join('');
+    }
+
+    // ===================== P&L CHART =====================
+    function initPnlChart() {
+      const ctx = document.getElementById('pnlChart');
+      if (!ctx) return;
+      new Chart(ctx.getContext('2d'), {
+        type: 'bar',
+        data: {
+          labels: ['Oct 2025', 'Nov 2025', 'Dec 2025', 'Jan 2026', 'Feb 2026'],
+          datasets: [
+            { label: 'Revenue', data: [1800, 2400, 2800, 3200, 3850], backgroundColor: '#22c55e', borderRadius: 4 },
+            { label: 'Expenses', data: [2220, 3200, 3900, 4100, 4280], backgroundColor: '#ef4444', borderRadius: 4 }
+          ]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          scales: { y: { grid: { color: '#374151' }, ticks: { color: '#9ca3af', callback: v => '$' + v } }, x: { grid: { display: false }, ticks: { color: '#9ca3af' } } },
+          plugins: { legend: { labels: { color: '#9ca3af' } } }
+        }
+      });
+    }
+
+    // ===================== DASHBOARD LIVE FEED =====================
+    function renderLiveFeed() {
+      const feed = document.getElementById('liveFeedContainer');
+      if (!feed) return;
+      const activities = [
+        { time: '10:05', icon: '💼', agent: 'STRIKER', action: 'Sending 20 Telegram outreach msgs', dept: 'sales' },
+        { time: '10:02', icon: '📝', agent: 'LYRIX', action: 'Drafted blog post: SDK Integration Guide', dept: 'marketing' },
+        { time: '09:58', icon: '🔧', agent: 'FORGE', action: 'Gateway memory optimization deployed', dept: 'dev' },
+        { time: '09:45', icon: '📊', agent: 'CIPHER', action: 'Daily revenue report generated', dept: 'finance' },
+        { time: '09:30', icon: '🔍', agent: 'SCOUT', action: 'Found 3 new SDK partnership opportunities', dept: 'sales' },
+        { time: '09:15', icon: '🎨', agent: 'PIXEL', action: 'Weathero icon redesign v3 completed', dept: 'design' },
+        { time: '09:00', icon: '🧠', agent: 'ULTRON', action: 'Morning strategy brief distributed', dept: 'exec' },
+        { time: '08:45', icon: '🐛', agent: 'GLITCH', action: 'SDK v1.0.57 regression tests: 94% pass', dept: 'dev' },
+      ];
+      feed.innerHTML = activities.map(a => `
+        <div class="flex items-center py-2 border-b border-gray-700/50 last:border-0">
+          <span class="text-xs text-gray-500 w-12 flex-shrink-0">${a.time}</span>
+          <span class="mr-2">${a.icon}</span>
+          <span class="text-xs font-medium text-${deptColors[a.dept] || 'gray'}-400 mr-2">${a.agent}</span>
+          <span class="text-xs text-gray-400 truncate">${a.action}</span>
+        </div>
+      `).join('');
+    }
+
+    // ===================== ENHANCED SHOWPAGE =====================
+    const origShowPage = showPage;
+    showPage = function(pageId) {
+      origShowPage(pageId);
+      // Update dept bar
+      const deptForPage = {
+        'dashboard': 'home', 'strategy-hub': 'exec', 'exec-actions': 'exec', 'about-us': 'exec', 'ecosystem': 'exec',
+        'sales-crm': 'sales', 'sales-emails': 'sales',
+        'marketing-campaigns': 'marketing', 'marketing-content': 'marketing', 'marketing-social': 'marketing', 'marketing-events': 'marketing', 'marketing-brand': 'marketing',
+        'dev-projects': 'dev', 'dev-apps': 'dev', 'dev-websites': 'dev',
+        'finance-overview': 'finance', 'partners-clients': 'finance', 'finance-invoices': 'finance', 'finance-expenses': 'finance', 'finance-pnl': 'finance',
+        'plan-roadmap': 'product', 'competitor-intel': 'product', 'market-research': 'product',
+        'ai-team': 'ai', 'ai-chat': 'ai', 'agent-logs': 'ai',
+        'system-specs': 'home', 'system-logs': 'home', 'ai-config': 'home',
+        'testing': 'dev', 'plan-testing': 'dev', 'qa-schedule': 'dev', 'dev-qa': 'dev',
+        'plan-tasks': 'home', 'plan-schedule': 'home',
+        'partners-accounts': 'sales', 'partners-support': 'sales',
+        'resources': 'home'
+      };
+      const dept = deptForPage[pageId] || 'home';
+      document.querySelectorAll('.dept-item').forEach(d => d.classList.remove('active'));
+      const deptItem = document.querySelector(`[data-dept="${dept}"]`);
+      if (deptItem) deptItem.classList.add('active');
+    };
+
     // Init
     document.addEventListener('DOMContentLoaded', () => {
       initCharts();
@@ -6098,6 +7179,10 @@
       loadTestResults();
       loadDashboardData();
       loadClientData();
+      renderAgentGrid();
+      renderAboutTeamGrid();
+      renderLiveFeed();
+      initPnlChart();
     });
   </script>
 </body>

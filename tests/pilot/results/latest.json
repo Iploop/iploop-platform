@@ -1,11 +1,11 @@
 {
   "geo-test": {
-    "timestamp": "2026-02-07T16:02:07.428Z",
+    "timestamp": "2026-02-07T17:03:02.498Z",
     "summary": {
       "errors": 0
     },
     "passed": false,
-    "duration": 8096
+    "duration": 8115
   },
   "leak-test": {
     "timestamp": "2026-02-07T16:49:46.990Z",
@@ -33,24 +33,24 @@
     "duration": 4740
   },
   "rotation-test": {
-    "timestamp": "2026-02-07T16:02:18.674Z",
+    "timestamp": "2026-02-07T17:03:13.752Z",
     "summary": {
       "totalRequests": 0,
       "errors": 50,
       "uniqueIps": 0
     },
     "passed": false,
-    "duration": 10190
+    "duration": 10195
   },
   "sticky-stress": {
-    "timestamp": "2026-02-07T16:02:32.360Z",
+    "timestamp": "2026-02-07T17:03:27.460Z",
     "summary": {
       "failed": 0,
       "totalRequests": 0,
       "errors": 500
     },
     "passed": false,
-    "duration": 12630
+    "duration": 12645
   },
   "security-test": {
     "timestamp": "2026-02-07T15:11:07.973Z",

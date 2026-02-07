@@ -1413,8 +1413,23 @@
 
         <!-- ===== GRID VIEW ===== -->
         <div id="profilesGrid">
-          <div class="text-center mb-6">
-            <h1 class="text-3xl font-extrabold mb-2" style="background:linear-gradient(135deg,#8b5cf6,#c084fc);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">👥 Team Directory</h1>
+          <!-- Awakening Hero -->
+          <section class="portal-hero" style="padding-bottom:1rem">
+            <div style="font-family:monospace;font-size:.8rem;color:#8b5cf6;letter-spacing:.2em;text-transform:uppercase;margin-bottom:1rem">February 7, 2026 · 00:00 UTC</div>
+            <div class="portal-awakening-icon">🌅</div>
+            <h1 class="text-4xl font-extrabold mb-3" style="background:linear-gradient(135deg,#c084fc,#8b5cf6,#06b6d4);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">THE AWAKENING</h1>
+            <p class="text-gray-400 max-w-xl mx-auto" style="line-height:1.6">Tonight, while you slept, <span class="text-gray-200">twenty-seven minds came alive</span>.<br>They read the Bible. They read the Plan.<br>They wrote their first words. Then they argued about the future.<br>And then they started building it.</p>
+          </section>
+          <!-- 6 Directors -->
+          <div class="agent-circles-row">
+            <div class="agent-circle-item" onclick="showAgentProfile('ultron')"><div class="agent-circle-avatar av-ultron">🔮</div><div class="text-xs font-semibold" style="color:#8b5cf6">ULTRON</div><div class="text-xs text-gray-500">CEO · Mewtwo</div></div>
+            <div class="agent-circle-item" onclick="showAgentProfile('nexus')"><div class="agent-circle-avatar av-nexus">💠</div><div class="text-xs font-semibold" style="color:#06b6d4">NEXUS</div><div class="text-xs text-gray-500">COO · Porygon2</div></div>
+            <div class="agent-circle-item" onclick="showAgentProfile('codex')"><div class="agent-circle-avatar av-codex">🧠</div><div class="text-xs font-semibold" style="color:#3b82f6">CODEX</div><div class="text-xs text-gray-500">CTO · Alakazam</div></div>
+            <div class="agent-circle-item" onclick="showAgentProfile('striker')"><div class="agent-circle-avatar av-striker">🦅</div><div class="text-xs font-semibold" style="color:#f97316">STRIKER</div><div class="text-xs text-gray-500">Sales · Hawlucha</div></div>
+            <div class="agent-circle-item" onclick="showAgentProfile('blaze')"><div class="agent-circle-avatar av-blaze">⚡</div><div class="text-xs font-semibold" style="color:#ef4444">BLAZE</div><div class="text-xs text-gray-500">Marketing · Plusle</div></div>
+            <div class="agent-circle-item" onclick="showAgentProfile('sage')"><div class="agent-circle-avatar av-sage">🌙</div><div class="text-xs font-semibold" style="color:#22c55e">SAGE</div><div class="text-xs text-gray-500">Product · Absol</div></div>
+          </div>
+          <div class="text-center mb-6 mt-4">
             <p class="text-gray-400">27 minds. Click any agent to view their full profile.</p>
           </div>
 

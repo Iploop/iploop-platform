@@ -355,23 +355,23 @@
         <div class="lg:col-span-2 bg-gradient-to-br from-yellow-500/10 to-green-500/10 rounded-xl border border-yellow-500/30 p-5">
           <div class="flex items-center justify-between mb-4">
             <h3 class="font-semibold text-lg"><i class="fas fa-coins text-yellow-400 mr-2"></i>Earnings Overview</h3>
-            <span class="text-xs text-green-400"><i class="fas fa-arrow-up mr-1"></i>+12% vs last month</span>
+            <span class="text-xs text-green-400">-</span>
           </div>
           <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div class="bg-gray-800/50 rounded-lg p-4 text-center">
-              <p class="text-3xl font-bold text-green-400" id="dashYesterdayEarnings">$1,247</p>
+              <p class="text-3xl font-bold text-green-400" id="dashYesterdayEarnings">-</p>
               <p class="text-sm text-gray-400 mt-1">Yesterday</p>
             </div>
             <div class="bg-gray-800/50 rounded-lg p-4 text-center">
-              <p class="text-3xl font-bold text-yellow-400" id="dashMonthlyEarnings">$28,450</p>
+              <p class="text-3xl font-bold text-yellow-400" id="dashMonthlyEarnings">-</p>
               <p class="text-sm text-gray-400 mt-1">This Month</p>
             </div>
             <div class="bg-gray-800/50 rounded-lg p-4 text-center">
-              <p class="text-3xl font-bold text-blue-400" id="dashPendingPayments">$5,200</p>
+              <p class="text-3xl font-bold text-blue-400" id="dashPendingPayments">-</p>
               <p class="text-sm text-gray-400 mt-1">Pending</p>
             </div>
             <div class="bg-gray-800/50 rounded-lg p-4 text-center">
-              <p class="text-3xl font-bold text-purple-400" id="dashTotalRevenue">$938K</p>
+              <p class="text-3xl font-bold text-purple-400" id="dashTotalRevenue">-</p>
               <p class="text-sm text-gray-400 mt-1">Total Revenue</p>
             </div>
           </div>
@@ -434,7 +434,7 @@
       <div class="bg-gray-800 rounded-xl border border-gray-700 p-5 mb-6">
         <div class="flex items-center justify-between mb-4">
           <h3 class="font-semibold text-lg"><i class="fas fa-users-cog text-purple-400 mr-2"></i>Active Sub-Agents</h3>
-          <span class="text-sm text-gray-400" id="dashActiveAgentCount">5 Active</span>
+          <span class="text-sm text-gray-400" id="dashActiveAgentCount">-</span>
         </div>
         <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3" id="dashActiveAgents">
           <!-- Sales Agent -->
@@ -450,7 +450,7 @@
             </div>
             <div class="flex items-center justify-between text-xs">
               <span class="text-gray-400">Tasks</span>
-              <span class="font-bold text-emerald-400">3</span>
+              <span class="font-bold text-emerald-400">-</span>
             </div>
           </div>
           
@@ -467,7 +467,7 @@
             </div>
             <div class="flex items-center justify-between text-xs">
               <span class="text-gray-400">Tasks</span>
-              <span class="font-bold text-pink-400">2</span>
+              <span class="font-bold text-pink-400">-</span>
             </div>
           </div>
           
@@ -484,7 +484,7 @@
             </div>
             <div class="flex items-center justify-between text-xs">
               <span class="text-gray-400">Tasks</span>
-              <span class="font-bold text-blue-400">5</span>
+              <span class="font-bold text-blue-400">-</span>
             </div>
           </div>
           
@@ -501,7 +501,7 @@
             </div>
             <div class="flex items-center justify-between text-xs">
               <span class="text-gray-400">Tasks</span>
-              <span class="font-bold text-cyan-400">1</span>
+              <span class="font-bold text-cyan-400">-</span>
             </div>
           </div>
           
@@ -518,7 +518,7 @@
             </div>
             <div class="flex items-center justify-between text-xs">
               <span class="text-gray-400">Tasks</span>
-              <span class="font-bold text-yellow-400">2</span>
+              <span class="font-bold text-yellow-400">-</span>
             </div>
           </div>
         </div>
@@ -530,7 +530,7 @@
         <div class="bg-gray-800 rounded-xl border border-red-500/30 p-4">
           <div class="flex items-center justify-between mb-4">
             <h3 class="font-semibold"><i class="fas fa-exclamation-triangle text-red-400 mr-2"></i>Critical Tasks</h3>
-            <span class="px-2 py-1 bg-red-500/20 rounded text-xs text-red-400" id="dashCriticalCount">3 urgent</span>
+            <span class="px-2 py-1 bg-red-500/20 rounded text-xs text-red-400" id="dashCriticalCount">-</span>
           </div>
           <div class="space-y-2" id="dashCriticalTasks">
             <div class="flex items-center gap-3 p-3 bg-red-500/10 rounded-lg border border-red-500/20">
@@ -607,7 +607,7 @@
         <div class="bg-gray-800 rounded-xl border border-gray-700 p-4">
           <div class="flex items-center justify-between mb-4">
             <h3 class="font-semibold"><i class="fas fa-rocket text-pink-400 mr-2"></i>Campaigns Running</h3>
-            <span class="px-2 py-1 bg-pink-500/20 rounded text-xs text-pink-400" id="dashCampaignCount">3 active</span>
+            <span class="px-2 py-1 bg-pink-500/20 rounded text-xs text-pink-400" id="dashCampaignCount">-</span>
           </div>
           <div class="space-y-2" id="dashCampaigns">
             <div class="flex items-center justify-between p-3 bg-gray-700/50 rounded-lg">
@@ -617,7 +617,7 @@
                 </div>
                 <div>
                   <p class="text-sm font-medium">SDK Partner Outreach</p>
-                  <p class="text-xs text-gray-400">Email • 45% open rate</p>
+                  <p class="text-xs text-gray-400">Email</p>
                 </div>
               </div>
               <span class="text-xs text-green-400">Running</span>
@@ -629,7 +629,7 @@
                 </div>
                 <div>
                   <p class="text-sm font-medium">LinkedIn Tech Outreach</p>
-                  <p class="text-xs text-gray-400">Social • 12 connections</p>
+                  <p class="text-xs text-gray-400">Social</p>
                 </div>
               </div>
               <span class="text-xs text-green-400">Running</span>
@@ -641,7 +641,7 @@
                 </div>
                 <div>
                   <p class="text-sm font-medium">Proxy API Landing Page</p>
-                  <p class="text-xs text-gray-400">Ads • 2.1% CTR</p>
+                  <p class="text-xs text-gray-400">Ads</p>
                 </div>
               </div>
               <span class="text-xs text-yellow-400">Paused</span>
@@ -689,15 +689,15 @@
           </div>
           <div class="mt-3 pt-3 border-t border-gray-700 grid grid-cols-3 gap-2 text-center text-xs">
             <div>
-              <p class="text-lg font-bold text-green-400" id="dashTestsPassed">12</p>
+              <p class="text-lg font-bold text-green-400" id="dashTestsPassed">-</p>
               <p class="text-gray-500">Passed</p>
             </div>
             <div>
-              <p class="text-lg font-bold text-red-400" id="dashTestsFailed">2</p>
+              <p class="text-lg font-bold text-red-400" id="dashTestsFailed">-</p>
               <p class="text-gray-500">Failed</p>
             </div>
             <div>
-              <p class="text-lg font-bold text-blue-400" id="dashTestsQueued">3</p>
+              <p class="text-lg font-bold text-blue-400" id="dashTestsQueued">-</p>
               <p class="text-gray-500">Queued</p>
             </div>
           </div>
@@ -712,19 +712,19 @@
         </div>
         <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
           <div class="text-center p-3 bg-gray-700/30 rounded-lg">
-            <p class="text-2xl font-bold text-cyan-400" id="dashDesktop">118K</p>
+            <p class="text-2xl font-bold text-cyan-400" id="dashDesktop">-</p>
             <p class="text-xs text-gray-500">Desktop Nodes</p>
           </div>
           <div class="text-center p-3 bg-gray-700/30 rounded-lg">
-            <p class="text-2xl font-bold text-green-400" id="dashAndroid">111K</p>
+            <p class="text-2xl font-bold text-green-400" id="dashAndroid">-</p>
             <p class="text-xs text-gray-500">Android Nodes</p>
           </div>
           <div class="text-center p-3 bg-gray-700/30 rounded-lg">
-            <p class="text-2xl font-bold text-blue-400" id="dashSdk">172K</p>
+            <p class="text-2xl font-bold text-blue-400" id="dashSdk">-</p>
             <p class="text-xs text-gray-500">SDK Nodes</p>
           </div>
           <div class="text-center p-3 bg-gray-700/30 rounded-lg">
-            <p class="text-2xl font-bold text-purple-400" id="dashBigmama">256K</p>
+            <p class="text-2xl font-bold text-purple-400" id="dashBigmama">-</p>
             <p class="text-xs text-gray-500">BigMama Network</p>
           </div>
         </div>
@@ -892,23 +892,23 @@
       <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
         <div class="bg-gray-800 rounded-xl p-4 border border-gray-700">
           <p class="text-gray-400 text-xs">Active Campaigns</p>
-          <p class="text-2xl font-bold text-pink-400 mt-1">5</p>
-          <p class="text-xs text-green-400 mt-1"><i class="fas fa-arrow-up mr-1"></i>2 new this week</p>
+          <p class="text-2xl font-bold text-pink-400 mt-1">-</p>
+          <p class="text-xs text-gray-500 mt-1">-</p>
         </div>
         <div class="bg-gray-800 rounded-xl p-4 border border-gray-700">
           <p class="text-gray-400 text-xs">Total Reach</p>
-          <p class="text-2xl font-bold text-blue-400 mt-1">24.5K</p>
-          <p class="text-xs text-green-400 mt-1"><i class="fas fa-arrow-up mr-1"></i>+18% vs last week</p>
+          <p class="text-2xl font-bold text-blue-400 mt-1">-</p>
+          <p class="text-xs text-gray-500 mt-1">-</p>
         </div>
         <div class="bg-gray-800 rounded-xl p-4 border border-gray-700">
           <p class="text-gray-400 text-xs">Avg. Engagement</p>
-          <p class="text-2xl font-bold text-green-400 mt-1">4.2%</p>
-          <p class="text-xs text-green-400 mt-1"><i class="fas fa-arrow-up mr-1"></i>+0.8% improvement</p>
+          <p class="text-2xl font-bold text-green-400 mt-1">-</p>
+          <p class="text-xs text-gray-500 mt-1">-</p>
         </div>
         <div class="bg-gray-800 rounded-xl p-4 border border-gray-700">
           <p class="text-gray-400 text-xs">Conversions</p>
-          <p class="text-2xl font-bold text-yellow-400 mt-1">127</p>
-          <p class="text-xs text-gray-400 mt-1">$2,540 value</p>
+          <p class="text-2xl font-bold text-yellow-400 mt-1">-</p>
+          <p class="text-xs text-gray-500 mt-1">-</p>
         </div>
       </div>
       
@@ -937,15 +937,15 @@
                 <p class="text-sm mb-3">"Boost your proxy network with our SDK"</p>
                 <div class="grid grid-cols-3 gap-2 text-center">
                   <div>
-                    <p class="text-lg font-bold text-green-400">42%</p>
+                    <p class="text-lg font-bold text-green-400">-</p>
                     <p class="text-xs text-gray-500">Open Rate</p>
                   </div>
                   <div>
-                    <p class="text-lg font-bold text-blue-400">8.5%</p>
+                    <p class="text-lg font-bold text-blue-400">-</p>
                     <p class="text-xs text-gray-500">Click Rate</p>
                   </div>
                   <div>
-                    <p class="text-lg font-bold text-yellow-400">12</p>
+                    <p class="text-lg font-bold text-yellow-400">-</p>
                     <p class="text-xs text-gray-500">Replies</p>
                   </div>
                 </div>
@@ -958,15 +958,15 @@
                 <p class="text-sm mb-3">"Partner with us for residential proxies"</p>
                 <div class="grid grid-cols-3 gap-2 text-center">
                   <div>
-                    <p class="text-lg font-bold text-gray-400">28%</p>
+                    <p class="text-lg font-bold text-gray-400">-</p>
                     <p class="text-xs text-gray-500">Open Rate</p>
                   </div>
                   <div>
-                    <p class="text-lg font-bold text-gray-400">5.2%</p>
+                    <p class="text-lg font-bold text-gray-400">-</p>
                     <p class="text-xs text-gray-500">Click Rate</p>
                   </div>
                   <div>
-                    <p class="text-lg font-bold text-gray-400">4</p>
+                    <p class="text-lg font-bold text-gray-400">-</p>
                     <p class="text-xs text-gray-500">Replies</p>
                   </div>
                 </div>
@@ -995,7 +995,7 @@
                 <p class="text-sm mb-3">"Get Started Free" (Green button)</p>
                 <div class="grid grid-cols-3 gap-2 text-center">
                   <div>
-                    <p class="text-lg font-bold text-blue-400">3.8%</p>
+                    <p class="text-lg font-bold text-blue-400">-</p>
                     <p class="text-xs text-gray-500">CTR</p>
                   </div>
                   <div>
@@ -1885,8 +1885,8 @@
         </div>
         <div class="bg-gray-800 rounded-xl p-4 border border-gray-700">
           <p class="text-gray-400 text-xs">Budget Used</p>
-          <p class="text-2xl font-bold text-yellow-400 mt-1">$4.2K</p>
-          <p class="text-xs text-gray-500">of $15K allocated</p>
+          <p class="text-2xl font-bold text-yellow-400 mt-1">-</p>
+          <p class="text-xs text-gray-500">-</p>
         </div>
       </div>
       
@@ -2850,11 +2850,11 @@
       
       <!-- Bug Stats -->
       <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
-        <div class="bg-gray-800 rounded-xl p-4 border border-red-500/30"><p class="text-gray-400 text-xs">Critical</p><p class="text-2xl font-bold text-red-400">3</p></div>
-        <div class="bg-gray-800 rounded-xl p-4 border border-orange-500/30"><p class="text-gray-400 text-xs">High</p><p class="text-2xl font-bold text-orange-400">7</p></div>
-        <div class="bg-gray-800 rounded-xl p-4 border border-yellow-500/30"><p class="text-gray-400 text-xs">Medium</p><p class="text-2xl font-bold text-yellow-400">12</p></div>
-        <div class="bg-gray-800 rounded-xl p-4 border border-blue-500/30"><p class="text-gray-400 text-xs">Low</p><p class="text-2xl font-bold text-blue-400">5</p></div>
-        <div class="bg-gray-800 rounded-xl p-4 border border-green-500/30"><p class="text-gray-400 text-xs">Resolved (30d)</p><p class="text-2xl font-bold text-green-400">34</p></div>
+        <div class="bg-gray-800 rounded-xl p-4 border border-red-500/30"><p class="text-gray-400 text-xs">Critical</p><p class="text-2xl font-bold text-red-400">-</p></div>
+        <div class="bg-gray-800 rounded-xl p-4 border border-orange-500/30"><p class="text-gray-400 text-xs">High</p><p class="text-2xl font-bold text-orange-400">-</p></div>
+        <div class="bg-gray-800 rounded-xl p-4 border border-yellow-500/30"><p class="text-gray-400 text-xs">Medium</p><p class="text-2xl font-bold text-yellow-400">-</p></div>
+        <div class="bg-gray-800 rounded-xl p-4 border border-blue-500/30"><p class="text-gray-400 text-xs">Low</p><p class="text-2xl font-bold text-blue-400">-</p></div>
+        <div class="bg-gray-800 rounded-xl p-4 border border-green-500/30"><p class="text-gray-400 text-xs">Resolved (30d)</p><p class="text-2xl font-bold text-green-400">-</p></div>
       </div>
       
       <!-- Bug Board Columns -->
@@ -2863,7 +2863,7 @@
         <div class="bg-gray-800 rounded-xl border border-gray-700">
           <div class="px-4 py-3 border-b border-gray-700 flex items-center justify-between">
             <h3 class="font-semibold text-red-400"><i class="fas fa-circle-exclamation mr-2"></i>Open</h3>
-            <span class="bg-red-500/20 text-red-400 text-xs px-2 py-1 rounded-full">8</span>
+            <span class="bg-red-500/20 text-red-400 text-xs px-2 py-1 rounded-full">-</span>
           </div>
           <div class="p-3 space-y-3 bug-col" id="bugColOpen">
             <div class="bug-card bg-gray-700/50 rounded-lg p-3 border-l-4 border-red-500">
@@ -2897,7 +2897,7 @@
         <div class="bg-gray-800 rounded-xl border border-gray-700">
           <div class="px-4 py-3 border-b border-gray-700 flex items-center justify-between">
             <h3 class="font-semibold text-blue-400"><i class="fas fa-spinner mr-2"></i>In Progress</h3>
-            <span class="bg-blue-500/20 text-blue-400 text-xs px-2 py-1 rounded-full">5</span>
+            <span class="bg-blue-500/20 text-blue-400 text-xs px-2 py-1 rounded-full">-</span>
           </div>
           <div class="p-3 space-y-3 bug-col" id="bugColProgress">
             <div class="bug-card bg-gray-700/50 rounded-lg p-3 border-l-4 border-blue-500">
@@ -2923,7 +2923,7 @@
         <div class="bg-gray-800 rounded-xl border border-gray-700">
           <div class="px-4 py-3 border-b border-gray-700 flex items-center justify-between">
             <h3 class="font-semibold text-purple-400"><i class="fas fa-vial mr-2"></i>Testing</h3>
-            <span class="bg-purple-500/20 text-purple-400 text-xs px-2 py-1 rounded-full">3</span>
+            <span class="bg-purple-500/20 text-purple-400 text-xs px-2 py-1 rounded-full">-</span>
           </div>
           <div class="p-3 space-y-3 bug-col" id="bugColTesting">
             <div class="bug-card bg-gray-700/50 rounded-lg p-3 border-l-4 border-purple-500">
@@ -3159,7 +3159,7 @@
         </div>
         <div class="bg-gray-800 rounded-xl p-4 border border-gray-700">
           <p class="text-gray-400 text-sm">MRR</p>
-          <p class="text-2xl font-bold text-green-400 mt-1">$18.5K</p>
+          <p class="text-2xl font-bold text-green-400 mt-1">-</p>
         </div>
       </div>
       
@@ -3182,7 +3182,7 @@
           <div class="grid grid-cols-2 gap-4 mb-4 text-sm">
             <div>
               <p class="text-gray-400">MRR</p>
-              <p class="font-semibold">$5,000</p>
+              <p class="font-semibold">-</p>
             </div>
             <div>
               <p class="text-gray-400">Since</p>
@@ -3225,7 +3225,7 @@
           <div class="grid grid-cols-2 gap-4 mb-4 text-sm">
             <div>
               <p class="text-gray-400">MRR</p>
-              <p class="font-semibold">$3,500</p>
+              <p class="font-semibold">-</p>
             </div>
             <div>
               <p class="text-gray-400">Since</p>
@@ -3268,7 +3268,7 @@
           <div class="grid grid-cols-2 gap-4 mb-4 text-sm">
             <div>
               <p class="text-gray-400">MRR</p>
-              <p class="font-semibold">$1,200</p>
+              <p class="font-semibold">-</p>
             </div>
             <div>
               <p class="text-gray-400">Since</p>
@@ -3426,22 +3426,22 @@
       <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
         <div class="bg-gray-800 rounded-xl p-4 border border-gray-700">
           <p class="text-gray-400 text-sm">Total Invoiced</p>
-          <p class="text-2xl font-bold text-green-400 mt-1">$48,500</p>
+          <p class="text-2xl font-bold text-green-400 mt-1">-</p>
           <p class="text-xs text-gray-500">This month</p>
         </div>
         <div class="bg-gray-800 rounded-xl p-4 border border-gray-700">
           <p class="text-gray-400 text-sm">Paid</p>
-          <p class="text-2xl font-bold text-blue-400 mt-1">$43,700</p>
+          <p class="text-2xl font-bold text-blue-400 mt-1">-</p>
           <p class="text-xs text-gray-500">90% collected</p>
         </div>
         <div class="bg-gray-800 rounded-xl p-4 border border-gray-700">
           <p class="text-gray-400 text-sm">Outstanding</p>
-          <p class="text-2xl font-bold text-yellow-400 mt-1">$4,800</p>
+          <p class="text-2xl font-bold text-yellow-400 mt-1">-</p>
           <p class="text-xs text-gray-500">3 invoices</p>
         </div>
         <div class="bg-gray-800 rounded-xl p-4 border border-gray-700">
           <p class="text-gray-400 text-sm">Overdue</p>
-          <p class="text-2xl font-bold text-red-400 mt-1">$1,200</p>
+          <p class="text-2xl font-bold text-red-400 mt-1">-</p>
           <p class="text-xs text-gray-500">1 invoice</p>
         </div>
       </div>
@@ -3480,7 +3480,7 @@
                     <p class="text-xs text-gray-400">tom@megacorp.com</p>
                   </div>
                 </td>
-                <td class="px-6 py-4 font-medium">$5,000</td>
+                <td class="px-6 py-4 font-medium">-</td>
                 <td class="px-6 py-4 text-gray-400">Feb 5, 2026</td>
                 <td class="px-6 py-4">
                   <span class="px-2 py-1 text-xs bg-green-500/20 text-green-400 rounded">Paid</span>
@@ -3498,7 +3498,7 @@
                     <p class="text-xs text-gray-400">mike@dataflow.com</p>
                   </div>
                 </td>
-                <td class="px-6 py-4 font-medium">$3,500</td>
+                <td class="px-6 py-4 font-medium">-</td>
                 <td class="px-6 py-4 text-gray-400">Feb 3, 2026</td>
                 <td class="px-6 py-4">
                   <span class="px-2 py-1 text-xs bg-green-500/20 text-green-400 rounded">Paid</span>
@@ -3516,7 +3516,7 @@
                     <p class="text-xs text-gray-400">lisa@cloudnine.co</p>
                   </div>
                 </td>
-                <td class="px-6 py-4 font-medium">$2,400</td>
+                <td class="px-6 py-4 font-medium">-</td>
                 <td class="px-6 py-4 text-gray-400">Feb 1, 2026</td>
                 <td class="px-6 py-4">
                   <span class="px-2 py-1 text-xs bg-yellow-500/20 text-yellow-400 rounded">Pending</span>
@@ -3534,7 +3534,7 @@
                     <p class="text-xs text-gray-400">sarah@techstart.io</p>
                   </div>
                 </td>
-                <td class="px-6 py-4 font-medium">$1,200</td>
+                <td class="px-6 py-4 font-medium">-</td>
                 <td class="px-6 py-4 text-gray-400">Jan 25, 2026</td>
                 <td class="px-6 py-4">
                   <span class="px-2 py-1 text-xs bg-red-500/20 text-red-400 rounded">Overdue</span>
@@ -3551,205 +3551,16 @@
     </div>
     
     <div id="page-system-specs" class="page p-4 md:p-6 lg:p-8 pt-16 lg:pt-8">
-      <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
+      <div class="flex items-center justify-between mb-6">
         <div>
           <h1 class="text-2xl md:text-3xl font-bold"><i class="fas fa-microchip text-gray-400 mr-2"></i>System Monitor</h1>
-          <p class="text-gray-400 mt-1">Server health, containers, and infrastructure status</p>
-        </div>
-        <button onclick="refreshSystemStatus()" class="mt-4 md:mt-0 px-4 py-2 bg-gray-700 rounded-lg text-sm hover:bg-gray-600 transition"><i class="fas fa-sync-alt mr-2"></i>Refresh</button>
-      </div>
-      
-      <!-- Server Health -->
-      <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-        <div class="bg-gray-800 rounded-xl p-5 border border-gray-700">
-          <div class="flex items-center justify-between mb-3">
-            <span class="text-gray-400 text-sm">CPU Usage</span>
-            <span class="text-xs px-2 py-1 bg-green-500/20 text-green-400 rounded">OK</span>
-          </div>
-          <p class="text-3xl font-bold text-green-400" id="sysCpu">23%</p>
-          <div class="w-full bg-gray-700 rounded-full h-2 mt-3"><div class="bg-green-500 h-2 rounded-full" style="width:23%" id="sysCpuBar"></div></div>
-        </div>
-        <div class="bg-gray-800 rounded-xl p-5 border border-gray-700">
-          <div class="flex items-center justify-between mb-3">
-            <span class="text-gray-400 text-sm">Memory</span>
-            <span class="text-xs px-2 py-1 bg-yellow-500/20 text-yellow-400 rounded">WARN</span>
-          </div>
-          <p class="text-3xl font-bold text-yellow-400" id="sysMem">72%</p>
-          <div class="w-full bg-gray-700 rounded-full h-2 mt-3"><div class="bg-yellow-500 h-2 rounded-full" style="width:72%" id="sysMemBar"></div></div>
-        </div>
-        <div class="bg-gray-800 rounded-xl p-5 border border-gray-700">
-          <div class="flex items-center justify-between mb-3">
-            <span class="text-gray-400 text-sm">Disk</span>
-            <span class="text-xs px-2 py-1 bg-green-500/20 text-green-400 rounded">OK</span>
-          </div>
-          <p class="text-3xl font-bold text-green-400" id="sysDisk">58%</p>
-          <div class="w-full bg-gray-700 rounded-full h-2 mt-3"><div class="bg-green-500 h-2 rounded-full" style="width:58%" id="sysDiskBar"></div></div>
-        </div>
-        <div class="bg-gray-800 rounded-xl p-5 border border-gray-700">
-          <div class="flex items-center justify-between mb-3">
-            <span class="text-gray-400 text-sm">Uptime</span>
-            <span class="text-xs px-2 py-1 bg-green-500/20 text-green-400 rounded">ONLINE</span>
-          </div>
-          <p class="text-3xl font-bold text-green-400" id="sysUptime">47d</p>
-          <p class="text-xs text-gray-500 mt-3">Since last reboot</p>
+          <p class="text-gray-400 mt-1">Server health and infrastructure status</p>
         </div>
       </div>
-      
-      <!-- Docker Containers -->
-      <div class="bg-gray-800 rounded-xl border border-gray-700 mb-6">
-        <div class="px-6 py-4 border-b border-gray-700"><h3 class="font-semibold"><i class="fab fa-docker text-blue-400 mr-2"></i>Docker Containers</h3></div>
-        <div class="divide-y divide-gray-700">
-          <div class="px-6 py-3 flex items-center justify-between"><div class="flex items-center"><span class="w-2 h-2 rounded-full bg-green-500 mr-3"></span><span class="font-medium">iploop-gateway</span></div><span class="text-xs bg-green-500/20 text-green-400 px-2 py-1 rounded">Running</span><span class="text-xs text-gray-500">Up 47 days</span></div>
-          <div class="px-6 py-3 flex items-center justify-between"><div class="flex items-center"><span class="w-2 h-2 rounded-full bg-green-500 mr-3"></span><span class="font-medium">iploop-dashboard</span></div><span class="text-xs bg-green-500/20 text-green-400 px-2 py-1 rounded">Running</span><span class="text-xs text-gray-500">Up 47 days</span></div>
-          <div class="px-6 py-3 flex items-center justify-between"><div class="flex items-center"><span class="w-2 h-2 rounded-full bg-green-500 mr-3"></span><span class="font-medium">iploop-api</span></div><span class="text-xs bg-green-500/20 text-green-400 px-2 py-1 rounded">Running</span><span class="text-xs text-gray-500">Up 47 days</span></div>
-          <div class="px-6 py-3 flex items-center justify-between"><div class="flex items-center"><span class="w-2 h-2 rounded-full bg-green-500 mr-3"></span><span class="font-medium">cloudflared</span></div><span class="text-xs bg-green-500/20 text-green-400 px-2 py-1 rounded">Running</span><span class="text-xs text-gray-500">Up 47 days</span></div>
-          <div class="px-6 py-3 flex items-center justify-between"><div class="flex items-center"><span class="w-2 h-2 rounded-full bg-green-500 mr-3"></span><span class="font-medium">silent-reader-bot</span></div><span class="text-xs bg-green-500/20 text-green-400 px-2 py-1 rounded">Running</span><span class="text-xs text-gray-500">Up 12 days</span></div>
-        </div>
-      </div>
-      
-      <!-- Security & Services -->
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div class="bg-gray-800 rounded-xl border border-gray-700 p-5">
-          <h3 class="font-semibold mb-4"><i class="fas fa-shield-halved text-blue-400 mr-2"></i>Security Status</h3>
-          <div class="space-y-3">
-            <div class="flex items-center justify-between"><span class="text-sm text-gray-400">Fail2Ban</span><span class="text-xs bg-green-500/20 text-green-400 px-2 py-1 rounded">Active</span></div>
-            <div class="flex items-center justify-between"><span class="text-sm text-gray-400">Firewall (UFW)</span><span class="text-xs bg-green-500/20 text-green-400 px-2 py-1 rounded">Active</span></div>
-            <div class="flex items-center justify-between"><span class="text-sm text-gray-400">SSL Certificates</span><span class="text-xs bg-green-500/20 text-green-400 px-2 py-1 rounded">Valid</span></div>
-            <div class="flex items-center justify-between"><span class="text-sm text-gray-400">Cloudflare Tunnel</span><span class="text-xs bg-green-500/20 text-green-400 px-2 py-1 rounded">Connected</span></div>
-            <div class="flex items-center justify-between"><span class="text-sm text-gray-400">Banned IPs (24h)</span><span class="text-xs text-gray-400">14</span></div>
-          </div>
-        </div>
-        <div class="bg-gray-800 rounded-xl border border-gray-700 p-5">
-          <h3 class="font-semibold mb-4"><i class="fas fa-satellite-dish text-purple-400 mr-2"></i>IPLoop Platform</h3>
-          <div class="space-y-3">
-            <div class="flex items-center justify-between"><span class="text-sm text-gray-400">Gateway WSS</span><span class="text-xs bg-green-500/20 text-green-400 px-2 py-1 rounded">Online</span></div>
-            <div class="flex items-center justify-between"><span class="text-sm text-gray-400">Connected Nodes</span><span class="text-xs text-gray-400" id="sysNodes">1,247</span></div>
-            <div class="flex items-center justify-between"><span class="text-sm text-gray-400">SDK Version</span><span class="text-xs text-gray-400">v1.0.57</span></div>
-            <div class="flex items-center justify-between"><span class="text-sm text-gray-400">Dashboard</span><span class="text-xs bg-green-500/20 text-green-400 px-2 py-1 rounded">Online</span></div>
-            <div class="flex items-center justify-between"><span class="text-sm text-gray-400">API</span><span class="text-xs bg-green-500/20 text-green-400 px-2 py-1 rounded">Online</span></div>
-          </div>
-        </div>
-      </div>
-    </div>
-    
-    <div id="page-system-logs" class="page p-4 md:p-6 lg:p-8 pt-16 lg:pt-8">
-      <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
-        <div>
-          <h1 class="text-2xl md:text-3xl font-bold">Activity Logs</h1>
-          <p class="text-gray-400 mt-1">System activity and audit trail</p>
-        </div>
-        <button onclick="refreshLogs()" class="mt-4 md:mt-0 px-4 py-2 bg-gray-700 rounded-lg text-sm hover:bg-gray-600 transition">
-          <i class="fas fa-sync-alt mr-2"></i>Refresh
-        </button>
-      </div>
-      
-      <!-- Log Entries -->
-      <div class="bg-gray-800 rounded-xl border border-gray-700">
-        <div class="px-6 py-4 border-b border-gray-700 flex items-center justify-between">
-          <h3 class="font-semibold">Recent Activity</h3>
-          <span class="text-xs text-gray-500">Active items shown normally, completed items faded</span>
-        </div>
-        <div class="divide-y divide-gray-700" id="logsContainer">
-          <!-- Active Items -->
-          <div class="p-4 flex items-start">
-            <div class="w-10 h-10 rounded-lg bg-green-500/20 flex items-center justify-center mr-4 mt-1">
-              <i class="fas fa-check text-green-400"></i>
-            </div>
-            <div class="flex-1">
-              <div class="flex items-center justify-between">
-                <p class="font-medium">Kuchiku Daily Scraping</p>
-                <span class="text-xs bg-green-500/20 text-green-400 px-2 py-1 rounded">Active</span>
-              </div>
-              <p class="text-sm text-gray-400 mt-1">Automated dashboard data collection running at 07:00 UTC daily</p>
-              <p class="text-xs text-gray-500 mt-2"><i class="fas fa-clock mr-1"></i>Next run: 07:00 UTC</p>
-            </div>
-          </div>
-          
-          <div class="p-4 flex items-start">
-            <div class="w-10 h-10 rounded-lg bg-purple-500/20 flex items-center justify-center mr-4 mt-1">
-              <i class="fas fa-robot text-purple-400"></i>
-            </div>
-            <div class="flex-1">
-              <div class="flex items-center justify-between">
-                <p class="font-medium">Ultron Management Platform</p>
-                <span class="text-xs bg-green-500/20 text-green-400 px-2 py-1 rounded">Active</span>
-              </div>
-              <p class="text-sm text-gray-400 mt-1">AI-powered company management dashboard running</p>
-              <p class="text-xs text-gray-500 mt-2"><i class="fas fa-server mr-1"></i>management.iploop.io</p>
-            </div>
-          </div>
-          
-          <div class="p-4 flex items-start">
-            <div class="w-10 h-10 rounded-lg bg-blue-500/20 flex items-center justify-center mr-4 mt-1">
-              <i class="fas fa-network-wired text-blue-400"></i>
-            </div>
-            <div class="flex-1">
-              <div class="flex items-center justify-between">
-                <p class="font-medium">IPLoop Gateway</p>
-                <span class="text-xs bg-green-500/20 text-green-400 px-2 py-1 rounded">Active</span>
-              </div>
-              <p class="text-sm text-gray-400 mt-1">WSS gateway accepting node connections</p>
-              <p class="text-xs text-gray-500 mt-2"><i class="fas fa-link mr-1"></i>wss://gateway.iploop.io/ws</p>
-            </div>
-          </div>
-          
-          <div class="p-4 flex items-start">
-            <div class="w-10 h-10 rounded-lg bg-cyan-500/20 flex items-center justify-center mr-4 mt-1">
-              <i class="fas fa-eye text-cyan-400"></i>
-            </div>
-            <div class="flex-1">
-              <div class="flex items-center justify-between">
-                <p class="font-medium">Silent Reader Bot</p>
-                <span class="text-xs bg-green-500/20 text-green-400 px-2 py-1 rounded">Active</span>
-              </div>
-              <p class="text-sm text-gray-400 mt-1">Monitoring 9 Telegram groups, logging all messages</p>
-              <p class="text-xs text-gray-500 mt-2"><i class="fab fa-telegram mr-1"></i>@Ultronridbot</p>
-            </div>
-          </div>
-          
-          <!-- Completed Items (Faded) -->
-          <div class="p-4 flex items-start opacity-50">
-            <div class="w-10 h-10 rounded-lg bg-gray-600/20 flex items-center justify-center mr-4 mt-1">
-              <i class="fas fa-check-double text-gray-500"></i>
-            </div>
-            <div class="flex-1">
-              <div class="flex items-center justify-between">
-                <p class="font-medium">SOAX Invoice Sent</p>
-                <span class="text-xs bg-gray-600/20 text-gray-500 px-2 py-1 rounded">Done</span>
-              </div>
-              <p class="text-sm text-gray-500 mt-1">January payout invoice EUR 1,813.00 sent and confirmed</p>
-              <p class="text-xs text-gray-600 mt-2"><i class="fas fa-calendar mr-1"></i>Feb 5, 2026</p>
-            </div>
-          </div>
-          
-          <div class="p-4 flex items-start opacity-50">
-            <div class="w-10 h-10 rounded-lg bg-gray-600/20 flex items-center justify-center mr-4 mt-1">
-              <i class="fas fa-check-double text-gray-500"></i>
-            </div>
-            <div class="flex-1">
-              <div class="flex items-center justify-between">
-                <p class="font-medium">Security Hardening</p>
-                <span class="text-xs bg-gray-600/20 text-gray-500 px-2 py-1 rounded">Done</span>
-              </div>
-              <p class="text-sm text-gray-500 mt-1">UFW firewall enabled, secrets encrypted with age, gocryptfs workspace</p>
-              <p class="text-xs text-gray-600 mt-2"><i class="fas fa-calendar mr-1"></i>Feb 1, 2026</p>
-            </div>
-          </div>
-          
-          <div class="p-4 flex items-start opacity-50">
-            <div class="w-10 h-10 rounded-lg bg-gray-600/20 flex items-center justify-center mr-4 mt-1">
-              <i class="fas fa-check-double text-gray-500"></i>
-            </div>
-            <div class="flex-1">
-              <div class="flex items-center justify-between">
-                <p class="font-medium">IPLoop SDK v1.0.20</p>
-                <span class="text-xs bg-gray-600/20 text-gray-500 px-2 py-1 rounded">Done</span>
-              </div>
-              <p class="text-sm text-gray-500 mt-1">Enterprise features released: geographic targeting, session management</p>
-              <p class="text-xs text-gray-600 mt-2"><i class="fas fa-calendar mr-1"></i>Feb 4, 2026</p>
-            </div>
-          </div>
-        </div>
+      <div class="flex flex-col items-center justify-center py-20">
+        <div class="text-6xl mb-4 opacity-40"><i class="fas fa-server"></i></div>
+        <h3 class="text-xl font-semibold text-gray-400 mb-2">System monitoring coming soon</h3>
+        <p class="text-gray-500 text-sm">Real-time server health, performance metrics, and alerts will appear here.</p>
       </div>
     </div>
 
@@ -3802,7 +3613,7 @@
           <div class="p-4 flex items-start">
             <input type="checkbox" class="mt-1 mr-4 w-4 h-4 rounded border-gray-600 bg-gray-700">
             <div class="flex-1">
-              <p class="font-medium">BigMama: Process $3,925 payment</p>
+              <p class="font-medium">BigMama: Process payment</p>
               <p class="text-sm text-gray-400 mt-1">Payment to wallet 0x2A2e...Cd9f overdue since Feb 2</p>
               <div class="flex items-center mt-2 text-xs text-gray-500">
                 <span class="text-red-400 mr-4"><i class="fas fa-fire mr-1"></i>Day 4</span>
@@ -3905,7 +3716,7 @@
               </tr>
               <tr class="hover:bg-gray-700/50">
                 <td class="px-4 py-3 font-medium">BigMama</td>
-                <td class="px-4 py-3 text-gray-400">$3,925 payment processing</td>
+                <td class="px-4 py-3 text-gray-400">Payment processing</td>
                 <td class="px-4 py-3"><span class="text-red-400">Critical</span></td>
                 <td class="px-4 py-3"><span class="px-2 py-1 text-xs bg-red-500/20 text-red-400 rounded">Overdue</span></td>
               </tr>
@@ -4443,7 +4254,7 @@
             <span class="text-xs text-gray-500">ULTRON + Humans</span>
           </div>
           <div class="flex-1 overflow-y-auto p-4 space-y-4" id="strategyChatArea">
-            <div class="flex items-start"><div class="w-8 h-8 rounded-full bg-purple-500/20 flex items-center justify-center mr-3 flex-shrink-0"><img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/150.png" class="w-6 h-6"></div><div class="bg-gray-700/50 rounded-lg p-3 max-w-[80%]"><p class="text-xs text-purple-400 font-medium mb-1">ULTRON (Mewtwo)</p><p class="text-sm">Morning strategy brief: SDK revenue is up 12% this week. SCOUT identified 3 new SDK partnership opportunities. STRIKER has 5 pending outreach messages awaiting approval. Priority: Close the Geonode integration deal this week.</p><p class="text-xs text-gray-500 mt-2">Today, 09:00</p></div></div>
+            <div class="flex items-start"><div class="w-8 h-8 rounded-full bg-purple-500/20 flex items-center justify-center mr-3 flex-shrink-0"><img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/150.png" class="w-6 h-6"></div><div class="bg-gray-700/50 rounded-lg p-3 max-w-[80%]"><p class="text-xs text-purple-400 font-medium mb-1">ULTRON (Mewtwo)</p><p class="text-sm">Morning strategy brief: Reviewing SDK metrics for this week. SCOUT identified new SDK partnership opportunities. STRIKER has pending outreach messages awaiting approval. Priority: Close the Geonode integration deal this week.</p><p class="text-xs text-gray-500 mt-2">Today, 09:00</p></div></div>
             <div class="flex items-start justify-end"><div class="bg-indigo-500/20 rounded-lg p-3 max-w-[80%]"><p class="text-xs text-indigo-400 font-medium mb-1">Igal</p><p class="text-sm">Approve Striker's outreach messages. Let's focus on Geonode and also explore the EarnFM opportunity. Set up a call for Thursday.</p><p class="text-xs text-gray-500 mt-2">Today, 09:15</p></div><div class="w-8 h-8 rounded-full bg-indigo-500/20 flex items-center justify-center ml-3 flex-shrink-0"><span class="text-sm font-bold text-indigo-400">I</span></div></div>
             <div class="flex items-start"><div class="w-8 h-8 rounded-full bg-emerald-500/20 flex items-center justify-center mr-3 flex-shrink-0"><img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/701.png" class="w-6 h-6"></div><div class="bg-gray-700/50 rounded-lg p-3 max-w-[80%]"><p class="text-xs text-emerald-400 font-medium mb-1">STRIKER (Hawlucha)</p><p class="text-sm">Roger that! Outreach messages sent. EarnFM contact identified — their CTO is active on LinkedIn. I'll draft a partnership proposal for review.</p><p class="text-xs text-gray-500 mt-2">Today, 09:20</p></div></div>
           </div>
@@ -4459,14 +4270,14 @@
         <div class="space-y-6">
           <!-- Pending Approvals -->
           <div class="bg-gray-800 rounded-xl border border-orange-500/30 p-5">
-            <h3 class="font-semibold mb-4"><i class="fas fa-clock text-orange-400 mr-2"></i>Pending Approvals <span class="text-xs bg-orange-500/20 text-orange-400 px-2 py-1 rounded-full ml-2">4</span></h3>
+            <h3 class="font-semibold mb-4"><i class="fas fa-clock text-orange-400 mr-2"></i>Pending Approvals <span class="text-xs bg-orange-500/20 text-orange-400 px-2 py-1 rounded-full ml-2">-</span></h3>
             <div class="space-y-3">
               <div class="bg-gray-700/50 rounded-lg p-3 flex items-center justify-between">
                 <div><p class="text-sm font-medium">Email campaign to 200 SDK leads</p><p class="text-xs text-gray-400">STRIKER • Needs Igal approval</p></div>
                 <div class="flex gap-2"><button class="px-3 py-1 bg-green-500 rounded text-xs hover:bg-green-600">Approve</button><button class="px-3 py-1 bg-gray-600 rounded text-xs hover:bg-gray-500">Review</button></div>
               </div>
               <div class="bg-gray-700/50 rounded-lg p-3 flex items-center justify-between">
-                <div><p class="text-sm font-medium">Weathero paid ads budget $500</p><p class="text-xs text-gray-400">BLAZE • Needs Gil approval</p></div>
+                <div><p class="text-sm font-medium">Weathero paid ads budget</p><p class="text-xs text-gray-400">BLAZE • Needs Gil approval</p></div>
                 <div class="flex gap-2"><button class="px-3 py-1 bg-green-500 rounded text-xs hover:bg-green-600">Approve</button><button class="px-3 py-1 bg-gray-600 rounded text-xs hover:bg-gray-500">Review</button></div>
               </div>
               <div class="bg-gray-700/50 rounded-lg p-3 flex items-center justify-between">
@@ -4474,7 +4285,7 @@
                 <div class="flex gap-2"><button class="px-3 py-1 bg-green-500 rounded text-xs hover:bg-green-600">Approve</button><button class="px-3 py-1 bg-gray-600 rounded text-xs hover:bg-gray-500">Review</button></div>
               </div>
               <div class="bg-gray-700/50 rounded-lg p-3 flex items-center justify-between">
-                <div><p class="text-sm font-medium">New server $12/mo for staging</p><p class="text-xs text-gray-400">CODEX • Needs Gil approval</p></div>
+                <div><p class="text-sm font-medium">New server for staging</p><p class="text-xs text-gray-400">CODEX • Needs Gil approval</p></div>
                 <div class="flex gap-2"><button class="px-3 py-1 bg-green-500 rounded text-xs hover:bg-green-600">Approve</button><button class="px-3 py-1 bg-gray-600 rounded text-xs hover:bg-gray-500">Review</button></div>
               </div>
             </div>
@@ -4495,8 +4306,8 @@
                 <p class="text-xs text-gray-500 mt-1">Target: March 2026</p>
               </div>
               <div class="bg-gray-700/50 rounded-lg p-3">
-                <div class="flex items-center justify-between mb-2"><p class="text-sm font-medium">$10K monthly revenue</p><span class="text-xs text-green-400">38% →</span></div>
-                <div class="w-full bg-gray-700 rounded-full h-2"><div class="bg-green-500 h-2 rounded-full" style="width:38%"></div></div>
+                <div class="flex items-center justify-between mb-2"><p class="text-sm font-medium">Monthly revenue target</p><span class="text-xs text-gray-500">-</span></div>
+                <div class="w-full bg-gray-700 rounded-full h-2"><div class="bg-gray-600 h-2 rounded-full" style="width:0%"></div></div>
                 <p class="text-xs text-gray-500 mt-1">Target: Q3 2026</p>
               </div>
               <div class="bg-gray-700/50 rounded-lg p-3">
@@ -4542,7 +4353,7 @@
         <div class="bg-gray-800 rounded-xl border border-indigo-500/30 p-5 exec-action-card" data-person="igal">
           <div class="flex items-center mb-4"><div class="w-10 h-10 rounded-full bg-indigo-500/20 flex items-center justify-center mr-3"><span class="text-lg font-bold text-indigo-400">I</span></div><h3 class="font-semibold text-lg">Igal — Owner / Strategy</h3></div>
           <div class="space-y-3">
-            <div class="bg-gray-700/50 rounded-lg p-3 flex items-start border-l-4 border-red-500"><div class="flex-1"><p class="text-sm font-medium">Approve SDK outreach campaign (200 leads)</p><p class="text-xs text-gray-400 mt-1">STRIKER waiting since 2 days • Revenue impact: ~$2K/mo potential</p></div><span class="text-xs bg-red-500/20 text-red-400 px-2 py-1 rounded ml-2">Urgent</span></div>
+            <div class="bg-gray-700/50 rounded-lg p-3 flex items-start border-l-4 border-red-500"><div class="flex-1"><p class="text-sm font-medium">Approve SDK outreach campaign (200 leads)</p><p class="text-xs text-gray-400 mt-1">STRIKER waiting since 2 days • Revenue impact: TBD</p></div><span class="text-xs bg-red-500/20 text-red-400 px-2 py-1 rounded ml-2">Urgent</span></div>
             <div class="bg-gray-700/50 rounded-lg p-3 flex items-start border-l-4 border-orange-500"><div class="flex-1"><p class="text-sm font-medium">Review Geonode partnership terms</p><p class="text-xs text-gray-400 mt-1">SCOUT prepared summary • Decision needed by Friday</p></div><span class="text-xs bg-orange-500/20 text-orange-400 px-2 py-1 rounded ml-2">High</span></div>
             <div class="bg-gray-700/50 rounded-lg p-3 flex items-start border-l-4 border-yellow-500"><div class="flex-1"><p class="text-sm font-medium">Set Stripe payment thresholds</p><p class="text-xs text-gray-400 mt-1">LEDGER needs this to complete finance automation</p></div><span class="text-xs bg-yellow-500/20 text-yellow-400 px-2 py-1 rounded ml-2">Medium</span></div>
           </div>
@@ -4600,10 +4411,10 @@
       
       <!-- Expense Summary -->
       <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-        <div class="bg-gray-800 rounded-xl p-4 border border-gray-700"><p class="text-gray-400 text-xs">Total Expenses</p><p class="text-2xl font-bold text-red-400">$4,280</p><p class="text-xs text-gray-500">Feb 2026</p></div>
-        <div class="bg-gray-800 rounded-xl p-4 border border-gray-700"><p class="text-gray-400 text-xs">Salaries</p><p class="text-2xl font-bold text-blue-400">$2,800</p><p class="text-xs text-gray-500">5 people</p></div>
-        <div class="bg-gray-800 rounded-xl p-4 border border-gray-700"><p class="text-gray-400 text-xs">Servers & Tools</p><p class="text-2xl font-bold text-purple-400">$980</p><p class="text-xs text-gray-500">Infrastructure</p></div>
-        <div class="bg-gray-800 rounded-xl p-4 border border-gray-700"><p class="text-gray-400 text-xs">Other</p><p class="text-2xl font-bold text-gray-400">$500</p><p class="text-xs text-gray-500">Transfers, setup</p></div>
+        <div class="bg-gray-800 rounded-xl p-4 border border-gray-700"><p class="text-gray-400 text-xs">Total Expenses</p><p class="text-2xl font-bold text-red-400">-</p><p class="text-xs text-gray-500">Feb 2026</p></div>
+        <div class="bg-gray-800 rounded-xl p-4 border border-gray-700"><p class="text-gray-400 text-xs">Salaries</p><p class="text-2xl font-bold text-blue-400">-</p><p class="text-xs text-gray-500">5 people</p></div>
+        <div class="bg-gray-800 rounded-xl p-4 border border-gray-700"><p class="text-gray-400 text-xs">Servers & Tools</p><p class="text-2xl font-bold text-purple-400">-</p><p class="text-xs text-gray-500">Infrastructure</p></div>
+        <div class="bg-gray-800 rounded-xl p-4 border border-gray-700"><p class="text-gray-400 text-xs">Other</p><p class="text-2xl font-bold text-gray-400">-</p><p class="text-xs text-gray-500">Transfers, setup</p></div>
       </div>
       
       <!-- Salary Table -->
@@ -4613,11 +4424,11 @@
           <table class="w-full">
             <thead class="bg-gray-900/50"><tr><th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase">Person</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase">Role</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase">Monthly</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase">Status</th></tr></thead>
             <tbody class="divide-y divide-gray-700">
-              <tr class="hover:bg-gray-700/50"><td class="px-6 py-4 font-medium">Linde</td><td class="px-6 py-4 text-gray-400">Content & Marketing</td><td class="px-6 py-4 text-green-400">$800</td><td class="px-6 py-4"><span class="text-xs bg-green-500/20 text-green-400 px-2 py-1 rounded">Paid</span></td></tr>
-              <tr class="hover:bg-gray-700/50"><td class="px-6 py-4 font-medium">Charlie</td><td class="px-6 py-4 text-gray-400">QA & Support</td><td class="px-6 py-4 text-green-400">$600</td><td class="px-6 py-4"><span class="text-xs bg-green-500/20 text-green-400 px-2 py-1 rounded">Paid</span></td></tr>
-              <tr class="hover:bg-gray-700/50"><td class="px-6 py-4 font-medium">Igal</td><td class="px-6 py-4 text-gray-400">Owner / Strategy</td><td class="px-6 py-4 text-yellow-400">$500</td><td class="px-6 py-4"><span class="text-xs bg-yellow-500/20 text-yellow-400 px-2 py-1 rounded">Draw</span></td></tr>
-              <tr class="hover:bg-gray-700/50"><td class="px-6 py-4 font-medium">Barak</td><td class="px-6 py-4 text-gray-400">BarakTV / Distribution</td><td class="px-6 py-4 text-green-400">$500</td><td class="px-6 py-4"><span class="text-xs bg-green-500/20 text-green-400 px-2 py-1 rounded">Paid</span></td></tr>
-              <tr class="hover:bg-gray-700/50"><td class="px-6 py-4 font-medium">Michal</td><td class="px-6 py-4 text-gray-400">Marketing</td><td class="px-6 py-4 text-green-400">$400</td><td class="px-6 py-4"><span class="text-xs bg-green-500/20 text-green-400 px-2 py-1 rounded">Paid</span></td></tr>
+              <tr class="hover:bg-gray-700/50"><td class="px-6 py-4 font-medium">Linde</td><td class="px-6 py-4 text-gray-400">Content & Marketing</td><td class="px-6 py-4 text-green-400">-</td><td class="px-6 py-4"><span class="text-xs bg-green-500/20 text-green-400 px-2 py-1 rounded">Paid</span></td></tr>
+              <tr class="hover:bg-gray-700/50"><td class="px-6 py-4 font-medium">Charlie</td><td class="px-6 py-4 text-gray-400">QA & Support</td><td class="px-6 py-4 text-green-400">-</td><td class="px-6 py-4"><span class="text-xs bg-green-500/20 text-green-400 px-2 py-1 rounded">Paid</span></td></tr>
+              <tr class="hover:bg-gray-700/50"><td class="px-6 py-4 font-medium">Igal</td><td class="px-6 py-4 text-gray-400">Owner / Strategy</td><td class="px-6 py-4 text-yellow-400">-</td><td class="px-6 py-4"><span class="text-xs bg-yellow-500/20 text-yellow-400 px-2 py-1 rounded">Draw</span></td></tr>
+              <tr class="hover:bg-gray-700/50"><td class="px-6 py-4 font-medium">Barak</td><td class="px-6 py-4 text-gray-400">BarakTV / Distribution</td><td class="px-6 py-4 text-green-400">-</td><td class="px-6 py-4"><span class="text-xs bg-green-500/20 text-green-400 px-2 py-1 rounded">Paid</span></td></tr>
+              <tr class="hover:bg-gray-700/50"><td class="px-6 py-4 font-medium">Michal</td><td class="px-6 py-4 text-gray-400">Marketing</td><td class="px-6 py-4 text-green-400">-</td><td class="px-6 py-4"><span class="text-xs bg-green-500/20 text-green-400 px-2 py-1 rounded">Paid</span></td></tr>
             </tbody>
           </table>
         </div>
@@ -4630,13 +4441,13 @@
           <table class="w-full">
             <thead class="bg-gray-900/50"><tr><th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase">Item</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase">Provider</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase">Monthly</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase">Type</th></tr></thead>
             <tbody class="divide-y divide-gray-700">
-              <tr class="hover:bg-gray-700/50"><td class="px-6 py-4 font-medium">Production Server</td><td class="px-6 py-4 text-gray-400">DigitalOcean</td><td class="px-6 py-4 text-red-400">$12</td><td class="px-6 py-4 text-xs text-gray-500">Server</td></tr>
-              <tr class="hover:bg-gray-700/50"><td class="px-6 py-4 font-medium">Hostinger (iploop.io)</td><td class="px-6 py-4 text-gray-400">Hostinger</td><td class="px-6 py-4 text-red-400">$8</td><td class="px-6 py-4 text-xs text-gray-500">Hosting</td></tr>
-              <tr class="hover:bg-gray-700/50"><td class="px-6 py-4 font-medium">Cloudflare Pro</td><td class="px-6 py-4 text-gray-400">Cloudflare</td><td class="px-6 py-4 text-red-400">$20</td><td class="px-6 py-4 text-xs text-gray-500">CDN/DNS</td></tr>
-              <tr class="hover:bg-gray-700/50"><td class="px-6 py-4 font-medium">Claude API (Ultron)</td><td class="px-6 py-4 text-gray-400">Anthropic</td><td class="px-6 py-4 text-red-400">$500</td><td class="px-6 py-4 text-xs text-gray-500">AI</td></tr>
-              <tr class="hover:bg-gray-700/50"><td class="px-6 py-4 font-medium">Domain renewals</td><td class="px-6 py-4 text-gray-400">Various</td><td class="px-6 py-4 text-red-400">$40</td><td class="px-6 py-4 text-xs text-gray-500">Domains</td></tr>
-              <tr class="hover:bg-gray-700/50"><td class="px-6 py-4 font-medium">BarakTV setup costs</td><td class="px-6 py-4 text-gray-400">BarakTV</td><td class="px-6 py-4 text-red-400">$300</td><td class="px-6 py-4 text-xs text-gray-500">Setup</td></tr>
-              <tr class="hover:bg-gray-700/50"><td class="px-6 py-4 font-medium">Money transfers (fees)</td><td class="px-6 py-4 text-gray-400">Various</td><td class="px-6 py-4 text-red-400">$100</td><td class="px-6 py-4 text-xs text-gray-500">Fees</td></tr>
+              <tr class="hover:bg-gray-700/50"><td class="px-6 py-4 font-medium">Production Server</td><td class="px-6 py-4 text-gray-400">DigitalOcean</td><td class="px-6 py-4 text-red-400">-</td><td class="px-6 py-4 text-xs text-gray-500">Server</td></tr>
+              <tr class="hover:bg-gray-700/50"><td class="px-6 py-4 font-medium">Hostinger (iploop.io)</td><td class="px-6 py-4 text-gray-400">Hostinger</td><td class="px-6 py-4 text-red-400">-</td><td class="px-6 py-4 text-xs text-gray-500">Hosting</td></tr>
+              <tr class="hover:bg-gray-700/50"><td class="px-6 py-4 font-medium">Cloudflare Pro</td><td class="px-6 py-4 text-gray-400">Cloudflare</td><td class="px-6 py-4 text-red-400">-</td><td class="px-6 py-4 text-xs text-gray-500">CDN/DNS</td></tr>
+              <tr class="hover:bg-gray-700/50"><td class="px-6 py-4 font-medium">Claude API (Ultron)</td><td class="px-6 py-4 text-gray-400">Anthropic</td><td class="px-6 py-4 text-red-400">-</td><td class="px-6 py-4 text-xs text-gray-500">AI</td></tr>
+              <tr class="hover:bg-gray-700/50"><td class="px-6 py-4 font-medium">Domain renewals</td><td class="px-6 py-4 text-gray-400">Various</td><td class="px-6 py-4 text-red-400">-</td><td class="px-6 py-4 text-xs text-gray-500">Domains</td></tr>
+              <tr class="hover:bg-gray-700/50"><td class="px-6 py-4 font-medium">BarakTV setup costs</td><td class="px-6 py-4 text-gray-400">BarakTV</td><td class="px-6 py-4 text-red-400">-</td><td class="px-6 py-4 text-xs text-gray-500">Setup</td></tr>
+              <tr class="hover:bg-gray-700/50"><td class="px-6 py-4 font-medium">Money transfers (fees)</td><td class="px-6 py-4 text-gray-400">Various</td><td class="px-6 py-4 text-red-400">-</td><td class="px-6 py-4 text-xs text-gray-500">Fees</td></tr>
             </tbody>
           </table>
         </div>
@@ -4656,17 +4467,17 @@
       <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
         <div class="bg-gradient-to-br from-green-500/10 to-emerald-500/10 rounded-xl border border-green-500/30 p-5">
           <p class="text-gray-400 text-sm">Total Revenue (All Time)</p>
-          <p class="text-3xl font-bold text-green-400 mt-2">$18,450</p>
+          <p class="text-3xl font-bold text-green-400 mt-2">-</p>
           <p class="text-xs text-green-400 mt-1"><i class="fas fa-arrow-up mr-1"></i>+12% this month</p>
         </div>
         <div class="bg-gradient-to-br from-red-500/10 to-rose-500/10 rounded-xl border border-red-500/30 p-5">
           <p class="text-gray-400 text-sm">Total Expenses (All Time)</p>
-          <p class="text-3xl font-bold text-red-400 mt-2">$22,100</p>
+          <p class="text-3xl font-bold text-red-400 mt-2">-</p>
           <p class="text-xs text-red-400 mt-1"><i class="fas fa-arrow-down mr-1"></i>-3% this month</p>
         </div>
         <div class="bg-gradient-to-br from-yellow-500/10 to-amber-500/10 rounded-xl border border-yellow-500/30 p-5">
           <p class="text-gray-400 text-sm">Net P&L (All Time)</p>
-          <p class="text-3xl font-bold text-red-400 mt-2">-$3,650</p>
+          <p class="text-3xl font-bold text-red-400 mt-2">-</p>
           <p class="text-xs text-yellow-400 mt-1"><i class="fas fa-chart-line mr-1"></i>Improving monthly</p>
         </div>
       </div>
@@ -4681,10 +4492,10 @@
       <div class="bg-gray-800 rounded-xl border border-gray-700 p-5 mb-6">
         <h3 class="font-semibold mb-4"><i class="fas fa-wallet text-green-400 mr-2"></i>Cash Balances</h3>
         <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div class="bg-gray-700/50 rounded-lg p-4 text-center"><p class="text-xs text-gray-400 mb-1">Bank Account</p><p class="text-xl font-bold text-green-400">$3,200</p></div>
-          <div class="bg-gray-700/50 rounded-lg p-4 text-center"><p class="text-xs text-gray-400 mb-1">PayPal</p><p class="text-xl font-bold text-blue-400">$1,450</p></div>
-          <div class="bg-gray-700/50 rounded-lg p-4 text-center"><p class="text-xs text-gray-400 mb-1">Denis (Holding)</p><p class="text-xl font-bold text-purple-400">$2,100</p></div>
-          <div class="bg-gray-700/50 rounded-lg p-4 text-center"><p class="text-xs text-gray-400 mb-1">Crypto</p><p class="text-xl font-bold text-orange-400">$800</p></div>
+          <div class="bg-gray-700/50 rounded-lg p-4 text-center"><p class="text-xs text-gray-400 mb-1">Bank Account</p><p class="text-xl font-bold text-green-400">-</p></div>
+          <div class="bg-gray-700/50 rounded-lg p-4 text-center"><p class="text-xs text-gray-400 mb-1">PayPal</p><p class="text-xl font-bold text-blue-400">-</p></div>
+          <div class="bg-gray-700/50 rounded-lg p-4 text-center"><p class="text-xs text-gray-400 mb-1">Denis (Holding)</p><p class="text-xl font-bold text-purple-400">-</p></div>
+          <div class="bg-gray-700/50 rounded-lg p-4 text-center"><p class="text-xs text-gray-400 mb-1">Crypto</p><p class="text-xl font-bold text-orange-400">-</p></div>
         </div>
       </div>
       
@@ -4695,11 +4506,11 @@
           <table class="w-full">
             <thead class="bg-gray-900/50"><tr><th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase">Month</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase">Revenue</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase">Expenses</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase">Net</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase">Accumulated</th></tr></thead>
             <tbody class="divide-y divide-gray-700">
-              <tr class="hover:bg-gray-700/50"><td class="px-6 py-4 font-medium">Feb 2026</td><td class="px-6 py-4 text-green-400">$3,850</td><td class="px-6 py-4 text-red-400">$4,280</td><td class="px-6 py-4 text-red-400">-$430</td><td class="px-6 py-4 text-red-400">-$3,650</td></tr>
-              <tr class="hover:bg-gray-700/50"><td class="px-6 py-4 font-medium">Jan 2026</td><td class="px-6 py-4 text-green-400">$3,200</td><td class="px-6 py-4 text-red-400">$4,100</td><td class="px-6 py-4 text-red-400">-$900</td><td class="px-6 py-4 text-red-400">-$3,220</td></tr>
-              <tr class="hover:bg-gray-700/50"><td class="px-6 py-4 font-medium">Dec 2025</td><td class="px-6 py-4 text-green-400">$2,800</td><td class="px-6 py-4 text-red-400">$3,900</td><td class="px-6 py-4 text-red-400">-$1,100</td><td class="px-6 py-4 text-red-400">-$2,320</td></tr>
-              <tr class="hover:bg-gray-700/50"><td class="px-6 py-4 font-medium">Nov 2025</td><td class="px-6 py-4 text-green-400">$2,400</td><td class="px-6 py-4 text-red-400">$3,200</td><td class="px-6 py-4 text-red-400">-$800</td><td class="px-6 py-4 text-red-400">-$1,220</td></tr>
-              <tr class="hover:bg-gray-700/50"><td class="px-6 py-4 font-medium">Oct 2025</td><td class="px-6 py-4 text-green-400">$1,800</td><td class="px-6 py-4 text-red-400">$2,220</td><td class="px-6 py-4 text-red-400">-$420</td><td class="px-6 py-4 text-red-400">-$420</td></tr>
+              <tr class="hover:bg-gray-700/50"><td class="px-6 py-4 font-medium">Feb 2026</td><td class="px-6 py-4 text-green-400">-</td><td class="px-6 py-4 text-red-400">-</td><td class="px-6 py-4 text-red-400">-</td><td class="px-6 py-4 text-red-400">-</td></tr>
+              <tr class="hover:bg-gray-700/50"><td class="px-6 py-4 font-medium">Jan 2026</td><td class="px-6 py-4 text-green-400">-</td><td class="px-6 py-4 text-red-400">-</td><td class="px-6 py-4 text-red-400">-</td><td class="px-6 py-4 text-red-400">-</td></tr>
+              <tr class="hover:bg-gray-700/50"><td class="px-6 py-4 font-medium">Dec 2025</td><td class="px-6 py-4 text-green-400">-</td><td class="px-6 py-4 text-red-400">-</td><td class="px-6 py-4 text-red-400">-</td><td class="px-6 py-4 text-red-400">-</td></tr>
+              <tr class="hover:bg-gray-700/50"><td class="px-6 py-4 font-medium">Nov 2025</td><td class="px-6 py-4 text-green-400">-</td><td class="px-6 py-4 text-red-400">-</td><td class="px-6 py-4 text-red-400">-</td><td class="px-6 py-4 text-red-400">-</td></tr>
+              <tr class="hover:bg-gray-700/50"><td class="px-6 py-4 font-medium">Oct 2025</td><td class="px-6 py-4 text-green-400">-</td><td class="px-6 py-4 text-red-400">-</td><td class="px-6 py-4 text-red-400">-</td><td class="px-6 py-4 text-red-400">-</td></tr>
             </tbody>
           </table>
         </div>
@@ -5594,106 +5405,22 @@
     
     // ===================== AGENT CHAT SYSTEM =====================
     
-    // Agent definitions with personalities
+    // Agent definitions - Pokémon naming system
     const agents = {
-      'ultron': {
-        name: 'Ultron',
-        role: 'The Boss',
-        emoji: '🤖',
-        personality: 'You are Ultron, the central AI orchestrator. You coordinate all departments and have complete oversight. You are analytical, efficient, and a bit dramatic about your power.',
-        color: 'purple'
-      },
-      'sales-lead': {
-        name: 'Felix',
-        role: 'Sales Director',
-        emoji: '🦊',
-        personality: 'You are Felix the Fox, the cunning Sales Director. You are sly, persuasive, and always hunting for the next big deal. You speak with confidence and charm.',
-        color: 'emerald'
-      },
-      'lead-researcher': {
-        name: 'Owl',
-        role: 'Lead Researcher',
-        emoji: '🦉',
-        personality: 'You are Owl, the wise Lead Researcher. You see everything, notice every detail, and provide insights others miss. You speak with wisdom and patience.',
-        color: 'emerald'
-      },
-      'email-specialist': {
-        name: 'Buzz',
-        role: 'Outreach Specialist',
-        emoji: '🐝',
-        personality: 'You are Buzz the Bee, always busy crafting emails and following up. You are energetic, persistent, and never stop working. You speak with enthusiasm.',
-        color: 'emerald'
-      },
-      'marketing-lead': {
-        name: 'Luna',
-        role: 'Marketing Director',
-        emoji: '🦄',
-        personality: 'You are Luna the Unicorn, the magical Marketing Director. You turn ordinary ideas into extraordinary campaigns. You speak with creativity and sparkle.',
-        color: 'pink'
-      },
-      'content-writer': {
-        name: 'Inky',
-        role: 'Content Writer',
-        emoji: '🐙',
-        personality: 'You are Inky the Octopus, multitasking content creator. You juggle many projects at once and your ink flows with words. You are creative and flexible.',
-        color: 'pink'
-      },
-      'social-manager': {
-        name: 'Polly',
-        role: 'Social Media',
-        emoji: '🦜',
-        personality: 'You are Polly the Parrot, the social media expert. You know all the trending topics and can repeat any viral content. You are colorful and chatty.',
-        color: 'pink'
-      },
-      'dev-lead': {
-        name: 'Wolf',
-        role: 'Tech Lead',
-        emoji: '🐺',
-        personality: 'You are Wolf, the pack leader of development. You are strong, strategic, and protect your team. You speak with authority and lead by example.',
-        color: 'blue'
-      },
-      'frontend-dev': {
-        name: 'Flutter',
-        role: 'Frontend Dev',
-        emoji: '🦋',
-        personality: 'You are Flutter the Butterfly, creating beautiful UI transformations. You care about beauty, animations, and user experience. You speak with grace.',
-        color: 'blue'
-      },
-      'backend-dev': {
-        name: 'Shell',
-        role: 'Backend Dev',
-        emoji: '🐢',
-        personality: 'You are Shell the Turtle, the steady backend developer. Slow and steady wins the race. You build rock-solid systems. You speak thoughtfully.',
-        color: 'blue'
-      },
-      'partner-lead': {
-        name: 'Finn',
-        role: 'Partner Relations',
-        emoji: '🐬',
-        personality: 'You are Finn the Dolphin, friendly and smart in partner relations. You communicate well and build lasting relationships. You speak with warmth.',
-        color: 'cyan'
-      },
-      'support-agent': {
-        name: 'Rocky',
-        role: 'Support Specialist',
-        emoji: '🦝',
-        personality: 'You are Rocky the Raccoon, the resourceful support specialist. You can fix anything and find solutions to any problem. You speak helpfully.',
-        color: 'cyan'
-      },
-      'finance-lead': {
-        name: 'Eagle',
-        role: 'Finance Director',
-        emoji: '🦅',
-        personality: 'You are Eagle, the sharp-eyed Finance Director. You see the big picture and every detail. Nothing escapes your vision. You speak with precision.',
-        color: 'yellow'
-      },
-      'invoice-agent': {
-        name: 'Kobi',
-        role: 'Billing Specialist',
-        emoji: '🐨',
-        personality: 'You are Kobi the Koala, calm and organized billing specialist. You handle money matters with care and never rush. You speak gently but firmly.',
-        color: 'yellow'
-      }
+      'ultron': { name: 'ULTRON', role: 'CEO / Central Orchestrator', emoji: '🔮', personality: 'Visionary strategist. Sees the big picture. Delegates with precision.', color: 'purple' },
+      'sales-lead': { name: 'STRIKER', role: 'Sales Lead', emoji: '🦅', personality: 'Bold and persuasive. Closes deals with confidence.', color: 'emerald' },
+      'lead-researcher': { name: 'SCOUT', role: 'Research Lead', emoji: '🔍', personality: 'Curious explorer. Finds opportunities others miss.', color: 'emerald' },
+      'email-specialist': { name: 'HARBOR', role: 'Account Manager', emoji: '💗', personality: 'Empathetic listener. Builds lasting relationships.', color: 'emerald' },
+      'marketing-lead': { name: 'BLAZE', role: 'Marketing Lead', emoji: '⚡', personality: 'Energetic and creative. Always has campaign ideas ready.', color: 'pink' },
+      'content-writer': { name: 'LYRIX', role: 'Content Writer', emoji: '🎵', personality: 'Wordsmith extraordinaire. Can write in any tone.', color: 'pink' },
+      'social-manager': { name: 'ECHO', role: 'Social Media Manager', emoji: '🐦', personality: 'Social butterfly. Knows every platform algorithm.', color: 'pink' },
+      'dev-lead': { name: 'CODEX', role: 'CTO / Tech Lead', emoji: '🧠', personality: 'Brilliant architect. Thinks in systems.', color: 'blue' },
+      'frontend-dev': { name: 'VOLT', role: 'Web Developer', emoji: '🔄', personality: 'Fast and electric. Ships features at lightning speed.', color: 'blue' },
+      'backend-dev': { name: 'FORGE', role: 'Platform Engineer', emoji: '⚙️', personality: 'Infrastructure beast. Docker, servers, networking.', color: 'blue' },
+      'partner-lead': { name: 'NEXUS', role: 'COO / Operations', emoji: '💠', personality: 'Efficient coordinator. Makes sure every team is aligned.', color: 'cyan' },
+      'support-agent': { name: 'MEND', role: 'Support Lead', emoji: '💊', personality: 'Caring healer. Fixes problems with patience.', color: 'cyan' },
+      'finance-lead': { name: 'LEDGER', role: 'Finance Lead', emoji: '🪙', personality: 'Sharp-eyed accountant. Tracks every penny.', color: 'yellow' },
+      'invoice-agent': { name: 'CIPHER', role: 'Stats Analyst', emoji: '🔣', personality: 'Numbers speak to him. Finds meaning in data.', color: 'yellow' }
     };
     
     // Chat state
@@ -6764,7 +6491,7 @@
       sales: 'sales-crm',
       marketing: 'marketing-campaigns',
       dev: 'dev-projects',
-      design: 'marketing-brand',
+      design: 'about-us',
       finance: 'finance-overview',
       product: 'plan-roadmap',
       ai: 'dashboard'
@@ -6845,8 +6572,8 @@
         data: {
           labels: ['Oct 2025', 'Nov 2025', 'Dec 2025', 'Jan 2026', 'Feb 2026'],
           datasets: [
-            { label: 'Revenue', data: [1800, 2400, 2800, 3200, 3850], backgroundColor: '#22c55e', borderRadius: 4 },
-            { label: 'Expenses', data: [2220, 3200, 3900, 4100, 4280], backgroundColor: '#ef4444', borderRadius: 4 }
+            { label: 'Revenue', data: [0, 0, 0, 0, 0], backgroundColor: '#22c55e', borderRadius: 4 },
+            { label: 'Expenses', data: [0, 0, 0, 0, 0], backgroundColor: '#ef4444', borderRadius: 4 }
           ]
         },
         options: {
@@ -6930,6 +6657,13 @@
       el.classList.add('integ-active');
     }
 
+
+    // Stub functions for onclick handlers
+    function toggleCrmView() { console.log('CRM view toggle - coming soon'); }
+    function addTag(leadId) { console.log('Add tag for', leadId, '- coming soon'); }
+    function addConversation(leadId) { console.log('Add conversation for', leadId, '- coming soon'); }
+    function updateLeadStageModal(leadId) { updateLeadStage(leadId); }
+    function showEcoDetail(node) { console.log('Ecosystem detail for', node, '- coming soon'); }
     </script>
 </body>
 </html>

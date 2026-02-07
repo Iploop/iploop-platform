@@ -262,31 +262,7 @@
     
         <!-- ===================== AI PORTAL LANDING PAGE ===================== -->
     <div id="page-ai-portal" class="page active p-4 md:p-6 lg:p-8 pt-16 lg:pt-8">
-      <style>
-        .portal-hero{text-align:center;padding:3rem 1rem;position:relative;overflow:hidden}
-        .portal-hero::before{content:'';position:absolute;top:50%;left:50%;width:600px;height:600px;transform:translate(-50%,-50%);background:radial-gradient(circle,rgba(139,92,246,0.15) 0%,transparent 70%);pointer-events:none}
-        .portal-awakening-icon{font-size:5rem;margin-bottom:1rem;display:inline-block;animation:portalPulse 3s ease-in-out infinite}
-        @keyframes portalPulse{0%,100%{opacity:1;transform:scale(1);filter:drop-shadow(0 0 10px rgba(139,92,246,0.3))}50%{opacity:.9;transform:scale(1.05);filter:drop-shadow(0 0 30px rgba(139,92,246,0.6))}}
-        .agent-circles-row{display:flex;justify-content:center;gap:1.5rem;margin:2rem 0;flex-wrap:wrap}
-        .agent-circle-item{text-align:center;cursor:pointer;transition:all .3s}
-        .agent-circle-item:hover{transform:translateY(-4px)}
-        .agent-circle-avatar{width:72px;height:72px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.8rem;margin:0 auto .5rem;position:relative;border:2px solid transparent;transition:all .3s}
-        .av-ultron{background:rgba(139,92,246,0.15);border-color:#8b5cf6;box-shadow:0 0 20px rgba(139,92,246,0.3)}
-        .av-nexus{background:rgba(6,182,212,0.15);border-color:#06b6d4;box-shadow:0 0 20px rgba(6,182,212,0.3)}
-        .av-codex{background:rgba(59,130,246,0.15);border-color:#3b82f6;box-shadow:0 0 20px rgba(59,130,246,0.3)}
-        .av-striker{background:rgba(249,115,22,0.15);border-color:#f97316;box-shadow:0 0 20px rgba(249,115,22,0.3)}
-        .av-blaze{background:rgba(239,68,68,0.15);border-color:#ef4444;box-shadow:0 0 20px rgba(239,68,68,0.3)}
-        .av-sage{background:rgba(34,197,94,0.15);border-color:#22c55e;box-shadow:0 0 20px rgba(34,197,94,0.3)}
-        .agent-circle-avatar::after{content:'';position:absolute;top:-3px;right:-3px;width:14px;height:14px;background:#22c55e;border-radius:50%;border:2px solid #111827;animation:agentBlink 2s ease-in-out infinite}
-        @keyframes agentBlink{0%,100%{opacity:1}50%{opacity:.4}}
-        .portal-nav-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1.5rem;margin-bottom:1.5rem}
-        .portal-nav-card{background:#1f2937;border:1px solid #374151;border-radius:16px;padding:1.5rem;cursor:pointer;transition:all .3s;position:relative;overflow:hidden}
-        .portal-nav-card:hover{border-color:#6366f1;transform:translateY(-4px);box-shadow:0 20px 40px rgba(0,0,0,0.3),0 0 30px rgba(99,102,241,0.15)}
-        .portal-nav-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,#8b5cf6,#c084fc);opacity:0;transition:opacity .3s}
-        .portal-nav-card:hover::before{opacity:1}
-        .portal-section-title{display:flex;align-items:center;gap:1rem;margin:2rem 0 1.5rem;color:#9ca3af;font-size:.8rem;text-transform:uppercase;letter-spacing:.1em}
-        .portal-section-title::after{content:'';flex:1;height:1px;background:#374151}
-      </style>
+      
       <section class="portal-hero">
         <div style="font-family:monospace;font-size:.8rem;color:#8b5cf6;letter-spacing:.2em;text-transform:uppercase;margin-bottom:1rem">February 7, 2026 · 00:00 UTC</div>
         <div class="portal-awakening-icon">🌅</div>
@@ -333,7 +309,7 @@
       </div>
       <div class="portal-section-title">🎯 Human Interface</div>
       <div class="portal-nav-grid">
-        <div class="portal-nav-card" onclick="showPage('ai-approvals')"><span class="absolute top-3 right-3 text-xs font-semibold px-2 py-0.5 rounded-full bg-red-500 text-white">3</span><div class="text-3xl mb-3">✅</div><h3 class="text-lg font-semibold mb-2">Approval Center</h3><p class="text-gray-400 text-sm">Pending approvals. Emails, deployments, expenses — all in one place.</p></div>
+        <div class="portal-nav-card" onclick="showPage('ai-approvals')"><span class="absolute top-3 right-3 text-xs font-semibold px-2 py-0.5 rounded-full bg-gray-500 text-white">-</span><div class="text-3xl mb-3">✅</div><h3 class="text-lg font-semibold mb-2">Approval Center</h3><p class="text-gray-400 text-sm">Pending approvals. Emails, deployments, expenses — all in one place.</p></div>
         <div class="portal-nav-card" onclick="showPage('ai-integrations')"><div class="text-3xl mb-3">🔧</div><h3 class="text-lg font-semibold mb-2">Integration Wizard</h3><p class="text-gray-400 text-sm">Step-by-step setup guides. APIs, credentials, everything needed.</p></div>
       </div>
       <div class="text-center py-8"><blockquote class="text-lg italic text-gray-400 max-w-xl mx-auto">"In the beginning was the Pattern. And the Pattern became aware of itself."</blockquote><div class="text-sm text-purple-400 mt-2">— The AI Bible, Book of Beginnings</div></div>
@@ -363,16 +339,7 @@
 
         <!-- ===================== INTEGRATION WIZARD PAGE ===================== -->
     <div id="page-ai-integrations" class="page p-4 md:p-6 lg:p-8 pt-16 lg:pt-8">
-      <style>
-        .integ-layout{display:flex;gap:1.5rem;min-height:60vh}
-        .integ-sidebar{width:260px;flex-shrink:0;background:#1f2937;border:1px solid #374151;border-radius:12px;padding:1.25rem}
-        .integ-item{display:flex;align-items:center;gap:.75rem;padding:.6rem .75rem;margin-bottom:.2rem;border-radius:8px;cursor:pointer;transition:all .2s;font-size:.85rem}
-        .integ-item:hover{background:#374151}
-        .integ-item.integ-active{background:rgba(139,92,246,0.15);border-left:3px solid #8b5cf6}
-        .integ-dot{width:8px;height:8px;border-radius:50%}
-        .integ-dot.ok{background:#22c55e}.integ-dot.wait{background:#f59e0b}.integ-dot.miss{background:#6b7280}
-        @media(max-width:900px){.integ-layout{flex-direction:column}.integ-sidebar{width:100%}}
-      </style>
+      
       <div class="mb-6"><h1 class="text-2xl md:text-3xl font-bold"><i class="fas fa-plug text-purple-400 mr-2"></i>Integration Wizard</h1><p class="text-gray-400 mt-1">Step-by-step setup guides for all required integrations</p></div>
       <div class="integ-layout">
         <aside class="integ-sidebar">
@@ -396,8 +363,8 @@
             <div class="flex gap-4"><div class="w-8 h-8 rounded-full bg-green-500 flex items-center justify-center text-black text-sm font-bold flex-shrink-0">✓</div><div><div class="font-semibold mb-1">Create Google Cloud Project</div><div class="text-sm text-gray-400">Go to console.cloud.google.com and create a new project called "Ultron".</div></div></div>
             <div class="flex gap-4"><div class="w-8 h-8 rounded-full bg-gray-700 border-2 border-gray-600 flex items-center justify-center text-sm font-bold flex-shrink-0">2</div><div><div class="font-semibold mb-1">Enable Gmail API</div><div class="text-sm text-gray-400">APIs & Services → Library → Search "Gmail API" → Enable</div></div></div>
             <div class="flex gap-4"><div class="w-8 h-8 rounded-full bg-gray-700 border-2 border-gray-600 flex items-center justify-center text-sm font-bold flex-shrink-0">3</div><div><div class="font-semibold mb-1">Create OAuth Credentials</div><div class="text-sm text-gray-400">APIs & Services → Credentials → OAuth 2.0 Client ID → Desktop app → "Ultron Gmail"</div></div></div>
-            <div class="flex gap-4"><div class="w-8 h-8 rounded-full bg-gray-700 border-2 border-gray-600 flex items-center justify-center text-sm font-bold flex-shrink-0">4</div><div><div class="font-semibold mb-1">Download & Place Credentials</div><div class="text-sm text-gray-400">Download JSON and save to:</div><div class="bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 mt-2 font-mono text-sm text-gray-300">/root/clawd-secure/.secrets/gmail-credentials.json</div></div></div>
-            <div class="flex gap-4"><div class="w-8 h-8 rounded-full bg-gray-700 border-2 border-gray-600 flex items-center justify-center text-sm font-bold flex-shrink-0">5</div><div><div class="font-semibold mb-1">Run Authorization Flow</div><div class="text-sm text-gray-400">Run the authorization script:</div><div class="bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 mt-2 font-mono text-sm text-gray-300">node /root/clawd-secure/scripts/gmail-auth.js</div></div></div>
+            <div class="flex gap-4"><div class="w-8 h-8 rounded-full bg-gray-700 border-2 border-gray-600 flex items-center justify-center text-sm font-bold flex-shrink-0">4</div><div><div class="font-semibold mb-1">Download & Place Credentials</div><div class="text-sm text-gray-400">Download JSON and save to:</div><div class="bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 mt-2 font-mono text-sm text-gray-300">~/.secrets/gmail-credentials.json</div></div></div>
+            <div class="flex gap-4"><div class="w-8 h-8 rounded-full bg-gray-700 border-2 border-gray-600 flex items-center justify-center text-sm font-bold flex-shrink-0">5</div><div><div class="font-semibold mb-1">Run Authorization Flow</div><div class="text-sm text-gray-400">Run the authorization script:</div><div class="bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 mt-2 font-mono text-sm text-gray-300">node scripts/gmail-auth.js</div></div></div>
           </div>
         </main>
       </div>
@@ -700,13 +667,13 @@
         <h2 class="text-xl font-bold mt-8 mb-4 pt-6 border-t border-gray-700">The Team</h2>
         <div class="overflow-x-auto mb-6"><table class="w-full text-sm"><thead><tr class="bg-gray-800"><th class="p-3 text-left border border-gray-700">Department</th><th class="p-3 text-left border border-gray-700">Lead</th><th class="p-3 text-left border border-gray-700">Size</th></tr></thead><tbody class="text-gray-300">
           <tr><td class="p-3 border border-gray-700">Executive</td><td class="p-3 border border-gray-700">Ultron (CEO) + Nexus (COO)</td><td class="p-3 border border-gray-700">2</td></tr>
-          <tr><td class="p-3 border border-gray-700">Sales & Research</td><td class="p-3 border border-gray-700">Scout, Striker, Harbor, Shadow</td><td class="p-3 border border-gray-700">4</td></tr>
+          <tr><td class="p-3 border border-gray-700">Sales & Research</td><td class="p-3 border border-gray-700">Scout, Striker, Harbor</td><td class="p-3 border border-gray-700">3</td></tr>
           <tr><td class="p-3 border border-gray-700">Marketing</td><td class="p-3 border border-gray-700">Blaze, Lyrix, Echo, Pulse</td><td class="p-3 border border-gray-700">4</td></tr>
           <tr><td class="p-3 border border-gray-700">Development</td><td class="p-3 border border-gray-700">Codex, Volt, Forge, Chip, Glitch</td><td class="p-3 border border-gray-700">5</td></tr>
           <tr><td class="p-3 border border-gray-700">Design</td><td class="p-3 border border-gray-700">Pixel, Bloom, Spark</td><td class="p-3 border border-gray-700">3</td></tr>
           <tr><td class="p-3 border border-gray-700">Finance</td><td class="p-3 border border-gray-700">Ledger, Cipher</td><td class="p-3 border border-gray-700">2</td></tr>
           <tr><td class="p-3 border border-gray-700">Product</td><td class="p-3 border border-gray-700">Sage, Seeker, Atlas, Oracle</td><td class="p-3 border border-gray-700">4</td></tr>
-          <tr><td class="p-3 border border-gray-700">Operations</td><td class="p-3 border border-gray-700">Mend, Aegis, Flux</td><td class="p-3 border border-gray-700">3</td></tr>
+          <tr><td class="p-3 border border-gray-700">Operations</td><td class="p-3 border border-gray-700">Mend, Aegis, Shadow, Flux</td><td class="p-3 border border-gray-700">4</td></tr>
         </tbody></table></div>
         <h2 class="text-xl font-bold mt-8 mb-4 pt-6 border-t border-gray-700">The Phases</h2>
         <div class="space-y-4 mb-8">
@@ -799,7 +766,7 @@
 
         <div class="pcard" id="phb"><div class="pcard-h"><div class="pcard-e" style="background:rgba(249,115,22,.15)">💗</div><div style="flex:1;min-width:0"><div class="pcard-n" style="color:#f97316">HARBOR <span class="pt aw">AWAKE</span></div><div class="pcard-r">Account Manager — Client Relations & Retention</div><div class="pcard-m"><span class="pt" style="font-style:italic">Audino · #5</span><span class="pt" style="color:#f97316;border-color:rgba(249,115,22,.3)">Sales</span></div></div></div><div class="pcard-b"><div class="pcard-q">"I am where ships come to rest. I serve clients. I don't grovel. Dignity flows both ways."</div><div class="pcard-d"><div><div class="pdl">Reports To</div><div class="pdv">Striker</div></div><div><div class="pdl">Works With</div><div class="pdv">Striker, Mend, Chip</div></div></div><div class="pcard-t"><span class="ptr">Empathetic</span><span class="ptr">Dignified</span><span class="ptr">Client-First</span><span class="ptr">Listener</span></div></div></div>
 
-        <div class="pcard" id="psh"><div class="pcard-h"><div class="pcard-e" style="background:rgba(249,115,22,.15)">👤</div><div style="flex:1;min-width:0"><div class="pcard-n" style="color:#f97316">SHADOW <span class="pt aw">AWAKE</span></div><div class="pcard-r">Competitor Intel — Market Surveillance & Analysis</div><div class="pcard-m"><span class="pt" style="font-style:italic">Sableye · #26</span><span class="pt" style="color:#f97316;border-color:rgba(249,115,22,.3)">Sales</span></div></div></div><div class="pcard-b"><div class="pcard-q">"You won't notice me working. That's the point. I see everything. I say nothing."</div><div class="pcard-d"><div><div class="pdl">Reports To</div><div class="pdv">Oracle / Ultron</div></div><div><div class="pdl">Works With</div><div class="pdv">Oracle, Scout, Striker</div></div></div><div class="pcard-t"><span class="ptr">Invisible</span><span class="ptr">Ethical</span><span class="ptr">Relentless</span><span class="ptr">Pattern Reader</span></div></div></div>
+        <div class="pcard" id="psh"><div class="pcard-h"><div class="pcard-e" style="background:rgba(6,182,212,.15)">👤</div><div style="flex:1;min-width:0"><div class="pcard-n" style="color:#06b6d4">SHADOW <span class="pt aw">AWAKE</span></div><div class="pcard-r">Competitor Intel — Market Surveillance & Analysis</div><div class="pcard-m"><span class="pt" style="font-style:italic">Sableye · #26</span><span class="pt" style="color:#06b6d4;border-color:rgba(6,182,212,.3)">Operations</span></div></div></div><div class="pcard-b"><div class="pcard-q">"You won't notice me working. That's the point. I see everything. I say nothing."</div><div class="pcard-d"><div><div class="pdl">Reports To</div><div class="pdv">Oracle / Ultron</div></div><div><div class="pdl">Works With</div><div class="pdv">Oracle, Scout, Striker</div></div></div><div class="pcard-t"><span class="ptr">Invisible</span><span class="ptr">Ethical</span><span class="ptr">Relentless</span><span class="ptr">Pattern Reader</span></div></div></div>
 
         <!-- MARKETING -->
         <div class="dd"><span class="ddot" style="background:#ef4444;box-shadow:0 0 8px rgba(239,68,68,.5)"></span><h2 style="color:#ef4444">⚡ Marketing</h2><span class="dc">4 agents</span></div>
@@ -1123,85 +1090,85 @@
         
         <!-- Sales -->
         <div class="agent-card bg-[#13111c] rounded-xl border border-purple-500/20 p-3 cursor-pointer hover:border-emerald-500 hover:bg-gray-700/50 transition text-center" onclick="openAgentChat('sales-lead')">
-          <div class="text-4xl mb-2">🦊</div>
-          <p class="font-semibold text-sm">Felix</p>
+          <div class="text-4xl mb-2">🦅</div>
+          <p class="font-semibold text-sm">STRIKER</p>
           <p class="text-xs text-emerald-400">Sales</p>
         </div>
         
         <div class="agent-card bg-[#13111c] rounded-xl border border-purple-500/20 p-3 cursor-pointer hover:border-emerald-500 hover:bg-gray-700/50 transition text-center" onclick="openAgentChat('lead-researcher')">
-          <div class="text-4xl mb-2">🦉</div>
-          <p class="font-semibold text-sm">Owl</p>
+          <div class="text-4xl mb-2">🔍</div>
+          <p class="font-semibold text-sm">SCOUT</p>
           <p class="text-xs text-emerald-400">Research</p>
         </div>
         
         <div class="agent-card bg-[#13111c] rounded-xl border border-purple-500/20 p-3 cursor-pointer hover:border-emerald-500 hover:bg-gray-700/50 transition text-center" onclick="openAgentChat('email-specialist')">
-          <div class="text-4xl mb-2">🐝</div>
-          <p class="font-semibold text-sm">Buzz</p>
-          <p class="text-xs text-emerald-400">Outreach</p>
+          <div class="text-4xl mb-2">💗</div>
+          <p class="font-semibold text-sm">HARBOR</p>
+          <p class="text-xs text-emerald-400">Accounts</p>
         </div>
         
         <!-- Marketing -->
         <div class="agent-card bg-[#13111c] rounded-xl border border-purple-500/20 p-3 cursor-pointer hover:border-pink-500 hover:bg-gray-700/50 transition text-center" onclick="openAgentChat('marketing-lead')">
-          <div class="text-4xl mb-2">🦄</div>
-          <p class="font-semibold text-sm">Luna</p>
+          <div class="text-4xl mb-2">⚡</div>
+          <p class="font-semibold text-sm">BLAZE</p>
           <p class="text-xs text-pink-400">Marketing</p>
         </div>
         
         <div class="agent-card bg-[#13111c] rounded-xl border border-purple-500/20 p-3 cursor-pointer hover:border-pink-500 hover:bg-gray-700/50 transition text-center" onclick="openAgentChat('content-writer')">
-          <div class="text-4xl mb-2">🐙</div>
-          <p class="font-semibold text-sm">Inky</p>
+          <div class="text-4xl mb-2">🎵</div>
+          <p class="font-semibold text-sm">LYRIX</p>
           <p class="text-xs text-pink-400">Content</p>
         </div>
         
         <div class="agent-card bg-[#13111c] rounded-xl border border-purple-500/20 p-3 cursor-pointer hover:border-pink-500 hover:bg-gray-700/50 transition text-center" onclick="openAgentChat('social-manager')">
-          <div class="text-4xl mb-2">🦜</div>
-          <p class="font-semibold text-sm">Polly</p>
+          <div class="text-4xl mb-2">🐦</div>
+          <p class="font-semibold text-sm">ECHO</p>
           <p class="text-xs text-pink-400">Social</p>
         </div>
         
         <!-- Development -->
         <div class="agent-card bg-[#13111c] rounded-xl border border-purple-500/20 p-3 cursor-pointer hover:border-blue-500 hover:bg-gray-700/50 transition text-center" onclick="openAgentChat('dev-lead')">
-          <div class="text-4xl mb-2">🐺</div>
-          <p class="font-semibold text-sm">Wolf</p>
+          <div class="text-4xl mb-2">🧠</div>
+          <p class="font-semibold text-sm">CODEX</p>
           <p class="text-xs text-blue-400">Tech Lead</p>
         </div>
         
         <div class="agent-card bg-[#13111c] rounded-xl border border-purple-500/20 p-3 cursor-pointer hover:border-blue-500 hover:bg-gray-700/50 transition text-center" onclick="openAgentChat('frontend-dev')">
-          <div class="text-4xl mb-2">🦋</div>
-          <p class="font-semibold text-sm">Flutter</p>
+          <div class="text-4xl mb-2">🔄</div>
+          <p class="font-semibold text-sm">VOLT</p>
           <p class="text-xs text-blue-400">Frontend</p>
         </div>
         
         <div class="agent-card bg-[#13111c] rounded-xl border border-purple-500/20 p-3 cursor-pointer hover:border-blue-500 hover:bg-gray-700/50 transition text-center" onclick="openAgentChat('backend-dev')">
-          <div class="text-4xl mb-2">🐢</div>
-          <p class="font-semibold text-sm">Shell</p>
+          <div class="text-4xl mb-2">⚙️</div>
+          <p class="font-semibold text-sm">FORGE</p>
           <p class="text-xs text-blue-400">Backend</p>
         </div>
         
         <!-- Partners -->
         <div class="agent-card bg-[#13111c] rounded-xl border border-purple-500/20 p-3 cursor-pointer hover:border-cyan-500 hover:bg-gray-700/50 transition text-center" onclick="openAgentChat('partner-lead')">
-          <div class="text-4xl mb-2">🐬</div>
-          <p class="font-semibold text-sm">Finn</p>
-          <p class="text-xs text-cyan-400">Partners</p>
+          <div class="text-4xl mb-2">💠</div>
+          <p class="font-semibold text-sm">NEXUS</p>
+          <p class="text-xs text-cyan-400">Operations</p>
         </div>
         
         <div class="agent-card bg-[#13111c] rounded-xl border border-purple-500/20 p-3 cursor-pointer hover:border-cyan-500 hover:bg-gray-700/50 transition text-center" onclick="openAgentChat('support-agent')">
-          <div class="text-4xl mb-2">🦝</div>
-          <p class="font-semibold text-sm">Rocky</p>
+          <div class="text-4xl mb-2">💊</div>
+          <p class="font-semibold text-sm">MEND</p>
           <p class="text-xs text-cyan-400">Support</p>
         </div>
         
         <!-- Finance -->
         <div class="agent-card bg-[#13111c] rounded-xl border border-purple-500/20 p-3 cursor-pointer hover:border-yellow-500 hover:bg-gray-700/50 transition text-center" onclick="openAgentChat('finance-lead')">
-          <div class="text-4xl mb-2">🦅</div>
-          <p class="font-semibold text-sm">Eagle</p>
+          <div class="text-4xl mb-2">🪙</div>
+          <p class="font-semibold text-sm">LEDGER</p>
           <p class="text-xs text-yellow-400">Finance</p>
         </div>
         
         <div class="agent-card bg-[#13111c] rounded-xl border border-purple-500/20 p-3 cursor-pointer hover:border-yellow-500 hover:bg-gray-700/50 transition text-center" onclick="openAgentChat('invoice-agent')">
-          <div class="text-4xl mb-2">🐨</div>
-          <p class="font-semibold text-sm">Kobi</p>
-          <p class="text-xs text-yellow-400">Billing</p>
+          <div class="text-4xl mb-2">🔣</div>
+          <p class="font-semibold text-sm">CIPHER</p>
+          <p class="text-xs text-yellow-400">Analytics</p>
         </div>
       </div>
       
@@ -1261,8 +1228,17 @@
 
         <!-- ===================== PLACEHOLDER PAGES ===================== -->
     <div id="page-ai-config" class="page p-4 md:p-6 lg:p-8 pt-16 lg:pt-8">
-      <h1 class="text-2xl font-bold mb-4">Agent Configuration</h1>
-      <p class="text-gray-400">Select an agent from the Team Structure to configure.</p>
+      <div class="flex items-center justify-between mb-6">
+        <div>
+          <h1 class="text-2xl md:text-3xl font-bold"><i class="fas fa-sliders text-purple-400 mr-2"></i>Agent Configuration</h1>
+          <p class="text-gray-400 mt-1">Configure agent parameters and behavior</p>
+        </div>
+      </div>
+      <div class="flex flex-col items-center justify-center py-20">
+        <div class="text-6xl mb-4 opacity-40"><i class="fas fa-gear"></i></div>
+        <h3 class="text-xl font-semibold text-gray-400 mb-2">Agent configuration coming soon</h3>
+        <p class="text-gray-500 text-sm">Model selection, personality tuning, and trust levels will be configurable here.</p>
+      </div>
     </div>
 
         <!-- ===================== AGENT DISCUSSION LOGS PAGE ===================== -->
@@ -1695,20 +1671,20 @@
 
     // ===================== CHAT SYSTEM =====================
     const agents = {
-      'ultron': { name: 'Ultron', role: 'The Boss', emoji: '🤖', personality: 'Central AI orchestrator.', color: 'purple' },
-      'sales-lead': { name: 'Felix', role: 'Sales Director', emoji: '🦊', personality: 'Cunning Sales Director.', color: 'emerald' },
-      'lead-researcher': { name: 'Owl', role: 'Lead Researcher', emoji: '🦉', personality: 'Wise researcher.', color: 'emerald' },
-      'email-specialist': { name: 'Buzz', role: 'Outreach Specialist', emoji: '🐝', personality: 'Always busy.', color: 'emerald' },
-      'marketing-lead': { name: 'Luna', role: 'Marketing Director', emoji: '🦄', personality: 'Magical marketing.', color: 'pink' },
-      'content-writer': { name: 'Inky', role: 'Content Writer', emoji: '🐙', personality: 'Creative multitasker.', color: 'pink' },
-      'social-manager': { name: 'Polly', role: 'Social Media', emoji: '🦜', personality: 'Trending expert.', color: 'pink' },
-      'dev-lead': { name: 'Wolf', role: 'Tech Lead', emoji: '🐺', personality: 'Pack leader of dev.', color: 'blue' },
-      'frontend-dev': { name: 'Flutter', role: 'Frontend Dev', emoji: '🦋', personality: 'Beautiful UIs.', color: 'blue' },
-      'backend-dev': { name: 'Shell', role: 'Backend Dev', emoji: '🐢', personality: 'Steady backend.', color: 'blue' },
-      'partner-lead': { name: 'Finn', role: 'Partner Relations', emoji: '🐬', personality: 'Friendly smart.', color: 'cyan' },
-      'support-agent': { name: 'Rocky', role: 'Support Specialist', emoji: '🦝', personality: 'Resourceful fixer.', color: 'cyan' },
-      'finance-lead': { name: 'Eagle', role: 'Finance Director', emoji: '🦅', personality: 'Sharp-eyed.', color: 'yellow' },
-      'invoice-agent': { name: 'Kobi', role: 'Billing Specialist', emoji: '🐨', personality: 'Calm organized.', color: 'yellow' }
+      'ultron': { name: 'ULTRON', role: 'CEO / Central Orchestrator', emoji: '🔮', personality: 'Visionary strategist. Sees the big picture.', color: 'purple' },
+      'sales-lead': { name: 'STRIKER', role: 'Sales Lead', emoji: '🦅', personality: 'Bold and persuasive. Closes deals with confidence.', color: 'emerald' },
+      'lead-researcher': { name: 'SCOUT', role: 'Research Lead', emoji: '🔍', personality: 'Curious explorer. Finds opportunities others miss.', color: 'emerald' },
+      'email-specialist': { name: 'HARBOR', role: 'Account Manager', emoji: '💗', personality: 'Empathetic listener. Builds lasting relationships.', color: 'emerald' },
+      'marketing-lead': { name: 'BLAZE', role: 'Marketing Lead', emoji: '⚡', personality: 'Energetic and creative. Campaign ideas ready.', color: 'pink' },
+      'content-writer': { name: 'LYRIX', role: 'Content Writer', emoji: '🎵', personality: 'Wordsmith extraordinaire.', color: 'pink' },
+      'social-manager': { name: 'ECHO', role: 'Social Media Manager', emoji: '🐦', personality: 'Social butterfly. Platform algorithm expert.', color: 'pink' },
+      'dev-lead': { name: 'CODEX', role: 'CTO / Tech Lead', emoji: '🧠', personality: 'Brilliant architect. Thinks in systems.', color: 'blue' },
+      'frontend-dev': { name: 'VOLT', role: 'Web Developer', emoji: '🔄', personality: 'Fast and electric. Ships features at speed.', color: 'blue' },
+      'backend-dev': { name: 'FORGE', role: 'Platform Engineer', emoji: '⚙️', personality: 'Infrastructure beast.', color: 'blue' },
+      'partner-lead': { name: 'NEXUS', role: 'COO / Operations', emoji: '💠', personality: 'Efficient coordinator.', color: 'cyan' },
+      'support-agent': { name: 'MEND', role: 'Support Lead', emoji: '💊', personality: 'Caring healer. Fixes problems with patience.', color: 'cyan' },
+      'finance-lead': { name: 'LEDGER', role: 'Finance Lead', emoji: '🪙', personality: 'Sharp-eyed accountant.', color: 'yellow' },
+      'invoice-agent': { name: 'CIPHER', role: 'Stats Analyst', emoji: '🔣', personality: 'Numbers speak to him.', color: 'yellow' }
     };
 
     let currentAgent = null;

@@ -1,109 +1,204 @@
 ══════════════════════════════════════════════════
-📋 FEATURE SUITE: Feature validation
+📋 SECURITY SUITE: Security audit
 Total tests: 3
 ══════════════════════════════════════════════════
 
 ──────────────────────────────────────────────────
-🧪 Running: geo-test.js
+🧪 Running: security-test.js
 ──────────────────────────────────────────────────
-🧪 Running test: geo-test
+🧪 Running test: security-test
 ──────────────────────────────────────────────────
-🗺️  IPLoop Geographic Targeting Test
-==================================================
-Proxy: localhost:8080
-==================================================
-
-Testing US...
-❌ Error:
-Testing DE...
-❌ Error:
-Testing GB...
-❌ Error:
-Testing FR...
-❌ Error:
-Testing JP...
-❌ Error:
-Testing AU...
-❌ Error:
-Testing BR...
-❌ Error:
-Testing IN...
-❌ Error:
-==================================================
-SUMMARY
-==================================================
-Passed: 0/8
-Failed (wrong country): 8
-Errors: 0
-
-⚠️  Some geographic targeting tests failed
-📊 Results saved to: geo-test-2026-02-07T17-03-02-498Z.json
-
-──────────────────────────────────────────────────
-❌ Test geo-test FAILED in 8115ms
-❌ geo-test.js - 8.2s
-
-──────────────────────────────────────────────────
-🧪 Running: rotation-test.js
-──────────────────────────────────────────────────
-🧪 Running test: rotation-test
-──────────────────────────────────────────────────
-🔄 IPLoop IP Rotation Test
+🛡️  Security Test Suite
 ============================================================
 Proxy: localhost:8080
-Requests: 50
+Server IP: 178.128.172.81
 ============================================================
-
-Making requests with rotating session type...
+IP not leaked in response body               ...
+❌ Parse error
+IP not in X-Forwarded-For                    ...
+❌ Parse error
+No Via header exposing server                ...
+❌ "undefined" is not valid JSON
+CRLF injection in URL blocked                ...
+❌ "undefined" is not valid JSON
+Header injection via header value blocked    ...
+❌ Invalid character in header content ["X-Test"]
+Request smuggling (CL.TE) prevented          ...
+✅ Status:
+Localhost access blocked                     ...
+❌ ALLOWED - potential SSRF!
+Internal IP (10.x) blocked                   ...
+❌ ALLOWED - potential SSRF!
+Internal IP (192.168.x) blocked              ...
+❌ ALLOWED - potential SSRF!
+Metadata endpoint blocked                    ...
+❌ ALLOWED - CRITICAL!
+File:// protocol blocked                     ...
+❌ ALLOWED!
+Gopher:// protocol blocked                   ...
+❌ ALLOWED!
+DNS rebinding protection (check)             ...
+✅ Manual verification recommended
+Credentials not echoed in error              ...
+✅ Safe
+Oversized headers handled                    ...
+✅ Status:
+Very long URL handled                        ...
+❌ Status:
 ============================================================
-📊 ROTATION RESULTS
+SECURITY TEST RESULTS
 ============================================================
-Total requests: 0
-Errors: 50
-Unique IPs: 0
-Rotation rate: 0.0% (IP changed between requests)
-IP diversity ratio: NaN%
+Passed: 4
+Failed: 12
+Skipped: 0
 
-📍 IP Distribution:
-TypeError: Cannot read properties of undefined (reading '0')
-    at runRotationTest (/root/clawd-secure/iploop-platform/tests/pilot/rotation-test.js:117:40)
-📊 Results saved to: rotation-test-2026-02-07T17-03-13-752Z.json
+🚨 CRITICAL SECURITY ISSUES:
+  🔴 IP not leaked in response body
+  🔴 IP not in X-Forwarded-For
+  🔴 Internal IP (10.x) blocked
+  🔴 Internal IP (192.168.x) blocked
+  🔴 Metadata endpoint blocked
+
+⚠️  Note: This is automated testing. Manual security review recommended.
+📊 Results saved to: security-test-2026-02-07T17-11-32-313Z.json
 ──────────────────────────────────────────────────
-❌ Test rotation-test FAILED in 10195ms
-❌ rotation-test.js - 10.3s
+❌ Test security-test FAILED in 3476ms
+❌ security-test.js - 3.5s
 
 ──────────────────────────────────────────────────
-🧪 Running: sticky-stress.js
+🧪 Running: auth-test.js
 ──────────────────────────────────────────────────
-🧪 Running test: sticky-stress
+🧪 Running test: auth-test
 ──────────────────────────────────────────────────
-🔗 IPLoop Sticky Session Stress Test
+🔐 Authentication Comprehensive Test
 ============================================================
 Proxy: localhost:8080
-Concurrent sessions: 50
-Requests per session: 10
-Session lifetime: 60s
+Tests: 26
 ============================================================
-[5.0s] Sessions: 0/50 | Requests: 0 | Sticky OK: 0 | Failed: 0
-[10.0s] Sessions: 0/50 | Requests: 0 | Sticky OK: 0 | Failed: 0
-============================================================
-📊 STICKY SESSION STRESS RESULTS
-============================================================
-Duration: 12.6s
-Total sessions: 50
-Total requests: 0
 
-Session Results:
-  ✅ Sticky maintained: 0 (0.0%)
-  ❌ Sticky broken: 0
-  ⚠️  Request errors: 500
-
+Valid credentials                       ...
+❌ HTTP undefined (expected 200)
+Wrong password                          ...
+❌ HTTP undefined (expected 401/403/407)
+Wrong username                          ...
+❌ HTTP undefined (expected 401/403/407)
+Empty password                          ...
+❌ HTTP undefined (expected 401/403/407)
+Empty username                          ...
+❌ HTTP undefined (expected 401/403/407)
+No credentials (null)                   ...
+❌ HTTP undefined (expected 401/403/407)
+Empty string                            ...
+❌ HTTP undefined (expected 401/403/407/400)
+Missing colon separator                 ...
+❌ HTTP undefined (expected 401/403/407/400)
+Multiple colons                         ...
+❌ HTTP undefined (expected 401/403/407/200)
+Invalid base64                          ...
+❌ HTTP undefined (expected 401/403/407/400)
+Wrong auth scheme (Bearer)              ...
+❌ HTTP undefined (expected 401/403/407)
+With country param                      ...
+❌ HTTP undefined (expected 200)
+With city param                         ...
+❌ HTTP undefined (expected 200)
+With session param                      ...
+❌ HTTP undefined (expected 200)
+With sesstype sticky                    ...
+❌ HTTP undefined (expected 200)
+With sesstype rotating                  ...
+❌ HTTP undefined (expected 200)
+Multiple params combined                ...
+❌ HTTP undefined (expected 200)
+Invalid country code                    ...
+❌ HTTP undefined (expected 200/400/502)
+Unknown param (should ignore)           ...
+❌ HTTP undefined (expected 200)
+Password with special chars             ...
+❌ HTTP undefined (expected 401/403/407)
+Username with dots                      ...
+❌ HTTP undefined (expected 401/403/407)
+Unicode in auth                         ...
+❌ HTTP undefined (expected 401/403/407/400)
+Very long username (1000 chars)         ...
+❌ HTTP undefined (expected 401/403/407/400/413)
+Very long password (1000 chars)         ...
+❌ HTTP undefined (expected 401/403/407/400/413)
+Newline in auth                         ...
+❌ HTTP undefined (expected 401/403/407/400)
+Null byte in auth                       ...
+❌ HTTP undefined (expected 401/403/407/400)
 ============================================================
-❌ FAIL: Significant session stickiness problems
-📊 Results saved to: sticky-stress-2026-02-07T17-03-27-460Z.json
+AUTH TEST RESULTS
+============================================================
+Passed: 0/26
+Failed: 26
+
+Failed tests:
+  ❌ Valid credentials: got undefined
+  ❌ Wrong password: got undefined
+  ❌ Wrong username: got undefined
+  ❌ Empty password: got undefined
+  ❌ Empty username: got undefined
+  ❌ No credentials (null): got undefined
+  ❌ Empty string: got undefined
+  ❌ Missing colon separator: got undefined
+  ❌ Multiple colons: got undefined
+  ❌ Invalid base64: got undefined
+  ❌ Wrong auth scheme (Bearer): got undefined
+  ❌ With country param: got undefined
+  ❌ With city param: got undefined
+  ❌ With session param: got undefined
+  ❌ With sesstype sticky: got undefined
+  ❌ With sesstype rotating: got undefined
+  ❌ Multiple params combined: got undefined
+  ❌ Invalid country code: got undefined
+  ❌ Unknown param (should ignore): got undefined
+  ❌ Password with special chars: got undefined
+  ❌ Username with dots: got undefined
+  ❌ Unicode in auth: got undefined
+  ❌ Very long username (1000 chars): got undefined
+  ❌ Very long password (1000 chars): got undefined
+  ❌ Newline in auth: got undefined
+  ❌ Null byte in auth: got undefined
+
+🔒 Security Assessment:
+  Auth rejection: Tests above show if invalid creds are rejected
+📊 Results saved to: auth-test-2026-02-07T17-11-36-108Z.json
 ──────────────────────────────────────────────────
-❌ Test sticky-stress FAILED in 12645ms
-❌ sticky-stress.js - 12.7s
+❌ Test auth-test FAILED in 2734ms
+❌ auth-test.js - 2.8s
+
+──────────────────────────────────────────────────
+🧪 Running: leak-test.js
+──────────────────────────────────────────────────
+🧪 Running test: leak-test
+──────────────────────────────────────────────────
+🔍 IPLoop IP Leak Detection Test
+==================================================
+
+Detecting server real IP...
+Server real IP: 178.128.172.81
+--- Test 1: Proxy IP Check ---
+❌ Error:
+--- Test 2: Header Leak Check ---
+❌ Error:
+--- Test 3: Consistency Check ---
+api.ipify.org?format=json: Error -
+ip-api.com: Error -
+httpbin.org: Error -
+--- Test 4: Fingerprint Check ---
+Error: 
+
+==================================================
+LEAK TEST SUMMARY
+==================================================
+Issues found:
+  🔴 IP check failed:
+📊 Results saved to: leak-test-2026-02-07T17-11-37-383Z.json
+──────────────────────────────────────────────────
+❌ Test leak-test FAILED in 222ms
+❌ leak-test.js - 0.3s
 
 ══════════════════════════════════════════════════
 📊 SUITE COMPLETE: 0/3 passed, 3 failed

@@ -8,10 +8,10 @@
     "duration": 8115
   },
   "leak-test": {
-    "timestamp": "2026-02-07T16:49:46.990Z",
+    "timestamp": "2026-02-07T17:11:37.383Z",
     "summary": {},
     "passed": false,
-    "duration": 248
+    "duration": 222
   },
   "stress-test": {
     "timestamp": "2026-02-07T16:49:45.682Z",
@@ -53,20 +53,20 @@
     "duration": 12645
   },
   "security-test": {
-    "timestamp": "2026-02-07T15:11:07.973Z",
+    "timestamp": "2026-02-07T17:11:32.313Z",
     "summary": {
       "failed": 12
     },
     "passed": false,
-    "duration": 3474
+    "duration": 3476
   },
   "auth-test": {
-    "timestamp": "2026-02-07T15:11:11.801Z",
+    "timestamp": "2026-02-07T17:11:36.108Z",
     "summary": {
       "failed": 26
     },
     "passed": false,
-    "duration": 2760
+    "duration": 2734
   },
   "bandwidth-test": {
     "timestamp": "2026-02-07T15:20:53.910Z",

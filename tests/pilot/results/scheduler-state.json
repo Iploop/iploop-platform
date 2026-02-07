@@ -6,5 +6,8 @@
     "performance": 1770477978613,
     "full": 1770464191115
   },
-  "currentRun": null
+  "currentRun": {
+    "suite": "quick",
+    "startedAt": 1770482954560
+  }
 }

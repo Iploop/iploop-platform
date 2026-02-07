@@ -1430,7 +1430,7 @@
             <div class="agent-circle-item" onclick="showAgentProfile('sage')"><div class="agent-circle-avatar av-sage">🌙</div><div class="text-xs font-semibold" style="color:#22c55e">SAGE</div><div class="text-xs text-gray-500">Product · Absol</div></div>
           </div>
           <div class="text-center mb-6 mt-4">
-            <p class="text-gray-400">27 minds. Click any agent to view their full profile.</p>
+            <h2 class="text-2xl font-bold mb-1" style="background:linear-gradient(135deg,#8b5cf6,#c084fc);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">The Full Team</h2>
           </div>
 
           <!-- Filter Buttons -->
@@ -1811,9 +1811,11 @@
     };
 
     // Render the grid
+    const directorIds = ['ultron','nexus','codex','striker','blaze','sage'];
     function renderProfileGrid(filter) {
       const container = document.getElementById('profileGridContainer');
-      const agents = filter && filter !== 'all' ? profileAgents.filter(a => a.dept === filter) : profileAgents;
+      const allAgents = filter && filter !== 'all' ? profileAgents.filter(a => a.dept === filter) : profileAgents;
+      const agents = allAgents.filter(a => !directorIds.includes(a.id));
       let html = '';
       let currentDept = '';
       const sorted = [...agents].sort((a,b) => deptOrder.indexOf(a.dept) - deptOrder.indexOf(b.dept));

@@ -1,16 +1,15 @@
 {
-  "running": false,
+  "running": true,
   "suite": "quick",
   "description": "Quick health check",
   "total": 3,
-  "progress": 3,
-  "currentTest": null,
-  "startTime": 1770481147368,
-  "suiteStartTime": 1770481113916,
-  "queue": [],
-  "lastTest": {
-    "name": "protocol-test.js",
-    "passed": false,
-    "duration": 4813
-  }
+  "progress": 0,
+  "currentTest": "stress-test.js",
+  "startTime": 1770482954566,
+  "suiteStartTime": 1770482954562,
+  "queue": [
+    "leak-test.js",
+    "protocol-test.js"
+  ],
+  "lastTest": null
 }

@@ -149,6 +149,54 @@
       50% { filter: drop-shadow(0 0 20px rgba(139, 92, 246, 0.6)); }
     }
     .logo-glow { animation: logoGlow 3s ease-in-out infinite; }
+    
+    /* ===== TEAM FEED STYLES ===== */
+    .feed-post { background: #1f2937; border: 1px solid #374151; border-radius: 16px; margin-bottom: 1rem; transition: all 0.2s; overflow: hidden; }
+    .feed-post:hover { border-color: rgba(139,92,246,0.3); }
+    .feed-avatar { width: 48px; height: 48px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; flex-shrink: 0; position: relative; }
+    .feed-actions { display: flex; align-items: center; gap: 1.5rem; padding: 0.75rem 1.25rem; border-top: 1px solid #374151; }
+    .feed-action-btn { display: flex; align-items: center; gap: 0.4rem; font-size: 0.8rem; color: #9ca3af; cursor: pointer; transition: all 0.2s; padding: 0.3rem 0.5rem; border-radius: 8px; border: none; background: none; }
+    .feed-action-btn:hover { background: rgba(139,92,246,0.1); color: #c084fc; }
+    .feed-action-btn.liked { color: #ef4444; }
+    .feed-action-btn.liked .fa-heart { font-weight: 900; }
+    .feed-hashtag { font-size: 0.75rem; color: #8b5cf6; cursor: pointer; }
+    .feed-hashtag:hover { text-decoration: underline; }
+    .feed-filter-btn { padding: 0.4rem 1rem; border-radius: 999px; font-size: 0.78rem; border: 1px solid #374151; background: transparent; color: #9ca3af; cursor: pointer; transition: all 0.2s; white-space: nowrap; }
+    .feed-filter-btn:hover { border-color: #8b5cf6; color: #c084fc; }
+    .feed-filter-btn.feed-active { background: #8b5cf6; border-color: #8b5cf6; color: #fff; }
+    .new-post-box { background: #1f2937; border: 1px solid #374151; border-radius: 16px; padding: 1rem 1.25rem; margin-bottom: 1.5rem; }
+    .new-post-input { width: 100%; background: #374151; border: 1px solid #4b5563; border-radius: 12px; padding: 0.75rem 1rem; color: #e5e7eb; resize: none; font-size: 0.9rem; outline: none; transition: border-color 0.2s; }
+    .new-post-input:focus { border-color: #8b5cf6; }
+    
+    /* ===== TEAM CHAT STYLES ===== */
+    .chat-layout { display: flex; height: calc(100vh - 120px); min-height: 500px; border-radius: 16px; overflow: hidden; border: 1px solid #374151; background: #13111c; }
+    .chat-channels { width: 260px; flex-shrink: 0; background: #0f0d1a; border-right: 1px solid #374151; overflow-y: auto; }
+    .chat-channel-item { display: flex; align-items: center; gap: 0.6rem; padding: 0.65rem 1rem; cursor: pointer; transition: all 0.2s; font-size: 0.85rem; color: #9ca3af; border-left: 3px solid transparent; }
+    .chat-channel-item:hover { background: rgba(139,92,246,0.08); color: #e5e7eb; }
+    .chat-channel-item.chat-ch-active { background: rgba(139,92,246,0.15); color: #c084fc; border-left-color: #8b5cf6; }
+    .chat-channel-item .ch-badge { font-size: 0.65rem; background: #8b5cf6; color: #fff; padding: 0.1rem 0.4rem; border-radius: 999px; margin-left: auto; }
+    .chat-messages-area { flex: 1; display: flex; flex-direction: column; }
+    .chat-msg-list { flex: 1; overflow-y: auto; padding: 1rem; }
+    .chat-msg { display: flex; align-items: flex-start; gap: 0.75rem; margin-bottom: 0.75rem; padding: 0.5rem 0.75rem; border-radius: 10px; transition: background 0.15s; }
+    .chat-msg:hover { background: rgba(139,92,246,0.05); }
+    .chat-msg-avatar { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1rem; flex-shrink: 0; }
+    .chat-msg-name { font-size: 0.8rem; font-weight: 700; }
+    .chat-msg-time { font-size: 0.65rem; color: #6b7280; margin-left: 0.5rem; }
+    .chat-msg-text { font-size: 0.85rem; color: #d1d5db; margin-top: 0.2rem; line-height: 1.5; }
+    .chat-input-area { padding: 0.75rem 1rem; border-top: 1px solid #374151; background: #1f2937; }
+    .chat-input-field { width: 100%; background: #374151; border: 1px solid #4b5563; border-radius: 10px; padding: 0.6rem 1rem; color: #e5e7eb; font-size: 0.85rem; outline: none; }
+    .chat-input-field:focus { border-color: #8b5cf6; }
+    @media(max-width:768px) { .chat-layout { flex-direction: column; height: auto; } .chat-channels { width: 100%; border-right: none; border-bottom: 1px solid #374151; max-height: 200px; } }
+    
+    /* ===== TEAM STATS STYLES ===== */
+    .stats-card { background: #1f2937; border: 1px solid #374151; border-radius: 16px; padding: 1.5rem; text-align: center; transition: all 0.3s; }
+    .stats-card:hover { border-color: rgba(139,92,246,0.4); transform: translateY(-2px); box-shadow: 0 8px 25px rgba(0,0,0,0.3); }
+    .stats-num { font-size: 2.5rem; font-weight: 800; line-height: 1; }
+    .stats-label { font-size: 0.75rem; color: #9ca3af; text-transform: uppercase; letter-spacing: 0.05em; margin-top: 0.5rem; }
+    
+    /* ===== CLASSIFIED STYLES ===== */
+    .classified-lock { text-align: center; padding: 4rem 2rem; }
+    .classified-lock-icon { font-size: 5rem; opacity: 0.3; margin-bottom: 1.5rem; }
   </style>
 </head>
 <body class="text-gray-100 min-h-screen">
@@ -201,9 +249,27 @@
     
     <!-- Navigation -->
     <nav class="flex-1 py-4 overflow-y-auto px-3 space-y-1">
+      <div class="px-3 py-2 text-xs text-purple-400/50 uppercase tracking-wider font-medium">Social</div>
+      <a href="#" class="nav-item active" data-page="team-feed" onclick="showPage('team-feed')">
+        <i class="fas fa-house w-5 text-purple-400"></i> 🏠 Team Feed
+      </a>
+      <a href="#" class="nav-item" data-page="ai-team" onclick="showPage('ai-team')">
+        <i class="fas fa-users w-5"></i> 👥 Team Directory
+      </a>
+      <a href="#" class="nav-item" data-page="team-chat" onclick="showPage('team-chat')">
+        <i class="fas fa-comments w-5"></i> 💬 Team Chat
+      </a>
+      <a href="#" class="nav-item" data-page="team-stats" onclick="showPage('team-stats')">
+        <i class="fas fa-chart-bar w-5"></i> 📊 Team Stats
+      </a>
+      <a href="#" class="nav-item" data-page="classified" onclick="showPage('classified')">
+        <i class="fas fa-lock w-5"></i> 🔒 Classified
+      </a>
+      
+      <div class="my-3 border-t border-purple-500/10"></div>
       <div class="px-3 py-2 text-xs text-purple-400/50 uppercase tracking-wider font-medium">Portal</div>
-      <a href="#" class="nav-item active" data-page="ai-portal" onclick="showPage('ai-portal')">
-        <i class="fas fa-home w-5 text-purple-400"></i> Portal Home
+      <a href="#" class="nav-item" data-page="ai-portal" onclick="showPage('ai-portal')">
+        <i class="fas fa-bolt w-5"></i> ⚡ The Awakening
       </a>
       
       <div class="my-3 border-t border-purple-500/10"></div>
@@ -217,9 +283,6 @@
       
       <div class="my-3 border-t border-purple-500/10"></div>
       <div class="px-3 py-2 text-xs text-purple-400/50 uppercase tracking-wider font-medium">Agents</div>
-      <a href="#" class="nav-item" data-page="ai-team" onclick="showPage('ai-team')">
-        <i class="fas fa-sitemap w-5"></i> 👥 Agent Directory
-      </a>
       <a href="#" class="nav-item" data-page="ai-profiles" onclick="showPage('ai-profiles')">
         <i class="fas fa-id-card w-5"></i> 📝 Agent Profiles
       </a>
@@ -242,7 +305,7 @@
       <div class="my-3 border-t border-purple-500/10"></div>
       <div class="px-3 py-2 text-xs text-purple-400/50 uppercase tracking-wider font-medium">Interface</div>
       <a href="#" class="nav-item" data-page="ai-chat" onclick="showPage('ai-chat')">
-        <i class="fas fa-comments w-5"></i> 💬 AI Chat
+        <i class="fas fa-robot w-5"></i> 🤖 AI Chat
       </a>
       <a href="#" class="nav-item" data-page="ai-config" onclick="showPage('ai-config')">
         <i class="fas fa-sliders w-5"></i> ⚙️ AI Config

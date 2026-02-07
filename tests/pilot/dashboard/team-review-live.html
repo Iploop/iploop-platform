@@ -54,13 +54,56 @@
         .waiting { text-align: center; padding: 3rem; color: var(--muted); font-style: italic; }
         .waiting .spinner { display: inline-block; width: 20px; height: 20px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 1s linear infinite; margin-right: 0.5rem; vertical-align: middle; }
         @keyframes spin { to { transform: rotate(360deg); } }
+        /* Filter Tabs */
+        .filter-tab {
+            padding: 0.4rem 1rem;
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 999px;
+            font-size: 0.8rem;
+            color: var(--muted);
+            cursor: pointer;
+            transition: all 0.25s ease;
+            font-family: 'Inter', sans-serif;
+        }
+        .filter-tab:hover {
+            border-color: var(--accent);
+            color: var(--text);
+        }
+        .filter-tab.active {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: #fff;
+        }
+        .agent-msg {
+            transition: opacity 0.3s ease, transform 0.3s ease;
+        }
+        .agent-msg.hidden-by-filter {
+            display: none;
+        }
     </style>
 </head>
 <body>
     <h1>🔮 Team Review Meeting #002</h1>
     <p class="subtitle">Management Platform Evaluation — Live Log</p>
     <div class="auto-refresh">🔄 Auto-refreshes every 15 seconds</div>
+
+    <!-- Category Badge -->
+    <div style="display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.4rem 1rem; background: rgba(139,92,246,0.1); border: 1px solid rgba(139,92,246,0.3); border-radius: 8px; font-size: 0.8rem; color: #c084fc; margin-bottom: 1rem;">
+        🏗️ Platform <span style="color: var(--muted); margin: 0 0.25rem;">›</span> Revision v1
+    </div>
+
     <div class="status"><span class="dot"></span> LIVE — Meeting in progress</div>
+
+    <!-- Agent Filter Tabs -->
+    <div id="agentFilterTabs" style="display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1.5rem;">
+        <button class="filter-tab active" data-filter="all" onclick="filterByAgent('all', this)">ALL</button>
+        <button class="filter-tab" data-filter="sage" onclick="filterByAgent('sage', this)">🌙 SAGE</button>
+        <button class="filter-tab" data-filter="codex" onclick="filterByAgent('codex', this)">🧠 CODEX</button>
+        <button class="filter-tab" data-filter="nexus" onclick="filterByAgent('nexus', this)">💠 NEXUS</button>
+        <button class="filter-tab" data-filter="blaze" onclick="filterByAgent('blaze', this)">⚡ BLAZE</button>
+        <button class="filter-tab" data-filter="striker" onclick="filterByAgent('striker', this)">🦅 STRIKER</button>
+    </div>
 
     <div id="log">
         <!-- LOG_START -->
@@ -1835,5 +1878,27 @@ node /root/clawd-secure/scripts/gmail-auth.js</code></pre>
 
         <!-- LOG_END -->
     </div>
+
+    <script>
+    function filterByAgent(agent, btn) {
+        // Update active tab
+        document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+        btn.classList.add('active');
+
+        // Filter messages
+        const messages = document.querySelectorAll('#log .agent-msg');
+        messages.forEach(msg => {
+            if (agent === 'all') {
+                msg.classList.remove('hidden-by-filter');
+            } else {
+                if (msg.classList.contains(agent)) {
+                    msg.classList.remove('hidden-by-filter');
+                } else {
+                    msg.classList.add('hidden-by-filter');
+                }
+            }
+        });
+    }
+    </script>
 </body>
 </html>

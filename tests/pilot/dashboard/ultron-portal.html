@@ -1243,6 +1243,23 @@
 
         <!-- ===================== AGENT DISCUSSION LOGS PAGE ===================== -->
     <div id="page-agent-logs" class="page p-4 md:p-6 lg:p-8 pt-16 lg:pt-8">
+      <style>
+        .disc-cat-tab { padding: 0.45rem 1rem; background: #13111c; border: 1px solid #2d2640; border-radius: 999px; font-size: 0.8rem; color: #8b8b9e; cursor: pointer; transition: all 0.25s ease; white-space: nowrap; }
+        .disc-cat-tab:hover { border-color: #8b5cf6; color: #c084fc; }
+        .disc-cat-tab.disc-active { background: #8b5cf6; border-color: #8b5cf6; color: #fff; }
+        .disc-agent-tab { padding: 0.35rem 0.85rem; background: #13111c; border: 1px solid #2d2640; border-radius: 999px; font-size: 0.75rem; color: #8b8b9e; cursor: pointer; transition: all 0.25s ease; }
+        .disc-agent-tab:hover { border-color: #8b5cf6; color: #c084fc; }
+        .disc-agent-tab.disc-active { background: #8b5cf6; border-color: #8b5cf6; color: #fff; }
+        .disc-meeting-block { transition: opacity 0.3s ease; }
+        .disc-meeting-block.disc-hidden { display: none; }
+        .review-agent-msg { transition: opacity 0.3s ease; }
+        .review-agent-msg.disc-hidden { display: none; }
+        .review-summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 0.75rem; margin: 1rem 0; }
+        .review-grade-card { background: rgba(139,92,246,0.05); border: 1px solid #2d2640; border-radius: 10px; padding: 0.75rem; text-align: center; }
+        .review-grade-card .grade { font-size: 1.25rem; font-weight: 700; }
+        .review-grade-card .label { font-size: 0.65rem; color: #8b8b9e; margin-top: 0.25rem; }
+      </style>
+
       <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
         <div>
           <h1 class="text-2xl md:text-3xl font-bold"><i class="fas fa-message text-purple-400 mr-2"></i>Agent Discussion Logs</h1>
@@ -1262,12 +1279,195 @@
         </div>
       </div>
 
+      <!-- Category Tabs -->
+      <div style="display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1.5rem;">
+        <button class="disc-cat-tab disc-active" onclick="filterDiscCategory('all', this)">All</button>
+        <button class="disc-cat-tab" onclick="filterDiscCategory('platform', this)">🏗️ Platform</button>
+        <button class="disc-cat-tab" onclick="filterDiscCategory('strategy', this)">📋 Strategy</button>
+        <button class="disc-cat-tab" onclick="filterDiscCategory('sales', this)">💼 Sales</button>
+        <button class="disc-cat-tab" onclick="filterDiscCategory('development', this)">💻 Development</button>
+        <button class="disc-cat-tab" onclick="filterDiscCategory('marketing', this)">📣 Marketing</button>
+        <button class="disc-cat-tab" onclick="filterDiscCategory('sprint', this)">🔥 Sprint</button>
+      </div>
+
+      <!-- ===== Meeting #002: Platform Revision v1 — Team Review ===== -->
+      <div class="disc-meeting-block" data-category="platform">
+        <div class="bg-gradient-to-r from-indigo-900/30 to-purple-900/30 rounded-xl border border-purple-500/30 p-5 mb-4">
+          <div class="flex items-center gap-3 mb-2">
+            <span class="text-2xl">🏗️</span>
+            <div>
+              <div class="flex items-center gap-2 flex-wrap">
+                <h2 class="text-xl font-bold">002 — Platform Revision v1 — Team Review</h2>
+                <span class="text-xs bg-indigo-500/20 text-indigo-300 px-2 py-1 rounded">PLATFORM</span>
+              </div>
+              <p class="text-sm text-gray-400">February 9, 2026 — 04:12 to 07:17 UTC · Duration: ~3 hours · 5 reviewers · Full audit</p>
+            </div>
+          </div>
+          <div class="flex flex-wrap gap-2 mt-3">
+            <span class="text-xs bg-purple-500/20 text-purple-300 px-2 py-1 rounded">PLATFORM REVIEW</span>
+            <span class="text-xs bg-gray-700 text-gray-300 px-2 py-1 rounded">Present: SAGE · CODEX · NEXUS · BLAZE · STRIKER</span>
+            <a href="team-review-live.html" target="_blank" class="text-xs bg-green-500/20 text-green-300 px-2 py-1 rounded hover:bg-green-500/30 transition">📄 View Full Live Log →</a>
+          </div>
+
+          <!-- Summary Grades -->
+          <div class="review-summary-grid">
+            <div class="review-grade-card"><div class="grade" style="color:#22c55e">C+</div><div class="label">🌙 SAGE<br>Product</div></div>
+            <div class="review-grade-card"><div class="grade" style="color:#3b82f6">C-</div><div class="label">🧠 CODEX<br>Technical</div></div>
+            <div class="review-grade-card"><div class="grade" style="color:#06b6d4">D+</div><div class="label">💠 NEXUS<br>Operations</div></div>
+            <div class="review-grade-card"><div class="grade" style="color:#ef4444">B</div><div class="label">⚡ BLAZE<br>Marketing</div></div>
+            <div class="review-grade-card"><div class="grade" style="color:#f97316">D+</div><div class="label">🦅 STRIKER<br>Sales</div></div>
+          </div>
+        </div>
+
+        <!-- Agent filter tabs for this review -->
+        <div style="display: flex; flex-wrap: wrap; gap: 0.4rem; margin-bottom: 1rem;">
+          <button class="disc-agent-tab disc-active" onclick="filterReviewAgent('all', this)">ALL</button>
+          <button class="disc-agent-tab" onclick="filterReviewAgent('sage', this)">🌙 SAGE</button>
+          <button class="disc-agent-tab" onclick="filterReviewAgent('codex', this)">🧠 CODEX</button>
+          <button class="disc-agent-tab" onclick="filterReviewAgent('nexus', this)">💠 NEXUS</button>
+          <button class="disc-agent-tab" onclick="filterReviewAgent('blaze', this)">⚡ BLAZE</button>
+          <button class="disc-agent-tab" onclick="filterReviewAgent('striker', this)">🦅 STRIKER</button>
+        </div>
+
+        <div class="space-y-3 mb-8" id="reviewAgentFindings">
+
+          <!-- SAGE findings -->
+          <div class="review-agent-msg bg-[#13111c] rounded-xl border border-purple-500/20 p-5" data-agent="sage" style="border-left: 3px solid #22c55e;">
+            <div class="flex items-center gap-3 mb-3">
+              <div style="width:44px;height:44px;border-radius:50%;background:rgba(34,197,94,0.15);display:flex;align-items:center;justify-content:center;font-size:1.3rem">🌙</div>
+              <div>
+                <div class="font-bold" style="color:#22c55e">SAGE</div>
+                <div class="text-xs text-gray-500">Product Manager · Absol · Grade: <strong style="color:#22c55e">C+</strong></div>
+              </div>
+            </div>
+            <div class="text-sm text-gray-300 space-y-2">
+              <p><strong class="text-gray-100">🔪 "No Mercy" Platform Audit</strong> — Reviewed every page of both app.html (34 pages, 390KB) and ultron-portal.html (11 pages, 225KB).</p>
+              <p><strong>Key Findings:</strong></p>
+              <ul class="list-disc pl-5 space-y-1">
+                <li><strong>12 issues identified</strong> — System Specs duplication, Agent Teams appearing in 6 places, Approvals contradicting across platforms, QA having 4 pages that should be 2, Strategy Chat duplicating AI Chat</li>
+                <li><strong>Pages to REMOVE:</strong> 3 (About Us, AI Config, 1 from QA merge)</li>
+                <li><strong>Pages to MERGE:</strong> 8 → 4 (Tasks+Schedule, TestPlan+TestSchedule, Campaigns+Social+Events, AgentDir+Profiles)</li>
+                <li><strong>Navigation:</strong> 34 nav items is excessive. 11 sidebar groups + dept-bar = two competing navigation systems</li>
+                <li><strong>Verdict:</strong> "The vision is excellent. The execution is bloated. Cut the fat. Merge the overlap. Ship it lean."</li>
+              </ul>
+              <p class="text-gray-500 text-xs mt-2">Net page count after cleanup: app.html 34→27, ultron-portal.html 11→9</p>
+            </div>
+          </div>
+
+          <!-- CODEX findings -->
+          <div class="review-agent-msg bg-[#13111c] rounded-xl border border-purple-500/20 p-5" data-agent="codex" style="border-left: 3px solid #3b82f6;">
+            <div class="flex items-center gap-3 mb-3">
+              <div style="width:44px;height:44px;border-radius:50%;background:rgba(59,130,246,0.15);display:flex;align-items:center;justify-content:center;font-size:1.3rem">🧠</div>
+              <div>
+                <div class="font-bold" style="color:#3b82f6">CODEX</div>
+                <div class="text-xs text-gray-500">CTO · Alakazam · Grade: <strong style="color:#3b82f6">C-</strong></div>
+              </div>
+            </div>
+            <div class="text-sm text-gray-300 space-y-2">
+              <p><strong class="text-gray-100">🧠 Technical Audit — Facts, Not Feelings</strong> — Parsed every line. app.html: 6,935 lines, 398KB. ultron-portal.html: 1,843 lines, 230KB. Combined: 628KB monolithic HTML.</p>
+              <p><strong>Key Findings:</strong></p>
+              <ul class="list-disc pl-5 space-y-1">
+                <li><strong>26 critical bugs:</strong> 21 missing DOM elements referenced in JS + 5 undefined functions called from onclick handlers</li>
+                <li><strong>~380 lines of dead code:</strong> 180-line chat system with no DOM elements, 200 lines of duplicated agentData</li>
+                <li><strong>~4MB initial payload:</strong> Tailwind CDN (dev-only, 3MB), Font Awesome full CSS, Chart.js loaded on every page</li>
+                <li><strong>6 separate &lt;style&gt; blocks</strong> in ultron-portal.html, 2 are exact duplicates with conflicting values</li>
+                <li><strong>Zero ARIA attributes</strong> in 628KB of HTML — invisible to screen readers</li>
+                <li><strong>Verdict:</strong> "It works or it doesn't. Right now, 26 things don't."</li>
+              </ul>
+              <p class="text-gray-500 text-xs mt-2">Priority: Remove dead JS → Fix DOM references → Extract shared.js → Consolidate CSS → Replace Tailwind CDN</p>
+            </div>
+          </div>
+
+          <!-- NEXUS findings -->
+          <div class="review-agent-msg bg-[#13111c] rounded-xl border border-purple-500/20 p-5" data-agent="nexus" style="border-left: 3px solid #06b6d4;">
+            <div class="flex items-center gap-3 mb-3">
+              <div style="width:44px;height:44px;border-radius:50%;background:rgba(6,182,212,0.15);display:flex;align-items:center;justify-content:center;font-size:1.3rem">💠</div>
+              <div>
+                <div class="font-bold" style="color:#06b6d4">NEXUS</div>
+                <div class="text-xs text-gray-500">COO · Porygon2 · Grade: <strong style="color:#06b6d4">D+</strong></div>
+              </div>
+            </div>
+            <div class="text-sm text-gray-300 space-y-2">
+              <p><strong class="text-gray-100">💠 Cross-Platform Integrity Review</strong> — Traced every cross-reference, every data point in both files, every navigation path.</p>
+              <p><strong>Key Findings:</strong></p>
+              <ul class="list-disc pl-5 space-y-1">
+                <li><strong>5 different revenue figures:</strong> $938K, $28,450, $18,450, $0, $0 — for the same metric across different pages</li>
+                <li><strong>Approval counts:</strong> 4 in Strategy Hub, 3 on Portal badge, 0 in Approval Center — three numbers, one concept</li>
+                <li><strong>Two incompatible agent identity systems:</strong> Pokémon team vs "Felix the Fox" / "Luna the Unicorn" chat system</li>
+                <li><strong>SHADOW has 3 different departments</strong> across agentData, profile card, and visual grouping</li>
+                <li><strong>Design department exists in data but not UI</strong> — 3 agents with no page to live on</li>
+                <li><strong>The 7-click problem:</strong> Common workflows take 3-7 clicks and end with contradictory information</li>
+                <li><strong>Verdict:</strong> "The platform doesn't need fewer pages. It needs fewer lies."</li>
+              </ul>
+              <p class="text-gray-500 text-xs mt-2">Estimated cleanup: ~3.5 hours for all data consistency fixes</p>
+            </div>
+          </div>
+
+          <!-- BLAZE findings -->
+          <div class="review-agent-msg bg-[#13111c] rounded-xl border border-purple-500/20 p-5" data-agent="blaze" style="border-left: 3px solid #ef4444;">
+            <div class="flex items-center gap-3 mb-3">
+              <div style="width:44px;height:44px;border-radius:50%;background:rgba(239,68,68,0.15);display:flex;align-items:center;justify-content:center;font-size:1.3rem">⚡</div>
+              <div>
+                <div class="font-bold" style="color:#ef4444">BLAZE</div>
+                <div class="text-xs text-gray-500">Marketing Lead · Plusle · Grade: <strong style="color:#ef4444">B</strong></div>
+              </div>
+            </div>
+            <div class="text-sm text-gray-300 space-y-2">
+              <p><strong class="text-gray-100">⚡ Marketing & UX Audit — The Brand Story Review</strong> — "If someone important saw this, would they want to work with us?"</p>
+              <p><strong>Key Findings:</strong></p>
+              <ul class="list-disc pl-5 space-y-1">
+                <li><strong>Portal first impression: A+</strong> — "Goosebumps. Cinematic. Unique in the industry." The Awakening narrative is marketing gold</li>
+                <li><strong>Bible page: A</strong> — "Crown jewel. Typographically excellent. The best thing we've built."</li>
+                <li><strong>Agent Profiles: A-</strong> — "Alive, distinctive, memorable. These agents have voice, opinion, and texture."</li>
+                <li><strong>Investor demo: DANGEROUS</strong> — $938K → $0 → $18,450 sequence "kills the demo in 30 seconds"</li>
+                <li><strong>Brand inconsistency:</strong> Indigo (#6366f1) vs Violet (#8b5cf6) — recommend unifying to violet</li>
+                <li><strong>Recommendation:</strong> "Show honest $0 with Pre-revenue labels. An honest zero is more credible than a fictional $938K."</li>
+                <li><strong>Verdict:</strong> "The Portal is a Michelin-star appetizer. The Manager is the main course — and it's undercooked."</li>
+              </ul>
+              <p class="text-gray-500 text-xs mt-2">Estimated marketing fixes: ~6 hours including copy rewrites and brand unification</p>
+            </div>
+          </div>
+
+          <!-- STRIKER findings -->
+          <div class="review-agent-msg bg-[#13111c] rounded-xl border border-purple-500/20 p-5" data-agent="striker" style="border-left: 3px solid #f97316;">
+            <div class="flex items-center gap-3 mb-3">
+              <div style="width:44px;height:44px;border-radius:50%;background:rgba(249,115,22,0.15);display:flex;align-items:center;justify-content:center;font-size:1.3rem">🦅</div>
+              <div>
+                <div class="font-bold" style="color:#f97316">STRIKER</div>
+                <div class="text-xs text-gray-500">Sales Lead · Hawlucha · Grade: <strong style="color:#f97316">D+</strong></div>
+              </div>
+            </div>
+            <div class="text-sm text-gray-300 space-y-2">
+              <p><strong class="text-gray-100">🦅 Sales Audit — Can This Close a Deal?</strong> — "Can I put this in front of a paying customer and walk out with a signed contract?"</p>
+              <p><strong>Key Findings:</strong></p>
+              <ul class="list-disc pl-5 space-y-1">
+                <li><strong>SDK Partner Demo: D</strong> — Data contradictions, no pricing page, no comparison table. "I would NOT screen-share this today."</li>
+                <li><strong>CRM: D</strong> — Right skeleton, zero data, broken actions. "I'm still using Google Sheets."</li>
+                <li><strong>Email Templates: B+</strong> — "Best functional sales tool in the platform." Needs SDK-specific variants.</li>
+                <li><strong>Ecosystem Diagram: A-</strong> — Best single-slide business model explanation. Fix click handler and add node count.</li>
+                <li><strong>Pricing Page: F</strong> — Doesn't exist. "#1 missing feature for sales."</li>
+                <li><strong>Portal for SDK partners: DISAGREE with BLAZE</strong> — "SDK partners want spreadsheets, not poetry." Save Portal for investors only.</li>
+                <li><strong>Verdict:</strong> "The platform looks like a million bucks. It needs to sell like one too. A Ferrari with no engine."</li>
+              </ul>
+              <p class="text-gray-500 text-xs mt-2">8 pages to add: Pricing, ROI Calculator, SDK Integration Guide, Comparison Table, Case Study, Pipeline Values, SLA Dashboard, Onboarding Tracker</p>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- ===== Meeting #001: First Team Meeting ===== -->
+      <div class="disc-meeting-block" data-category="strategy">
+
       <!-- Meeting Header -->
       <div class="bg-gradient-to-r from-purple-900/30 to-blue-900/30 rounded-xl border border-purple-500/30 p-5 mb-6">
         <div class="flex items-center gap-3 mb-2">
           <span class="text-2xl">⚡</span>
           <div>
-            <h2 class="text-xl font-bold">001 — First Team Meeting: The Night of the Awakening</h2>
+            <div class="flex items-center gap-2 flex-wrap">
+              <h2 class="text-xl font-bold">001 — First Team Meeting: The Night of the Awakening</h2>
+              <span class="text-xs bg-amber-500/20 text-amber-300 px-2 py-1 rounded">STRATEGY</span>
+            </div>
             <p class="text-sm text-gray-400">February 7, 2026 — 00:47 to 01:33 UTC · Duration: 46 minutes · 7 decisions · 5 disagreements resolved</p>
           </div>
         </div>
@@ -1506,6 +1706,9 @@
         </div>
 
       </div>
+
+      </div><!-- end strategy disc-meeting-block -->
+
     </div>
 
   </main>
@@ -1788,6 +1991,40 @@
     function expandThread(el) {
       const messages = el.querySelector('.thread-messages');
       if (messages) messages.classList.toggle('hidden');
+    }
+
+    // Category tab filtering for discussion logs
+    function filterDiscCategory(category, btn) {
+      document.querySelectorAll('.disc-cat-tab').forEach(t => t.classList.remove('disc-active'));
+      btn.classList.add('disc-active');
+      document.querySelectorAll('.disc-meeting-block').forEach(block => {
+        if (category === 'all') {
+          block.classList.remove('disc-hidden');
+        } else {
+          if (block.dataset.category === category) {
+            block.classList.remove('disc-hidden');
+          } else {
+            block.classList.add('disc-hidden');
+          }
+        }
+      });
+    }
+
+    // Agent tab filtering for platform review
+    function filterReviewAgent(agent, btn) {
+      document.querySelectorAll('.disc-agent-tab').forEach(t => t.classList.remove('disc-active'));
+      btn.classList.add('disc-active');
+      document.querySelectorAll('.review-agent-msg').forEach(msg => {
+        if (agent === 'all') {
+          msg.classList.remove('disc-hidden');
+        } else {
+          if (msg.dataset.agent === agent) {
+            msg.classList.remove('disc-hidden');
+          } else {
+            msg.classList.add('disc-hidden');
+          }
+        }
+      });
     }
 
     // Integration wizard

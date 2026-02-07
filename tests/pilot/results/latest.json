@@ -1,88 +1,88 @@
 {
   "geo-test": {
-    "timestamp": "2026-02-07T05:50:30.912Z",
+    "timestamp": "2026-02-07T09:55:20.223Z",
     "summary": {
       "errors": 0
     },
     "passed": false,
-    "duration": 8110
+    "duration": 8104
   },
   "leak-test": {
-    "timestamp": "2026-02-07T05:57:29.620Z",
+    "timestamp": "2026-02-07T10:06:18.960Z",
     "summary": {},
     "passed": false,
-    "duration": 379
+    "duration": 230
   },
   "stress-test": {
-    "timestamp": "2026-02-07T06:08:00.503Z",
+    "timestamp": "2026-02-07T10:06:17.676Z",
     "summary": {
-      "totalRequests": 119448,
-      "failed": 119448,
-      "throughput": 396.83,
+      "totalRequests": 669,
+      "failed": 669,
+      "throughput": 21.58,
       "ipsObserved": 0
     },
     "passed": false,
-    "duration": 301075
+    "duration": 31060
   },
   "protocol-test": {
-    "timestamp": "2026-02-07T05:57:35.418Z",
+    "timestamp": "2026-02-07T10:06:24.759Z",
     "summary": {
       "failed": 23
     },
     "passed": false,
-    "duration": 4741
+    "duration": 4740
   },
   "rotation-test": {
-    "timestamp": "2026-02-07T05:50:42.188Z",
+    "timestamp": "2026-02-07T09:55:31.461Z",
     "summary": {
       "totalRequests": 0,
       "errors": 50,
       "uniqueIps": 0
     },
     "passed": false,
-    "duration": 10212
+    "duration": 10183
   },
   "sticky-stress": {
-    "timestamp": "2026-02-07T05:50:55.880Z",
+    "timestamp": "2026-02-07T09:55:45.144Z",
     "summary": {
       "failed": 0,
       "totalRequests": 0,
       "errors": 500
     },
     "passed": false,
-    "duration": 12632
+    "duration": 12629
   },
   "security-test": {
-    "timestamp": "2026-02-07T05:31:08.703Z",
+    "timestamp": "2026-02-07T09:08:00.057Z",
     "summary": {
       "failed": 12
     },
     "passed": false,
-    "duration": 3486
+    "duration": 3480
   },
   "auth-test": {
-    "timestamp": "2026-02-07T05:31:12.502Z",
+    "timestamp": "2026-02-07T09:08:03.873Z",
     "summary": {
       "failed": 26
     },
     "passed": false,
-    "duration": 2740
+    "duration": 2749
   },
   "bandwidth-test": {
-    "timestamp": "2026-02-07T06:02:36.797Z",
+    "timestamp": "2026-02-07T09:09:06.397Z",
     "summary": {},
     "passed": false,
-    "duration": 97
+    "duration": 81
   },
   "latency-test": {
-    "timestamp": "2026-02-07T06:02:58.360Z",
+    "timestamp": "2026-02-07T09:09:27.937Z",
     "summary": {
       "p99Latency": 0,
       "errors": 50,
       "failed": 1
     },
     "passed": false,
-    "duration": 20500
+    "duration": 20485
   },
   "failure-test": {
     "timestamp": "2026-02-07T05:31:20.640Z",

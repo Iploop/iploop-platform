@@ -14,15 +14,15 @@
     "duration": 379
   },
   "stress-test": {
-    "timestamp": "2026-02-07T05:57:28.177Z",
+    "timestamp": "2026-02-07T06:08:00.503Z",
     "summary": {
-      "totalRequests": 681,
-      "failed": 681,
-      "throughput": 21.96,
+      "totalRequests": 119448,
+      "failed": 119448,
+      "throughput": 396.83,
       "ipsObserved": 0
     },
     "passed": false,
-    "duration": 31074
+    "duration": 301075
   },
   "protocol-test": {
     "timestamp": "2026-02-07T05:57:35.418Z",

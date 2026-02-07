@@ -3,11 +3,8 @@
     "quick": 1770443856436,
     "feature": 1770443456896,
     "security": 1770440802221,
-    "performance": 1770433352546,
+    "performance": 1770444481521,
     "full": 1770442402087
   },
-  "currentRun": {
-    "suite": "performance",
-    "startedAt": 1770444156644
-  }
+  "currentRun": null
 }

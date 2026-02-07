@@ -1,16 +1,16 @@
 {
-  "running": true,
+  "running": false,
   "suite": "performance",
   "description": "Performance benchmark",
   "total": 3,
-  "progress": 2,
-  "currentTest": "stress-test.js",
+  "progress": 3,
+  "currentTest": null,
   "startTime": 1770444179377,
   "suiteStartTime": 1770444156645,
   "queue": [],
   "lastTest": {
-    "name": "latency-test.js",
+    "name": "stress-test.js",
     "passed": false,
-    "duration": 20561
+    "duration": 301137
   }
 }

@@ -628,8 +628,8 @@
         </div>
       </div>
 
-      <!-- Agent Grid (reuses agentGrid from Team Directory) -->
-      <div id="homeAgentGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 mb-6"></div>
+      <!-- Agent Grid (same style as Team Directory) -->
+      <div id="homeProfileGridContainer" class="pgrid-wrap"></div>
 
       <!-- Quick Links -->
       <div class="portal-section-title">📖 Explore</div>
@@ -3853,37 +3853,49 @@
     }
 
     // ===================== INIT =====================
-    // Home page agent grid (mirrors Team Directory but in awakening page)
-    const pokemonEmojis = {150:'🔮',233:'💠',177:'🔍',701:'🦅',531:'💗',311:'⚡',648:'🎵',441:'📢',312:'📊',65:'🧠',479:'⚙️',462:'🔧',474:'💾',132:'🧪',235:'🎨',743:'🌸',175:'✨',198:'💰',201:'🔢',359:'🌙',196:'👁️',477:'🏗️',178:'🔮',113:'💊',437:'🛡️',302:'👤',133:'🦊'};
-    const twColors = {purple:'#a78bfa',amber:'#fbbf24',emerald:'#34d399',pink:'#f472b6',blue:'#60a5fa',fuchsia:'#e879f9',yellow:'#facc15',teal:'#2dd4bf',red:'#f87171'};
-    function renderHomeAgentGrid(filter) {
-      const grid = document.getElementById('homeAgentGrid');
-      if (!grid) return;
-      const filtered = filter === 'all' ? agentData : agentData.filter(a => a.dept === filter);
-      grid.innerHTML = filtered.map(a => {
-        const c = twColors[a.color] || '#8b5cf6';
-        const em = pokemonEmojis[a.pokemonId] || '🤖';
-        const dn = deptNames[a.dept] || a.dept;
-        return `
-        <div class="bg-[#13111c] rounded-xl border border-purple-500/20 p-4 cursor-pointer hover:border-purple-500/40 hover:shadow-lg hover:shadow-purple-500/5 transition-all" onclick="showPage('ai-profiles');setTimeout(()=>showAgentProfile('${a.name.toLowerCase()}'),200)">
-          <div class="flex items-center gap-3">
-            <div style="width:44px;height:44px;border-radius:50%;background:${c}22;display:flex;align-items:center;justify-content:center;font-size:1.3rem;border:2px solid ${c}44">${em}</div>
-            <div class="flex-1 min-w-0">
-              <div class="font-bold text-sm" style="color:${c}">${a.name}</div>
-              <div class="text-xs text-gray-500 truncate">${a.role}</div>
-              <div class="text-xs text-gray-600">${a.pokemon} · ${dn}</div>
-            </div>
-            <span class="w-2 h-2 rounded-full ${a.status === 'active' ? 'bg-green-500' : 'bg-gray-600'} flex-shrink-0"></span>
-          </div>
-        </div>`;
-      }).join('');
+    // Home page agent grid - reuses profile card style
+    function renderHomeProfileGrid(filter) {
+      const container = document.getElementById('homeProfileGridContainer');
+      if (!container) return;
+      const agents = filter && filter !== 'all' ? profileAgents.filter(a => a.dept === filter) : profileAgents;
+      let html = '';
+      let currentDept = '';
+      const sorted = [...agents].sort((a,b) => deptOrder.indexOf(a.dept) - deptOrder.indexOf(b.dept));
+      sorted.forEach(a => {
+        if (a.dept !== currentDept) {
+          currentDept = a.dept;
+          const di = deptInfo[a.dept];
+          if (!filter || filter === 'all') {
+            html += '</div><div class="pd-div" style="grid-column:1/-1"><span class="pd-dot" style="background:'+di.color+';box-shadow:0 0 6px '+di.color+'"></span>'+di.icon+' '+di.name+'</div><div class="pgrid" style="display:contents">';
+          }
+        }
+        const gradient = a.colors.length >= 2 ? 'linear-gradient(135deg,'+a.colors[0].hex+'aa,'+a.colors[1].hex+'88)' : 'linear-gradient(135deg,#2d2640,#1e1b2e)';
+        const avatarBg = a.colors[0] ? a.colors[0].hex+'22' : 'rgba(139,92,246,.1)';
+        const borderColor = a.colors[0] ? a.colors[0].hex : '#8b5cf6';
+        const statusColor = a.status === 'active' ? '#22c55e' : '#f59e0b';
+        const tags = [];
+        if (a.sprint) tags.push('<span class="pgc-tag sprint">⚡ SPRINT</span>');
+        if (a.status === 'active') tags.push('<span class="pgc-tag active">AWAKE</span>');
+        else tags.push('<span class="pgc-tag dormant">IDLE</span>');
+        if (a.workHistory.length === 0) tags.push('<span class="pgc-tag dormant">NO MISSIONS</span>');
+        html += '<div class="pgrid-card" style="--agent-glow:'+borderColor+'33" onclick="showPage(\'ai-profiles\');setTimeout(()=>showAgentProfile(\''+a.id+'\'),200)">';
+        html += '<div class="pgc-banner" style="background:'+gradient+'"></div>';
+        html += '<div class="pgc-avatar" style="background:'+avatarBg+';border-color:'+borderColor+'"><span>'+a.emoji+'</span><span class="pgc-status" style="background:'+statusColor+'"></span></div>';
+        html += '<div class="pgc-body">';
+        html += '<div class="pgc-name" style="color:'+borderColor+'">'+a.name+'</div>';
+        html += '<div class="pgc-poke">'+a.pokemon+' · #'+a.pokemonId+'</div>';
+        html += '<div class="pgc-role">'+a.role+'</div>';
+        html += '<div class="pgc-meta">'+tags.join('')+'</div>';
+        html += '</div></div>';
+      });
+      container.innerHTML = html;
     }
-    function filterHomeAgents(dept) { renderHomeAgentGrid(dept); }
+    function filterHomeAgents(dept) { renderHomeProfileGrid(dept); }
 
     document.addEventListener('DOMContentLoaded', () => {
       loadChatHistories();
       renderAgentGrid();
-      renderHomeAgentGrid('all');
+      renderHomeProfileGrid('all');
       renderFeed();
       renderChatChannels();
       renderTeamChatMessages();

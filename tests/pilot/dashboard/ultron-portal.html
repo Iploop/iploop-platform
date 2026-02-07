@@ -3854,23 +3854,29 @@
 
     // ===================== INIT =====================
     // Home page agent grid (mirrors Team Directory but in awakening page)
+    const pokemonEmojis = {150:'🔮',233:'💠',177:'🔍',701:'🦅',531:'💗',311:'⚡',648:'🎵',441:'📢',312:'📊',65:'🧠',479:'⚙️',462:'🔧',474:'💾',132:'🧪',235:'🎨',743:'🌸',175:'✨',198:'💰',201:'🔢',359:'🌙',196:'👁️',477:'🏗️',178:'🔮',113:'💊',437:'🛡️',302:'👤',133:'🦊'};
+    const twColors = {purple:'#a78bfa',amber:'#fbbf24',emerald:'#34d399',pink:'#f472b6',blue:'#60a5fa',fuchsia:'#e879f9',yellow:'#facc15',teal:'#2dd4bf',red:'#f87171'};
     function renderHomeAgentGrid(filter) {
       const grid = document.getElementById('homeAgentGrid');
       if (!grid) return;
       const filtered = filter === 'all' ? agentData : agentData.filter(a => a.dept === filter);
-      grid.innerHTML = filtered.map(a => `
-        <div class="bg-[#13111c] rounded-xl border border-purple-500/20 p-4 cursor-pointer hover:border-purple-500/40 hover:shadow-lg hover:shadow-purple-500/5 transition-all" onclick="showPage('ai-profiles');setTimeout(()=>showAgentProfile('${a.id}'),200)">
+      grid.innerHTML = filtered.map(a => {
+        const c = twColors[a.color] || '#8b5cf6';
+        const em = pokemonEmojis[a.pokemonId] || '🤖';
+        const dn = deptNames[a.dept] || a.dept;
+        return `
+        <div class="bg-[#13111c] rounded-xl border border-purple-500/20 p-4 cursor-pointer hover:border-purple-500/40 hover:shadow-lg hover:shadow-purple-500/5 transition-all" onclick="showPage('ai-profiles');setTimeout(()=>showAgentProfile('${a.name.toLowerCase()}'),200)">
           <div class="flex items-center gap-3">
-            <div style="width:44px;height:44px;border-radius:50%;background:${a.color}22;display:flex;align-items:center;justify-content:center;font-size:1.3rem;border:2px solid ${a.color}44">${a.emoji}</div>
+            <div style="width:44px;height:44px;border-radius:50%;background:${c}22;display:flex;align-items:center;justify-content:center;font-size:1.3rem;border:2px solid ${c}44">${em}</div>
             <div class="flex-1 min-w-0">
-              <div class="font-bold text-sm" style="color:${a.color}">${a.name}</div>
+              <div class="font-bold text-sm" style="color:${c}">${a.name}</div>
               <div class="text-xs text-gray-500 truncate">${a.role}</div>
-              <div class="text-xs text-gray-600">${a.pokemon} · ${a.deptName}</div>
+              <div class="text-xs text-gray-600">${a.pokemon} · ${dn}</div>
             </div>
             <span class="w-2 h-2 rounded-full ${a.status === 'active' ? 'bg-green-500' : 'bg-gray-600'} flex-shrink-0"></span>
           </div>
-        </div>
-      `).join('');
+        </div>`;
+      }).join('');
     }
     function filterHomeAgents(dept) { renderHomeAgentGrid(dept); }
 

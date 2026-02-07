@@ -1,56 +1,56 @@
 {
   "geo-test": {
-    "timestamp": "2026-02-07T18:04:06.528Z",
+    "timestamp": "2026-02-07T19:05:26.010Z",
     "summary": {
       "errors": 0
     },
     "passed": false,
-    "duration": 8108
+    "duration": 8102
   },
   "leak-test": {
-    "timestamp": "2026-02-07T17:51:50.982Z",
+    "timestamp": "2026-02-07T18:54:10.638Z",
     "summary": {},
     "passed": false,
-    "duration": 229
+    "duration": 243
   },
   "stress-test": {
-    "timestamp": "2026-02-07T17:51:49.690Z",
+    "timestamp": "2026-02-07T18:54:09.332Z",
     "summary": {
-      "totalRequests": 676,
-      "failed": 676,
-      "throughput": 21.8,
+      "totalRequests": 667,
+      "failed": 667,
+      "throughput": 21.51,
       "ipsObserved": 0
     },
     "passed": false,
-    "duration": 31062
+    "duration": 31082
   },
   "protocol-test": {
-    "timestamp": "2026-02-07T17:51:56.789Z",
+    "timestamp": "2026-02-07T18:54:16.430Z",
     "summary": {
       "failed": 23
     },
     "passed": false,
-    "duration": 4749
+    "duration": 4734
   },
   "rotation-test": {
-    "timestamp": "2026-02-07T18:04:17.778Z",
+    "timestamp": "2026-02-07T19:05:37.260Z",
     "summary": {
       "totalRequests": 0,
       "errors": 50,
       "uniqueIps": 0
     },
     "passed": false,
-    "duration": 10191
+    "duration": 10192
   },
   "sticky-stress": {
-    "timestamp": "2026-02-07T18:04:31.475Z",
+    "timestamp": "2026-02-07T19:05:50.936Z",
     "summary": {
       "failed": 0,
       "totalRequests": 0,
       "errors": 500
     },
     "passed": false,
-    "duration": 12632
+    "duration": 12622
   },
   "security-test": {
     "timestamp": "2026-02-07T17:38:04.969Z",
@@ -69,20 +69,20 @@
     "duration": 2731
   },
   "bandwidth-test": {
-    "timestamp": "2026-02-07T17:38:15.684Z",
+    "timestamp": "2026-02-07T18:27:12.893Z",
     "summary": {},
     "passed": false,
-    "duration": 78
+    "duration": 85
   },
   "latency-test": {
-    "timestamp": "2026-02-07T17:39:03.304Z",
+    "timestamp": "2026-02-07T18:27:34.411Z",
     "summary": {
       "p99Latency": 0,
       "errors": 50,
-      "failed": 1
+      "failed": 2
     },
     "passed": false,
-    "duration": 20456
+    "duration": 20462
   },
   "failure-test": {
     "timestamp": "2026-02-07T17:38:16.819Z",

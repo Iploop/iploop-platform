@@ -37,9 +37,9 @@ Failed (wrong country): 8
 Errors: 0
 
 ⚠️  Some geographic targeting tests failed
-📊 Results saved to: geo-test-2026-02-07T18-04-06-528Z.json
+📊 Results saved to: geo-test-2026-02-07T19-05-26-010Z.json
 ──────────────────────────────────────────────────
-❌ Test geo-test FAILED in 8108ms
+❌ Test geo-test FAILED in 8102ms
 ❌ geo-test.js - 8.2s
 
 ──────────────────────────────────────────────────
@@ -66,10 +66,9 @@ IP diversity ratio: NaN%
 📍 IP Distribution:
 TypeError: Cannot read properties of undefined (reading '0')
     at runRotationTest (/root/clawd-secure/iploop-platform/tests/pilot/rotation-test.js:117:40)
-📊 Results saved to: rotation-test-2026-02-07T18-04-17-778Z.json
-
+📊 Results saved to: rotation-test-2026-02-07T19-05-37-260Z.json
 ──────────────────────────────────────────────────
-❌ Test rotation-test FAILED in 10191ms
+❌ Test rotation-test FAILED in 10192ms
 ❌ rotation-test.js - 10.2s
 
 ──────────────────────────────────────────────────
@@ -100,9 +99,9 @@ Session Results:
 
 ============================================================
 ❌ FAIL: Significant session stickiness problems
-📊 Results saved to: sticky-stress-2026-02-07T18-04-31-475Z.json
+📊 Results saved to: sticky-stress-2026-02-07T19-05-50-936Z.json
 ──────────────────────────────────────────────────
-❌ Test sticky-stress FAILED in 12632ms
+❌ Test sticky-stress FAILED in 12622ms
 ❌ sticky-stress.js - 12.7s
 
 ══════════════════════════════════════════════════

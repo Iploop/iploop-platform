@@ -1,16 +1,16 @@
 {
   "running": false,
-  "suite": "feature",
-  "description": "Feature validation",
+  "suite": "security",
+  "description": "Security audit",
   "total": 3,
   "progress": 3,
   "currentTest": null,
-  "startTime": 1770491138274,
-  "suiteStartTime": 1770491117860,
+  "startTime": 1770491520582,
+  "suiteStartTime": 1770491512197,
   "queue": [],
   "lastTest": {
-    "name": "sticky-stress.js",
+    "name": "leak-test.js",
     "passed": false,
-    "duration": 12671
+    "duration": 306
   }
 }

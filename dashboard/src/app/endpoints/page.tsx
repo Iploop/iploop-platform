@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Globe, Copy, Terminal, CheckCircle, Server } from 'lucide-react'
 
-const SERVER_IP = 'proxy.iploop.com' // Change to your actual server IP/domain
+const SERVER_IP = 'proxy.iploop.io' // Change to your actual server IP/domain
 
 export default function EndpointsPage() {
   const [copiedItem, setCopiedItem] = useState<string | null>(null)

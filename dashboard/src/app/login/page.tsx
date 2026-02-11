@@ -57,7 +57,8 @@ function LoginForm() {
       const data = await res.json()
 
       if (!res.ok) {
-        const errMsg = typeof data.error === 'string' ? data.error : 
+        const errMsg = typeof data.error === 'string' ? data.error :
+                       typeof data.error === 'object' && data.error?.message ? data.error.message :
                        data.message || 'Authentication failed'
         throw new Error(errMsg)
       }

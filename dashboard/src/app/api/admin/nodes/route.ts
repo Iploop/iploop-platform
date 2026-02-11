@@ -24,8 +24,13 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: 'Invalid or expired token' }, { status: 401 })
     }
 
-    // Fetch nodes from node-registration service (full data for admins)
-    const nodesRes = await fetch(`${NODE_REGISTRATION_URL}/nodes`, {
+    // Fetch nodes from node-registration service (limited for performance)
+    // Only fetch active/available nodes to avoid massive payload
+    const url = new URL(request.url)
+    const status = url.searchParams.get('status') || 'available'
+    const limit = Math.min(parseInt(url.searchParams.get('limit') || '100'), 500)
+    
+    const nodesRes = await fetch(`${NODE_REGISTRATION_URL}/nodes?status=${status}&limit=${limit}`, {
       cache: 'no-store',
     })
     
@@ -55,8 +60,10 @@ export async function GET(request: Request) {
       healthData = await healthRes.json()
     }
 
-    // Process nodes for admin view (include all details)
-    const nodes = (nodesData.nodes || []).map((node: any) => ({
+    // Process nodes for admin view — limit to prevent browser crash
+    const allNodes = nodesData.nodes || nodesData || []
+    const limitedNodes = Array.isArray(allNodes) ? allNodes.slice(0, limit) : []
+    const nodes = limitedNodes.map((node: any) => ({
       id: node.id,
       deviceId: node.device_id,
       ipAddress: node.ip_address,
@@ -86,12 +93,12 @@ export async function GET(request: Request) {
       nodes,
       nodeCount: nodesData.count || nodes.length,
       stats: {
-        totalNodes: statsData.total_nodes || 0,
-        activeNodes: statsData.active_nodes || 0,
-        inactiveNodes: statsData.inactive_nodes || 0,
-        countryBreakdown: statsData.country_breakdown || {},
-        deviceTypes: statsData.device_types || {},
-        connectionTypes: statsData.connection_types || {},
+        totalNodes: healthData.total_nodes || statsData.total_nodes || 0,
+        activeNodes: healthData.active_nodes || statsData.active_nodes || 0,
+        inactiveNodes: healthData.inactive_nodes || statsData.inactive_nodes || 0,
+        countryBreakdown: healthData.country_breakdown || statsData.country_breakdown || {},
+        deviceTypes: healthData.device_types || statsData.device_types || {},
+        connectionTypes: healthData.connection_types || statsData.connection_types || {},
       },
       health: {
         status: healthData.status,

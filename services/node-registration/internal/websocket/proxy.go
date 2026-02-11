@@ -162,6 +162,8 @@ func (pm *ProxyManager) cleanupExpiredRequests() {
 
 // GetClientByNodeID finds a connected client by node ID
 func (h *Hub) GetClientByNodeID(nodeID string) *Client {
+	h.clientsMu.RLock()
+	defer h.clientsMu.RUnlock()
 	for client := range h.clients {
 		if client.nodeID == nodeID {
 			return client

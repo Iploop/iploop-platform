@@ -14,7 +14,7 @@ const KNOWLEDGE_BASE = {
 
 2. **Make your first request**
    \`\`\`bash
-   curl -x http://user:YOUR_API_KEY@proxy.iploop.com:7777 https://httpbin.org/ip
+   curl -x http://user:YOUR_API_KEY@proxy.iploop.io:7777 https://httpbin.org/ip
    \`\`\`
 
 3. **Check the response**
@@ -32,7 +32,7 @@ Need help with a specific programming language? Just ask!`,
 
 **Usage:**
 \`\`\`bash
-curl -x http://user:YOUR_API_KEY-country-US@proxy.iploop.com:7777 https://httpbin.org/ip
+curl -x http://user:YOUR_API_KEY-country-US@proxy.iploop.io:7777 https://httpbin.org/ip
 \`\`\`
 
 Available countries depend on our current node network. Check the Nodes page to see active regions.`,
@@ -42,12 +42,12 @@ Available countries depend on our current node network. Check the Nodes page to 
 **Common causes:**
 1. **Wrong API key** - Copy it again from the API Keys page
 2. **Key disabled** - Check if your key is active in the dashboard
-3. **Format issue** - Make sure the format is \`user:API_KEY@proxy.iploop.com:7777\`
+3. **Format issue** - Make sure the format is \`user:API_KEY@proxy.iploop.io:7777\`
 
 **Try this:**
 1. Go to API Keys page
 2. Create a new key or copy an existing one
-3. Test with: \`curl -x http://test:YOUR_KEY@proxy.iploop.com:7777 https://httpbin.org/ip\`
+3. Test with: \`curl -x http://test:YOUR_KEY@proxy.iploop.io:7777 https://httpbin.org/ip\`
 
 Still having issues? Email support@iploop.io with your error details.`,
 
@@ -63,7 +63,7 @@ Your key will look like: \`iploop_abc123...\`
 
 Use it in requests like:
 \`\`\`
-http://user:iploop_abc123@proxy.iploop.com:7777
+http://user:iploop_abc123@proxy.iploop.io:7777
 \`\`\``,
 
   python: `**Python Integration:**
@@ -74,8 +74,8 @@ import requests
 API_KEY = "your_api_key_here"
 
 proxies = {
-    'http': f'http://user:{API_KEY}@proxy.iploop.com:7777',
-    'https': f'http://user:{API_KEY}@proxy.iploop.com:7777'
+    'http': f'http://user:{API_KEY}@proxy.iploop.io:7777',
+    'https': f'http://user:{API_KEY}@proxy.iploop.io:7777'
 }
 
 # Make a request
@@ -84,8 +84,8 @@ print(response.json())
 
 # With country targeting
 proxies_us = {
-    'http': f'http://user:{API_KEY}-country-US@proxy.iploop.com:7777',
-    'https': f'http://user:{API_KEY}-country-US@proxy.iploop.com:7777'
+    'http': f'http://user:{API_KEY}-country-US@proxy.iploop.io:7777',
+    'https': f'http://user:{API_KEY}-country-US@proxy.iploop.io:7777'
 }
 \`\`\``,
 
@@ -97,7 +97,7 @@ const axios = require('axios');
 const API_KEY = 'your_api_key_here';
 
 const proxy = {
-  host: 'proxy.iploop.com',
+  host: 'proxy.iploop.io',
   port: 7777,
   auth: {
     username: 'user',
@@ -178,7 +178,7 @@ function getResponse(message: string): string {
   if (msg.includes('timeout') || msg.includes('connection') || msg.includes('refused') || msg.includes("can't connect")) {
     return `**Connection Issues:**
 
-1. **Check proxy endpoint**: \`proxy.iploop.com:7777\` (HTTP) or \`:1080\` (SOCKS5)
+1. **Check proxy endpoint**: \`proxy.iploop.io:7777\` (HTTP) or \`:1080\` (SOCKS5)
 2. **Verify your API key** is active
 3. **Check node availability** - Some regions may have limited nodes
 

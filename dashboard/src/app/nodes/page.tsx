@@ -113,7 +113,7 @@ export default function NodesPage() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-green-500">
-                {data?.nodes?.filter(n => n.status === 'available').length || 0}
+                {data?.health?.connected_nodes || data?.stats?.active_nodes || 0}
               </div>
             </CardContent>
           </Card>
@@ -123,7 +123,7 @@ export default function NodesPage() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                {new Set(data?.nodes?.map(n => n.country) || []).size}
+                {data?.stats?.country_breakdown ? Object.keys(data.stats.country_breakdown).filter(k => k !== '').length : 0}
               </div>
             </CardContent>
           </Card>
@@ -201,19 +201,6 @@ export default function NodesPage() {
           </CardContent>
         </Card>
 
-        {/* Debug Info */}
-        {data && (
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-sm">Debug Info</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <pre className="text-xs bg-muted p-4 rounded overflow-auto max-h-48">
-                {JSON.stringify({ stats: data.stats, health: data.health, timestamp: data.timestamp }, null, 2)}
-              </pre>
-            </CardContent>
-          </Card>
-        )}
       </div>
     </Layout>
   )

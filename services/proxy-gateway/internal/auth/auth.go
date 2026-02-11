@@ -14,8 +14,9 @@ import (
 )
 
 type Authenticator struct {
-	db  *sql.DB
-	rdb *redis.Client
+	db         *sql.DB
+	rdb        *redis.Client
+	planLoader *PlanLoader
 }
 
 type Customer struct {
@@ -32,13 +33,16 @@ type ProxyAuth struct {
 	Country      string
 	City         string
 	SessionID    string
+	SessionType  string // "sticky", "rotating", "per-request"
+	Plan         *AccountPlan
 	OriginalAuth string
 }
 
 func NewAuthenticator(db *sql.DB, rdb *redis.Client) *Authenticator {
 	return &Authenticator{
-		db:  db,
-		rdb: rdb,
+		db:         db,
+		rdb:        rdb,
+		planLoader: NewPlanLoader(db, rdb),
 	}
 }
 
@@ -93,6 +97,8 @@ func (a *Authenticator) ParseProxyAuth(authHeader string) (*ProxyAuth, error) {
 				auth.City = strings.ToLower(value)
 			case "session":
 				auth.SessionID = value
+			case "sesstype", "stype":
+				auth.SessionType = value
 			}
 		}
 
@@ -103,6 +109,23 @@ func (a *Authenticator) ParseProxyAuth(authHeader string) (*ProxyAuth, error) {
 		}
 
 		auth.Customer = customer
+
+		// Load account plan and apply defaults
+		if a.planLoader != nil && customer != nil {
+			plan, err := a.planLoader.LoadPlan(customer.UserID)
+			if err != nil {
+				fmt.Printf("[AUTH] Warning: failed to load plan for user %s: %v\n", customer.UserID, err)
+			} else {
+				// Apply plan defaults (fills in missing params)
+				ApplyPlanDefaults(auth, plan)
+
+				// Check plan limits (geo restrictions, feature gates)
+				if limitErr := CheckPlanLimits(auth, plan); limitErr != nil {
+					return nil, fmt.Errorf("plan limit exceeded: %v", limitErr)
+				}
+			}
+		}
+
 		return auth, nil
 	}
 
@@ -216,7 +239,17 @@ func (a *Authenticator) getCustomerFromCache(customerID string) (*Customer, erro
 }
 
 // RecordUsage records bandwidth usage for billing
-func (a *Authenticator) RecordUsage(customerID string, bytesUsed int64, nodeID string, success bool) error {
+func (a *Authenticator) RecordUsage(customerID string, bytesUsed int64, nodeID string, success bool, extras ...string) error {
+	// extras[0] = country, extras[1] = target_host
+	country := ""
+	targetHost := ""
+	if len(extras) > 0 {
+		country = extras[0]
+	}
+	if len(extras) > 1 {
+		targetHost = extras[1]
+	}
+
 	// Insert usage record
 	query := `
 		INSERT INTO usage_records (
@@ -224,6 +257,7 @@ func (a *Authenticator) RecordUsage(customerID string, bytesUsed int64, nodeID s
 			node_id, 
 			bytes_downloaded, 
 			target_country,
+			target_host,
 			success,
 			ended_at
 		) VALUES (
@@ -232,11 +266,12 @@ func (a *Authenticator) RecordUsage(customerID string, bytesUsed int64, nodeID s
 			$3,
 			$4,
 			$5,
+			$6,
 			NOW()
 		)
 	`
 	
-	_, err := a.db.Exec(query, customerID, nodeID, bytesUsed, "", success)
+	_, err := a.db.Exec(query, customerID, nodeID, bytesUsed, country, targetHost, success)
 	if err != nil {
 		return fmt.Errorf("failed to record usage: %v", err)
 	}

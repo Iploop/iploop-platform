@@ -74,8 +74,17 @@ func main() {
 	wsNodePool := nodepool.NewWebSocketNodePool(nodePool, logger)
 	metricsCollector := metrics.NewCollector()
 
+	// Initialize warm pool for pre-validated fast-lane nodes
+	nodeRegURL := os.Getenv("NODE_REGISTRATION_URL")
+	if nodeRegURL == "" {
+		nodeRegURL = "http://node-registration:8001"
+	}
+	warmPool := nodepool.NewWarmPool(nodePool, nodeRegURL, logger)
+	defer warmPool.Stop()
+
 	// Initialize proxy servers (with WebSocket node pool for real-time routing)
 	httpProxy := proxy.NewHTTPProxy(authenticator, nodePool, wsNodePool, metricsCollector, logger)
+	httpProxy.SetWarmPool(warmPool)
 	socksProxy := proxy.NewSOCKS5Proxy(authenticator, nodePool, wsNodePool, metricsCollector, logger)
 
 	// Start HTTP proxy server
@@ -153,6 +162,12 @@ func main() {
 	// WebSocket node pool status
 	router.GET("/nodes/ws", func(c *gin.Context) {
 		stats := wsNodePool.GetStats()
+		c.JSON(http.StatusOK, stats)
+	})
+
+	// Warm pool status
+	router.GET("/nodes/warm", func(c *gin.Context) {
+		stats := warmPool.GetStats()
 		c.JSON(http.StatusOK, stats)
 	})
 

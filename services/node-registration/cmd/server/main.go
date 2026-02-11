@@ -112,11 +112,18 @@ func main() {
 			return
 		}
 
+		stats := nodeManager.GetStatistics()
 		c.JSON(http.StatusOK, gin.H{
-			"status":         "healthy",
-			"timestamp":      time.Now().UTC(),
-			"service":        "node-registration",
-			"connected_nodes": hub.GetConnectedCount(),
+			"status":           "healthy",
+			"timestamp":        time.Now().UTC(),
+			"service":          "node-registration",
+			"connected_nodes":  hub.GetConnectedCount(),
+			"total_nodes":      stats.TotalNodes,
+			"active_nodes":     stats.ActiveNodes,
+			"inactive_nodes":   stats.InactiveNodes,
+			"country_breakdown": stats.CountryBreakdown,
+			"device_types":     stats.DeviceTypes,
+			"connection_types": stats.ConnectionTypes,
 		})
 	})
 
@@ -134,6 +141,15 @@ func main() {
 	router.GET("/stats", func(c *gin.Context) {
 		stats := nodeManager.GetStatistics()
 		c.JSON(http.StatusOK, stats)
+	})
+
+	// Connected nodes endpoint — returns only nodes with active WebSocket
+	router.GET("/internal/connected-nodes", func(c *gin.Context) {
+		ids := hub.GetConnectedNodeIDs()
+		c.JSON(http.StatusOK, gin.H{
+			"node_ids": ids,
+			"count":    len(ids),
+		})
 	})
 
 	// Internal proxy endpoint (called by proxy-gateway)

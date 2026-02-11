@@ -7,6 +7,7 @@ import (
 	"net"
 	"net/http"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/gorilla/websocket"
@@ -31,6 +32,26 @@ type IPGeoInfo struct {
 	Longitude   float64 `json:"lon"`
 	ISP         string  `json:"isp"`
 	ASN         string  `json:"as"`
+}
+
+// isSDKVersionAllowed checks if SDK version is >= 1.0.62
+func isSDKVersionAllowed(version string) bool {
+	// Parse "1.0.62" format
+	parts := strings.Split(strings.TrimSpace(version), ".")
+	if len(parts) != 3 {
+		return false
+	}
+	var major, minor, patch int
+	fmt.Sscanf(parts[0], "%d", &major)
+	fmt.Sscanf(parts[1], "%d", &minor)
+	fmt.Sscanf(parts[2], "%d", &patch)
+
+	// Minimum: 1.0.62
+	if major > 1 { return true }
+	if major < 1 { return false }
+	if minor > 0 { return true }
+	if minor < 0 { return false }
+	return patch >= 62
 }
 
 // lookupIPGeo fetches geolocation for an IP address
@@ -86,6 +107,7 @@ func extractClientIP(r *http.Request) string {
 
 type Hub struct {
 	clients       map[*Client]bool
+	clientsMu     sync.RWMutex
 	register      chan *Client
 	unregister    chan *Client
 	broadcast     chan []byte
@@ -130,6 +152,10 @@ type RegistrationMessage struct {
 	ConnectionType string  `json:"connection_type"`
 	DeviceType     string  `json:"device_type"`
 	SDKVersion     string  `json:"sdk_version"`
+	// Fields from ipinfo.io (sent by SDK v1.0.62+)
+	Loc            string  `json:"loc"`      // "lat,lng" format
+	Org            string  `json:"org"`      // "AS12345 ISP Name" format
+	Timezone       string  `json:"timezone"`
 }
 
 func NewHub(nodeManager *nodemanager.NodeManager, logger *logrus.Entry) *Hub {
@@ -165,23 +191,30 @@ func (h *Hub) Run() {
 	for {
 		select {
 		case client := <-h.register:
+			h.clientsMu.Lock()
 			h.clients[client] = true
+			h.clientsMu.Unlock()
 			h.logger.Infof("Client connected from %s", client.conn.RemoteAddr())
 
 		case client := <-h.unregister:
+			h.clientsMu.Lock()
 			if _, ok := h.clients[client]; ok {
 				delete(h.clients, client)
 				close(client.send)
-				
-				// Mark node as disconnected
+				h.clientsMu.Unlock()
+
+				// Mark node as disconnected (outside lock)
 				if client.nodeID != "" {
 					h.nodeManager.DisconnectNode(client.nodeID)
 				}
-				
+
 				h.logger.Infof("Client disconnected: %s (node: %s)", client.deviceID, client.nodeID)
+			} else {
+				h.clientsMu.Unlock()
 			}
 
 		case message := <-h.broadcast:
+			h.clientsMu.RLock()
 			for client := range h.clients {
 				select {
 				case client.send <- message:
@@ -190,18 +223,36 @@ func (h *Hub) Run() {
 					delete(h.clients, client)
 				}
 			}
+			h.clientsMu.RUnlock()
 		}
 	}
 }
 
 func (h *Hub) Close() {
+	h.clientsMu.RLock()
+	defer h.clientsMu.RUnlock()
 	for client := range h.clients {
 		client.conn.Close()
 	}
 }
 
 func (h *Hub) GetConnectedCount() int {
+	h.clientsMu.RLock()
+	defer h.clientsMu.RUnlock()
 	return len(h.clients)
+}
+
+// GetConnectedNodeIDs returns all node IDs with active WebSocket connections
+func (h *Hub) GetConnectedNodeIDs() []string {
+	h.clientsMu.RLock()
+	defer h.clientsMu.RUnlock()
+	ids := make([]string, 0, len(h.clients))
+	for client := range h.clients {
+		if client.nodeID != "" {
+			ids = append(ids, client.nodeID)
+		}
+	}
+	return ids
 }
 
 func HandleNodeConnection(hub *Hub, w http.ResponseWriter, r *http.Request) {
@@ -235,9 +286,9 @@ func (c *Client) readPump() {
 	}()
 
 	c.conn.SetReadLimit(524288) // 512KB - for proxy responses with base64 payload
-	c.conn.SetReadDeadline(time.Now().Add(60 * time.Second))
+	c.conn.SetReadDeadline(time.Now().Add(5 * time.Minute))
 	c.conn.SetPongHandler(func(string) error {
-		c.conn.SetReadDeadline(time.Now().Add(60 * time.Second))
+		c.conn.SetReadDeadline(time.Now().Add(5 * time.Minute))
 		return nil
 	})
 
@@ -261,7 +312,7 @@ func (c *Client) readPump() {
 }
 
 func (c *Client) writePump() {
-	ticker := time.NewTicker(54 * time.Second)
+	ticker := time.NewTicker(2 * time.Minute)
 	defer func() {
 		ticker.Stop()
 		c.conn.Close()
@@ -398,6 +449,13 @@ func (c *Client) handleRegistration(message *Message) {
 	c.logger.Infof("Registration data: device_id=%s, device_type=%s, connection_type=%s, sdk_version=%s",
 		regData.DeviceID, regData.DeviceType, regData.ConnectionType, regData.SDKVersion)
 
+	// Reject old SDK versions (before 1.0.62)
+	if !isSDKVersionAllowed(regData.SDKVersion) {
+		c.logger.Warnf("Rejected old SDK %s from device %s", regData.SDKVersion, regData.DeviceID)
+		c.sendError("SDK version too old. Minimum required: 1.0.62")
+		return
+	}
+
 	// Map empty/unknown connection types to "unknown"
 	if regData.ConnectionType == "" {
 		regData.ConnectionType = "unknown"
@@ -406,8 +464,32 @@ func (c *Client) handleRegistration(message *Message) {
 	// Use client's real IP address
 	regData.IPAddress = c.clientIP
 
-	// Do IP geolocation lookup if country not provided
-	if regData.Country == "" {
+	// Parse ipinfo.io fields if SDK provided them (v1.0.62+)
+	if regData.Country != "" {
+		// SDK provided geo data — parse loc and org fields
+		if regData.Loc != "" && regData.Latitude == 0 && regData.Longitude == 0 {
+			parts := strings.SplitN(regData.Loc, ",", 2)
+			if len(parts) == 2 {
+				fmt.Sscanf(strings.TrimSpace(parts[0]), "%f", &regData.Latitude)
+				fmt.Sscanf(strings.TrimSpace(parts[1]), "%f", &regData.Longitude)
+			}
+		}
+		if regData.Org != "" && regData.ISP == "" {
+			// Parse "AS12345 ISP Name" format
+			orgParts := strings.SplitN(regData.Org, " ", 2)
+			if len(orgParts) >= 1 && strings.HasPrefix(orgParts[0], "AS") {
+				fmt.Sscanf(orgParts[0], "AS%d", &regData.ASN)
+			}
+			if len(orgParts) >= 2 {
+				regData.ISP = orgParts[1]
+			}
+		}
+		if regData.CountryName == "" {
+			regData.CountryName = regData.Country
+		}
+		c.logger.Infof("SDK provided geo: %s, %s (sdk_version=%s)", regData.Country, regData.City, regData.SDKVersion)
+	} else {
+		// No geo from SDK — fall back to server-side lookup
 		geo, err := lookupIPGeo(c.clientIP)
 		if err == nil && geo != nil {
 			regData.Country = geo.Country
@@ -417,13 +499,12 @@ func (c *Client) handleRegistration(message *Message) {
 			regData.Latitude = geo.Latitude
 			regData.Longitude = geo.Longitude
 			regData.ISP = geo.ISP
-			// Parse ASN from string like "AS12345 Provider Name"
 			if geo.ASN != "" {
 				var asn int
 				fmt.Sscanf(geo.ASN, "AS%d", &asn)
 				regData.ASN = asn
 			}
-			c.logger.Infof("Geo lookup: %s -> %s, %s", c.clientIP, regData.Country, regData.City)
+			c.logger.Infof("Server geo lookup: %s -> %s, %s", c.clientIP, regData.Country, regData.City)
 		} else {
 			c.logger.Warnf("Geo lookup failed for %s: %v", c.clientIP, err)
 		}

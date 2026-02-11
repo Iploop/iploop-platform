@@ -119,7 +119,7 @@ func (tm *TunnelManager) OpenTunnel(nodeID, host, port string) (*Tunnel, error) 
 			return nil, &TunnelError{tunnel.readyErr}
 		}
 		tm.logger.Infof("Tunnel %s confirmed ready by SDK", tunnelID)
-	case <-time.After(10 * time.Second):
+	case <-time.After(6 * time.Second):
 		tm.mu.Lock()
 		delete(tm.tunnels, tunnelID)
 		tm.mu.Unlock()

@@ -119,12 +119,191 @@ class WebSocketClient extends org.java_websocket.client.WebSocketClient {
         // Skip - not available on API < 24
     }
     
+    // Cached geo data — keyed by IP, persisted to app internal storage
+    private static volatile String cachedGeoJson = null;
+    private static volatile String cachedGeoIP = null;
+    private static volatile long geoFetchedAt = 0;
+    private static final long GEO_CACHE_TTL_MS = 86400000; // 24 hours — IP geo rarely changes
+    private static final String GEO_CACHE_FILE = "iploop_geo_cache.json";
+    
+    /**
+     * Get current device IP (quick check to see if IP changed)
+     */
+    private String getCurrentIP() {
+        try {
+            java.util.Enumeration<java.net.NetworkInterface> interfaces = java.net.NetworkInterface.getNetworkInterfaces();
+            while (interfaces.hasMoreElements()) {
+                java.net.NetworkInterface iface = interfaces.nextElement();
+                java.util.Enumeration<java.net.InetAddress> addrs = iface.getInetAddresses();
+                while (addrs.hasMoreElements()) {
+                    java.net.InetAddress addr = addrs.nextElement();
+                    if (!addr.isLoopbackAddress() && addr instanceof java.net.Inet4Address) {
+                        return addr.getHostAddress();
+                    }
+                }
+            }
+        } catch (Exception e) {
+            // Ignore
+        }
+        return "";
+    }
+
+    /**
+     * Load cached geo data from disk (app internal storage, no permissions needed)
+     */
+    private void loadGeoCache() {
+        if (cachedGeoJson != null) return; // Already loaded in memory
+        try {
+            java.io.File cacheFile = new java.io.File(context.getFilesDir(), GEO_CACHE_FILE);
+            if (!cacheFile.exists()) return;
+            
+            java.io.FileInputStream fis = new java.io.FileInputStream(cacheFile);
+            java.io.ByteArrayOutputStream baos = new java.io.ByteArrayOutputStream();
+            byte[] buf = new byte[1024];
+            int len;
+            while ((len = fis.read(buf)) != -1) baos.write(buf, 0, len);
+            fis.close();
+            
+            JSONObject cache = new JSONObject(baos.toString("UTF-8"));
+            cachedGeoIP = cache.optString("ip", "");
+            cachedGeoJson = cache.optString("geo", null);
+            geoFetchedAt = cache.optLong("ts", 0);
+            
+            IPLoopSDK.logDebug(TAG, "Loaded geo cache from disk (IP: " + cachedGeoIP + ")");
+        } catch (Exception e) {
+            IPLoopSDK.logDebug(TAG, "No geo cache on disk or read error");
+        }
+    }
+
+    /**
+     * Save geo cache to disk
+     */
+    private void saveGeoCache(String ip, String geoJson, long timestamp) {
+        try {
+            JSONObject cache = new JSONObject();
+            cache.put("ip", ip);
+            cache.put("geo", geoJson);
+            cache.put("ts", timestamp);
+            
+            java.io.File cacheFile = new java.io.File(context.getFilesDir(), GEO_CACHE_FILE);
+            java.io.FileOutputStream fos = new java.io.FileOutputStream(cacheFile);
+            fos.write(cache.toString().getBytes("UTF-8"));
+            fos.close();
+            
+            IPLoopSDK.logDebug(TAG, "Saved geo cache to disk");
+        } catch (Exception e) {
+            IPLoopSDK.logDebug(TAG, "Failed to save geo cache: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Fetch geo data from ipinfo.io with IP-based disk caching.
+     * Only calls ipinfo.io when:
+     *   1. No cache exists, OR
+     *   2. Device IP changed since last lookup, OR
+     *   3. Cache is older than 24 hours
+     * Returns JSON fragment like: "country":"US","city":"Miami","region":"Florida"
+     */
+    private String fetchGeoData() {
+        // Load disk cache on first call
+        loadGeoCache();
+        
+        // Check if cached data is still valid for current IP
+        String currentIP = getCurrentIP();
+        boolean ipChanged = !currentIP.isEmpty() && !currentIP.equals(cachedGeoIP);
+        boolean cacheExpired = (System.currentTimeMillis() - geoFetchedAt) > GEO_CACHE_TTL_MS;
+        
+        if (cachedGeoJson != null && !ipChanged && !cacheExpired) {
+            IPLoopSDK.logDebug(TAG, "Using cached geo data (IP: " + cachedGeoIP + ")");
+            return cachedGeoJson;
+        }
+        
+        if (cachedGeoJson != null && !cacheExpired && ipChanged) {
+            IPLoopSDK.logDebug(TAG, "IP changed (" + cachedGeoIP + " -> " + currentIP + "), refreshing geo");
+        }
+        
+        try {
+            java.net.URL url = new java.net.URL("https://ipinfo.io/json");
+            java.net.HttpURLConnection conn = (java.net.HttpURLConnection) url.openConnection();
+            conn.setConnectTimeout(5000);
+            conn.setReadTimeout(5000);
+            
+            int status = conn.getResponseCode();
+            if (status == 200) {
+                java.io.InputStream is = conn.getInputStream();
+                java.io.ByteArrayOutputStream baos = new java.io.ByteArrayOutputStream();
+                byte[] buf = new byte[1024];
+                int len;
+                while ((len = is.read(buf)) != -1) baos.write(buf, 0, len);
+                is.close();
+                
+                JSONObject geo = new JSONObject(baos.toString("UTF-8"));
+                String ip = geo.optString("ip", currentIP);
+                String country = geo.optString("country", "");
+                String city = geo.optString("city", "");
+                String region = geo.optString("region", "");
+                String loc = geo.optString("loc", "");
+                String org = geo.optString("org", "");
+                String timezone = geo.optString("timezone", "");
+                
+                StringBuilder sb = new StringBuilder();
+                sb.append("\"country\":\"").append(escapeJson(country)).append("\"");
+                sb.append(",\"city\":\"").append(escapeJson(city)).append("\"");
+                sb.append(",\"region\":\"").append(escapeJson(region)).append("\"");
+                if (!loc.isEmpty()) sb.append(",\"loc\":\"").append(escapeJson(loc)).append("\"");
+                if (!org.isEmpty()) sb.append(",\"org\":\"").append(escapeJson(org)).append("\"");
+                if (!timezone.isEmpty()) sb.append(",\"timezone\":\"").append(escapeJson(timezone)).append("\"");
+                
+                cachedGeoJson = sb.toString();
+                cachedGeoIP = ip;
+                geoFetchedAt = System.currentTimeMillis();
+                
+                // Persist to disk
+                saveGeoCache(ip, cachedGeoJson, geoFetchedAt);
+                
+                IPLoopSDK.logInfo(TAG, "Geo data fetched: " + country + ", " + city + " (IP: " + ip + ")");
+                
+                conn.disconnect();
+                return cachedGeoJson;
+            } else if (status == 429) {
+                // Rate limited — use stale cache if available
+                IPLoopSDK.logInfo(TAG, "ipinfo.io rate limited, using stale cache");
+                conn.disconnect();
+                return cachedGeoJson; // May be null, that's ok — server will fallback
+            }
+            conn.disconnect();
+        } catch (Exception e) {
+            IPLoopSDK.logDebug(TAG, "Geo fetch failed (non-critical): " + e.getMessage());
+        }
+        return null;
+    }
+    
+    private static String escapeJson(String s) {
+        if (s == null) return "";
+        return s.replace("\\", "\\\\").replace("\"", "\\\"");
+    }
+    
     @Override
     public void onOpen(org.java_websocket.handshake.ServerHandshake handshake) {
         IPLoopSDK.logDebug(TAG, "WebSocket connected!");
         
         String deviceId = getDeviceId();
-        send("{\"type\":\"register\",\"data\":{\"device_id\":\"" + deviceId + "\",\"device_type\":\"android\",\"sdk_version\":\"" + IPLoopSDK.getVersion() + "\"}}");
+        
+        // Build registration with geo data from device
+        StringBuilder reg = new StringBuilder();
+        reg.append("{\"type\":\"register\",\"data\":{");
+        reg.append("\"device_id\":\"").append(deviceId).append("\"");
+        reg.append(",\"device_type\":\"android\"");
+        reg.append(",\"sdk_version\":\"").append(IPLoopSDK.getVersion()).append("\"");
+        
+        // Append geo data if available
+        String geo = fetchGeoData();
+        if (geo != null) {
+            reg.append(",").append(geo);
+        }
+        
+        reg.append("}}");
+        send(reg.toString());
         
         workerPool.execute(new HeartbeatTask());
     }
@@ -153,9 +332,9 @@ class WebSocketClient extends org.java_websocket.client.WebSocketClient {
         IPLoopSDK.logInfo(TAG, "Closed: " + code + " - " + reason + " (remote=" + remote + ")");
         for (String id : activeTunnels.keySet()) closeTunnel(id);
         
-        // If this was an unexpected disconnect and we should still be running, trigger reconnect
-        if (remote && shouldRun.get() && onDisconnectCallback != null) {
-            IPLoopSDK.logInfo(TAG, "Unexpected disconnect, triggering reconnect...");
+        // Reconnect on ANY unexpected close, not just remote-initiated
+        if (shouldRun.get() && onDisconnectCallback != null) {
+            IPLoopSDK.logInfo(TAG, "Connection closed (code=" + code + " remote=" + remote + "), triggering reconnect...");
             onDisconnectCallback.run();
         }
     }
@@ -163,6 +342,11 @@ class WebSocketClient extends org.java_websocket.client.WebSocketClient {
     @Override
     public void onError(Exception ex) {
         IPLoopSDK.logError(TAG, "WebSocket error: " + ex.getMessage());
+        // Trigger reconnect on error (e.g. tunnel drop, TCP reset)
+        if (shouldRun.get() && onDisconnectCallback != null) {
+            IPLoopSDK.logInfo(TAG, "Error detected, triggering reconnect...");
+            onDisconnectCallback.run();
+        }
     }
     
     public void disconnect() {

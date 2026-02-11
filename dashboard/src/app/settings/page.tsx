@@ -32,7 +32,7 @@ export default function SettingsPage() {
   const [profile, setProfile] = useState({
     firstName: 'John',
     lastName: 'Doe',
-    email: 'demo@iploop.com',
+    email: 'demo@iploop.io',
     company: 'Demo Corp',
     phone: '+1 (555) 123-4567',
     timezone: 'America/New_York'

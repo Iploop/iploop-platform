@@ -11,7 +11,7 @@ import {
 } from 'lucide-react'
 
 const API_BASE = 'https://api.iploop.io'
-const PROXY_HOST = 'proxy.iploop.com'
+const PROXY_HOST = 'proxy.iploop.io'
 
 export default function DocsPage() {
   const [copiedCode, setCopiedCode] = useState<string | null>(null)

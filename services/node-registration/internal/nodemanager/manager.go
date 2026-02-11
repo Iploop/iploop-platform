@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"sync"
 	"time"
 
 	"github.com/go-redis/redis/v8"
@@ -16,6 +17,10 @@ type NodeManager struct {
 	db     *sql.DB
 	rdb    *redis.Client
 	logger *logrus.Entry
+
+	// Batch sync: collect dirty node IDs, flush to Postgres periodically
+	dirtyMu    sync.Mutex
+	dirtyNodes map[string]bool // node IDs that need Postgres sync
 }
 
 type Node struct {
@@ -76,31 +81,87 @@ type Statistics struct {
 
 func NewNodeManager(db *sql.DB, rdb *redis.Client, logger *logrus.Entry) *NodeManager {
 	nm := &NodeManager{
-		db:     db,
-		rdb:    rdb,
-		logger: logger.WithField("component", "node-manager"),
+		db:         db,
+		rdb:        rdb,
+		logger:     logger.WithField("component", "node-manager"),
+		dirtyNodes: make(map[string]bool),
 	}
 
-	// Start cleanup routine
+	// Pre-load device→node mappings from Postgres into Redis
+	nm.preloadDeviceMappings()
+
+	// Start background routines
 	go nm.startCleanupRoutine()
+	go nm.startBatchSyncRoutine()
 
 	return nm
 }
 
-func (nm *NodeManager) RegisterNode(registration *NodeRegistration) (*Node, error) {
-	// Check if node already exists
-	existingNode, err := nm.getNodeByDeviceID(registration.DeviceID)
-	if err != nil && err != sql.ErrNoRows {
-		return nil, fmt.Errorf("failed to check existing node: %v", err)
+// preloadDeviceMappings loads device_id→node_id mappings from Postgres into Redis
+// so RegisterNode can skip Postgres lookups on reconnects.
+func (nm *NodeManager) preloadDeviceMappings() {
+	ctx := context.Background()
+	query := `SELECT id, device_id FROM nodes WHERE status = 'available' OR last_heartbeat > NOW() - INTERVAL '1 hour'`
+	rows, err := nm.db.Query(query)
+	if err != nil {
+		nm.logger.Warnf("Failed to preload device mappings: %v", err)
+		return
 	}
+	defer rows.Close()
 
-	var node *Node
+	count := 0
+	pipe := nm.rdb.Pipeline()
+	for rows.Next() {
+		var nodeID, deviceID string
+		if err := rows.Scan(&nodeID, &deviceID); err != nil {
+			continue
+		}
+		pipe.Set(ctx, fmt.Sprintf("device:%s", deviceID), nodeID, 24*time.Hour)
+		count++
+		if count%500 == 0 {
+			pipe.Exec(ctx)
+			pipe = nm.rdb.Pipeline()
+		}
+	}
+	if count%500 != 0 {
+		pipe.Exec(ctx)
+	}
+	nm.logger.Infof("Preloaded %d device→node mappings into Redis", count)
+}
+
+// ─── RegisterNode: Redis-first, Postgres async ───
+
+func (nm *NodeManager) RegisterNode(registration *NodeRegistration) (*Node, error) {
+	ctx := context.Background()
 	now := time.Now()
 
-	// If err is ErrNoRows, existingNode is empty, so treat as new node
-	if err == nil && existingNode != nil && existingNode.ID != "" {
+	// Check Redis first for existing node by device_id
+	deviceKey := fmt.Sprintf("device:%s", registration.DeviceID)
+	existingNodeID, err := nm.rdb.Get(ctx, deviceKey).Result()
+
+	var node *Node
+
+	if err == nil && existingNodeID != "" {
+		// Try to load existing node from Redis
+		nodeData, redisErr := nm.rdb.Get(ctx, nm.getRedisNodeKey(existingNodeID)).Result()
+		if redisErr == nil {
+			var existing Node
+			if json.Unmarshal([]byte(nodeData), &existing) == nil {
+				node = &existing
+			}
+		}
+	}
+
+	if node == nil {
+		// Check Postgres for existing node
+		existingNode, dbErr := nm.getNodeByDeviceID(registration.DeviceID)
+		if dbErr == nil && existingNode != nil && existingNode.ID != "" {
+			node = existingNode
+		}
+	}
+
+	if node != nil {
 		// Update existing node
-		node = existingNode
 		node.IPAddress = registration.IPAddress
 		node.Country = registration.Country
 		node.CountryName = registration.CountryName
@@ -118,8 +179,6 @@ func (nm *NodeManager) RegisterNode(registration *NodeRegistration) (*Node, erro
 		node.LastHeartbeat = now
 		node.ConnectedSince = now
 		node.UpdatedAt = now
-
-		err = nm.updateNode(node)
 	} else {
 		// Create new node
 		node = &Node{
@@ -139,7 +198,7 @@ func (nm *NodeManager) RegisterNode(registration *NodeRegistration) (*Node, erro
 			DeviceType:     registration.DeviceType,
 			SDKVersion:     registration.SDKVersion,
 			Status:         "available",
-			QualityScore:   100, // Start with perfect score
+			QualityScore:   100,
 			BandwidthUsed:  0,
 			TotalRequests:  0,
 			SuccessRequests: 0,
@@ -148,54 +207,43 @@ func (nm *NodeManager) RegisterNode(registration *NodeRegistration) (*Node, erro
 			CreatedAt:      now,
 			UpdatedAt:      now,
 		}
-
-		err = nm.insertNode(node)
 	}
 
-	if err != nil {
-		return nil, fmt.Errorf("failed to register node: %v", err)
-	}
-
-	// Store in Redis for fast lookup
-	err = nm.storeNodeInRedis(node)
-	if err != nil {
+	// Store in Redis immediately (this is the hot path)
+	if err := nm.storeNodeInRedis(node); err != nil {
 		nm.logger.Warnf("Failed to store node in Redis: %v", err)
-		// Don't fail the registration if Redis fails
 	}
 
-	nm.logger.Infof("Node registered: %s (device: %s, country: %s, city: %s)", 
+	// Store device→node mapping in Redis
+	nm.rdb.Set(ctx, fmt.Sprintf("device:%s", node.DeviceID), node.ID, 24*time.Hour)
+
+	// Mark dirty for async Postgres sync
+	nm.markDirty(node.ID)
+
+	nm.logger.Infof("Node registered: %s (device: %s, country: %s, city: %s)",
 		node.ID, node.DeviceID, node.Country, node.City)
 
 	return node, nil
 }
 
+// ─── UpdateHeartbeat: Redis-only, no Postgres ───
+
 func (nm *NodeManager) UpdateHeartbeat(nodeID string) error {
 	ctx := context.Background()
 	now := time.Now()
 
-	// Update in database
-	query := `
-		UPDATE nodes 
-		SET last_heartbeat = $1, status = 'available', updated_at = $1
-		WHERE id = $2
-	`
-	_, err := nm.db.Exec(query, now, nodeID)
-	if err != nil {
-		return fmt.Errorf("failed to update heartbeat in database: %v", err)
-	}
-
-	// Update in Redis
 	nodeKey := nm.getRedisNodeKey(nodeID)
 	nodeData, err := nm.rdb.Get(ctx, nodeKey).Result()
 	if err != nil {
-		// If not in Redis, try to load from database
+		// Not in Redis — try loading from Postgres
 		node, dbErr := nm.getNodeByID(nodeID)
 		if dbErr != nil {
 			return fmt.Errorf("node not found: %s", nodeID)
 		}
 		node.LastHeartbeat = now
 		node.Status = "available"
-		return nm.storeNodeInRedis(node)
+		nm.storeNodeInRedis(node)
+		return nil
 	}
 
 	var node Node
@@ -205,32 +253,161 @@ func (nm *NodeManager) UpdateHeartbeat(nodeID string) error {
 
 	node.LastHeartbeat = now
 	node.Status = "available"
-	
+	node.UpdatedAt = now
+
+	// Update Redis only — no Postgres write
 	return nm.storeNodeInRedis(&node)
 }
 
+// ─── DisconnectNode: Redis-first, Postgres async ───
+
 func (nm *NodeManager) DisconnectNode(nodeID string) error {
 	ctx := context.Background()
-	now := time.Now()
-
-	// Update status to inactive
-	query := `
-		UPDATE nodes 
-		SET status = 'inactive', updated_at = $1
-		WHERE id = $2
-	`
-	_, err := nm.db.Exec(query, now, nodeID)
-	if err != nil {
-		return fmt.Errorf("failed to update node status: %v", err)
-	}
 
 	// Remove from Redis active pool
 	nodeKey := nm.getRedisNodeKey(nodeID)
+
+	// Try to get node data to clean up country/city keys
+	nodeData, err := nm.rdb.Get(ctx, nodeKey).Result()
+	if err == nil {
+		var node Node
+		if json.Unmarshal([]byte(nodeData), &node) == nil {
+			// Clean up country and city keys
+			nm.rdb.Del(ctx, fmt.Sprintf("node:%s:%s", node.Country, node.ID))
+			if node.City != "" {
+				nm.rdb.Del(ctx, fmt.Sprintf("node:%s:%s:%s", node.Country, node.City, node.ID))
+			}
+		}
+	}
+
 	nm.rdb.Del(ctx, nodeKey)
+
+	// Mark for async Postgres update (status → inactive)
+	nm.markDirtyDisconnect(nodeID)
 
 	nm.logger.Infof("Node disconnected: %s", nodeID)
 	return nil
 }
+
+// ─── Batch Postgres Sync ───
+
+func (nm *NodeManager) markDirty(nodeID string) {
+	nm.dirtyMu.Lock()
+	nm.dirtyNodes[nodeID] = true // true = active/update
+	nm.dirtyMu.Unlock()
+}
+
+func (nm *NodeManager) markDirtyDisconnect(nodeID string) {
+	nm.dirtyMu.Lock()
+	nm.dirtyNodes[nodeID] = false // false = disconnect
+	nm.dirtyMu.Unlock()
+}
+
+func (nm *NodeManager) startBatchSyncRoutine() {
+	ticker := time.NewTicker(30 * time.Second)
+	defer ticker.Stop()
+
+	for range ticker.C {
+		nm.flushToPostgres()
+	}
+}
+
+func (nm *NodeManager) flushToPostgres() {
+	nm.dirtyMu.Lock()
+	if len(nm.dirtyNodes) == 0 {
+		nm.dirtyMu.Unlock()
+		return
+	}
+	// Snapshot and reset
+	batch := nm.dirtyNodes
+	nm.dirtyNodes = make(map[string]bool)
+	nm.dirtyMu.Unlock()
+
+	ctx := context.Background()
+	synced := 0
+	disconnected := 0
+	errors := 0
+
+	for nodeID, isActive := range batch {
+		if !isActive {
+			// Disconnect — just mark inactive in Postgres
+			_, err := nm.db.Exec(
+				`UPDATE nodes SET status = 'inactive', updated_at = NOW() WHERE id = $1`,
+				nodeID,
+			)
+			if err != nil {
+				errors++
+			} else {
+				disconnected++
+			}
+			continue
+		}
+
+		// Active node — load from Redis and upsert to Postgres
+		nodeKey := nm.getRedisNodeKey(nodeID)
+		nodeData, err := nm.rdb.Get(ctx, nodeKey).Result()
+		if err != nil {
+			// Node already expired from Redis, skip
+			continue
+		}
+
+		var node Node
+		if err := json.Unmarshal([]byte(nodeData), &node); err != nil {
+			continue
+		}
+
+		// Upsert by device_id (the true unique key for a physical device)
+		_, err = nm.db.Exec(`
+			INSERT INTO nodes (
+				id, device_id, ip_address, country, country_name, city, region,
+				latitude, longitude, asn, isp, carrier, connection_type, device_type,
+				sdk_version, status, quality_score, bandwidth_used_mb, total_requests,
+				successful_requests, last_heartbeat, connected_since, created_at, updated_at
+			) VALUES (
+				$1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14,
+				$15, $16, $17, $18, $19, $20, $21, $22, $23, $24
+			)
+			ON CONFLICT (device_id) DO UPDATE SET
+				ip_address = EXCLUDED.ip_address,
+				country = EXCLUDED.country,
+				country_name = EXCLUDED.country_name,
+				city = EXCLUDED.city,
+				region = EXCLUDED.region,
+				latitude = EXCLUDED.latitude,
+				longitude = EXCLUDED.longitude,
+				asn = EXCLUDED.asn,
+				isp = EXCLUDED.isp,
+				carrier = EXCLUDED.carrier,
+				connection_type = EXCLUDED.connection_type,
+				device_type = EXCLUDED.device_type,
+				sdk_version = EXCLUDED.sdk_version,
+				status = EXCLUDED.status,
+				last_heartbeat = EXCLUDED.last_heartbeat,
+				connected_since = EXCLUDED.connected_since,
+				updated_at = EXCLUDED.updated_at
+		`,
+			node.ID, node.DeviceID, node.IPAddress, node.Country, node.CountryName,
+			node.City, node.Region, node.Latitude, node.Longitude, node.ASN,
+			node.ISP, node.Carrier, node.ConnectionType, node.DeviceType,
+			node.SDKVersion, node.Status, node.QualityScore, node.BandwidthUsed,
+			node.TotalRequests, node.SuccessRequests, node.LastHeartbeat,
+			node.ConnectedSince, node.CreatedAt, node.UpdatedAt,
+		)
+		if err != nil {
+			errors++
+			nm.logger.Warnf("Postgres sync failed for node %s: %v", nodeID, err)
+		} else {
+			synced++
+		}
+	}
+
+	if synced > 0 || disconnected > 0 || errors > 0 {
+		nm.logger.Infof("Postgres batch sync: %d upserted, %d disconnected, %d errors (from %d dirty)",
+			synced, disconnected, errors, len(batch))
+	}
+}
+
+// ─── Read operations (unchanged, still use Postgres for heavy queries) ───
 
 func (nm *NodeManager) GetAllNodes() []*Node {
 	query := `
@@ -281,7 +458,7 @@ func (nm *NodeManager) GetStatistics() *Statistics {
 	query := `
 		SELECT 
 			COUNT(*) as total,
-			COUNT(CASE WHEN status = 'available' AND last_heartbeat > NOW() - INTERVAL '2 minutes' THEN 1 END) as active,
+			COUNT(CASE WHEN status = 'available' AND last_heartbeat > NOW() - INTERVAL '6 minutes' THEN 1 END) as active,
 			AVG(quality_score) as avg_quality,
 			SUM(bandwidth_used_mb) as total_bandwidth,
 			country,
@@ -304,7 +481,7 @@ func (nm *NodeManager) GetStatistics() *Statistics {
 		var totalBandwidth int64
 		var country, deviceType, connectionType string
 
-		err := rows.Scan(&total, &active, &avgQuality, &totalBandwidth, 
+		err := rows.Scan(&total, &active, &avgQuality, &totalBandwidth,
 			&country, &deviceType, &connectionType)
 		if err != nil {
 			continue
@@ -313,7 +490,7 @@ func (nm *NodeManager) GetStatistics() *Statistics {
 		stats.TotalNodes += total
 		stats.ActiveNodes += active
 		stats.TotalBandwidth += totalBandwidth
-		
+
 		if avgQuality > 0 {
 			stats.AverageQuality = avgQuality
 		}
@@ -326,6 +503,8 @@ func (nm *NodeManager) GetStatistics() *Statistics {
 	stats.InactiveNodes = stats.TotalNodes - stats.ActiveNodes
 	return stats
 }
+
+// ─── Internal helpers ───
 
 func (nm *NodeManager) getNodeByDeviceID(deviceID string) (*Node, error) {
 	query := `
@@ -373,74 +552,29 @@ func (nm *NodeManager) getNodeByID(nodeID string) (*Node, error) {
 	return node, err
 }
 
-func (nm *NodeManager) insertNode(node *Node) error {
-	query := `
-		INSERT INTO nodes (
-			id, device_id, ip_address, country, country_name, city, region,
-			latitude, longitude, asn, isp, carrier, connection_type, device_type,
-			sdk_version, status, quality_score, bandwidth_used_mb, total_requests,
-			successful_requests, last_heartbeat, connected_since, created_at, updated_at
-		) VALUES (
-			$1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24
-		)
-	`
-
-	_, err := nm.db.Exec(query,
-		node.ID, node.DeviceID, node.IPAddress, node.Country, node.CountryName,
-		node.City, node.Region, node.Latitude, node.Longitude, node.ASN,
-		node.ISP, node.Carrier, node.ConnectionType, node.DeviceType,
-		node.SDKVersion, node.Status, node.QualityScore, node.BandwidthUsed,
-		node.TotalRequests, node.SuccessRequests, node.LastHeartbeat,
-		node.ConnectedSince, node.CreatedAt, node.UpdatedAt,
-	)
-
-	return err
-}
-
-func (nm *NodeManager) updateNode(node *Node) error {
-	query := `
-		UPDATE nodes SET
-			ip_address = $2, country = $3, country_name = $4, city = $5, region = $6,
-			latitude = $7, longitude = $8, asn = $9, isp = $10, carrier = $11,
-			connection_type = $12, device_type = $13, sdk_version = $14, status = $15,
-			last_heartbeat = $16, connected_since = $17, updated_at = $18
-		WHERE id = $1
-	`
-
-	_, err := nm.db.Exec(query,
-		node.ID, node.IPAddress, node.Country, node.CountryName, node.City,
-		node.Region, node.Latitude, node.Longitude, node.ASN, node.ISP,
-		node.Carrier, node.ConnectionType, node.DeviceType, node.SDKVersion,
-		node.Status, node.LastHeartbeat, node.ConnectedSince, node.UpdatedAt,
-	)
-
-	return err
-}
-
 func (nm *NodeManager) storeNodeInRedis(node *Node) error {
 	ctx := context.Background()
 	nodeKey := nm.getRedisNodeKey(node.ID)
-	
-	// Store in main pool
+
 	nodeJSON, err := json.Marshal(node)
 	if err != nil {
 		return err
 	}
 
-	// Store with TTL of 5 minutes (will be refreshed by heartbeats)
-	err = nm.rdb.Set(ctx, nodeKey, nodeJSON, 5*time.Minute).Err()
+	// Store with TTL of 6 minutes (heartbeat every 5 min refreshes it)
+	err = nm.rdb.Set(ctx, nodeKey, nodeJSON, 6*time.Minute).Err()
 	if err != nil {
 		return err
 	}
 
-	// Also store in country-specific key for faster targeting
+	// Country-specific key for fast targeting
 	countryKey := fmt.Sprintf("node:%s:%s", node.Country, node.ID)
-	nm.rdb.Set(ctx, countryKey, nodeJSON, 5*time.Minute)
+	nm.rdb.Set(ctx, countryKey, nodeJSON, 6*time.Minute)
 
-	// And city-specific key
+	// City-specific key
 	if node.City != "" {
 		cityKey := fmt.Sprintf("node:%s:%s:%s", node.Country, node.City, node.ID)
-		nm.rdb.Set(ctx, cityKey, nodeJSON, 5*time.Minute)
+		nm.rdb.Set(ctx, cityKey, nodeJSON, 6*time.Minute)
 	}
 
 	return nil
@@ -454,17 +588,14 @@ func (nm *NodeManager) startCleanupRoutine() {
 	ticker := time.NewTicker(5 * time.Minute)
 	defer ticker.Stop()
 
-	for {
-		select {
-		case <-ticker.C:
-			nm.cleanupInactiveNodes()
-		}
+	for range ticker.C {
+		nm.cleanupInactiveNodes()
 	}
 }
 
 func (nm *NodeManager) cleanupInactiveNodes() {
-	cutoff := time.Now().Add(-5 * time.Minute)
-	
+	cutoff := time.Now().Add(-10 * time.Minute)
+
 	query := `
 		UPDATE nodes 
 		SET status = 'inactive', updated_at = NOW()

@@ -1,10 +1,16 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import dynamic from 'next/dynamic'
 import { Layout } from '@/components/layout'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { BarChart3, Globe, Zap, Activity, TrendingUp, Users, Server, Clock, Smartphone, MapPin, Wifi } from 'lucide-react'
+
+const WorldMap = dynamic(() => import('@/components/world-map').then(mod => mod.WorldMap), { 
+  ssr: false,
+  loading: () => <div className="w-full flex items-center justify-center" style={{ aspectRatio: '2/1' }}><span className="text-muted-foreground">Loading map...</span></div>
+})
 
 interface NodeData {
   nodes: any[]
@@ -36,12 +42,13 @@ export default function DashboardPage() {
   }, [])
 
   const activeNodes = data?.nodes?.filter(n => n.status === 'available') || []
-  const countries = new Set(data?.nodes?.map(n => n.country) || [])
+  const connectedCount = data?.health?.connected_nodes || data?.stats?.active_nodes || activeNodes.length
+  const countryCount = data?.stats?.country_breakdown ? Object.keys(data.stats.country_breakdown).filter((k: string) => k !== '').length : new Set(data?.nodes?.map((n: any) => n.country) || []).size
 
   const statsData = [
     {
       title: "Active Nodes",
-      value: activeNodes.length.toString(),
+      value: connectedCount.toString(),
       icon: Smartphone,
       description: "Currently online"
     },
@@ -53,7 +60,7 @@ export default function DashboardPage() {
     },
     {
       title: "Countries",
-      value: countries.size.toString(),
+      value: countryCount.toString(),
       icon: Globe,
       description: "Available regions"
     },
@@ -176,25 +183,37 @@ export default function DashboardPage() {
           </Card>
         </div>
 
-        {/* Country Breakdown */}
+        {/* Global Node Map */}
         {data?.stats?.country_breakdown && Object.keys(data.stats.country_breakdown).length > 0 && (
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Globe className="h-5 w-5" />
-                Nodes by Country
+                Global Node Distribution
               </CardTitle>
-              <CardDescription>Geographic distribution of nodes</CardDescription>
+              <CardDescription>
+                {countryCount} countries • {connectedCount.toLocaleString()} active nodes worldwide
+              </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="flex flex-wrap gap-3">
-                {Object.entries(data.stats.country_breakdown).map(([country, count]) => (
-                  <div key={country} className="flex items-center gap-2 p-2 border rounded-lg">
-                    <span className="text-lg">{getCountryFlag(country)}</span>
-                    <span className="font-medium">{country}</span>
-                    <Badge variant="secondary">{count as number}</Badge>
+              <WorldMap countryData={data.stats.country_breakdown} />
+              {/* Top countries summary */}
+              <div className="mt-4 flex flex-wrap gap-2">
+                {Object.entries(data.stats.country_breakdown)
+                  .sort(([,a], [,b]) => (b as number) - (a as number))
+                  .slice(0, 10)
+                  .map(([country, count]) => (
+                    <div key={country} className="flex items-center gap-1.5 px-3 py-1.5 bg-secondary/50 rounded-full text-sm">
+                      <span>{getCountryFlag(country)}</span>
+                      <span className="font-medium">{country}</span>
+                      <span className="text-muted-foreground">{(count as number).toLocaleString()}</span>
+                    </div>
+                  ))}
+                {Object.keys(data.stats.country_breakdown).length > 10 && (
+                  <div className="flex items-center px-3 py-1.5 text-sm text-muted-foreground">
+                    +{Object.keys(data.stats.country_breakdown).length - 10} more
                   </div>
-                ))}
+                )}
               </div>
             </CardContent>
           </Card>

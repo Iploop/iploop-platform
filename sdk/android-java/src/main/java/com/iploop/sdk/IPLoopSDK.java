@@ -16,7 +16,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 public class IPLoopSDK {
     private static final String TAG = "IPLoopSDK";
-    private static final String VERSION = "1.0.59";
+    private static final String VERSION = "1.0.63";
     
     // Logging control
     private static boolean loggingEnabled = false;
@@ -28,9 +28,9 @@ public class IPLoopSDK {
     private static WebSocketClient wsClient;
     private static final AtomicBoolean running = new AtomicBoolean(false);
     private static final AtomicInteger reconnectAttempts = new AtomicInteger(0);
-    private static final int FAST_RECONNECT_ATTEMPTS = 10;
+    private static final int FAST_RECONNECT_ATTEMPTS = 15;
     private static final long BASE_RECONNECT_DELAY_MS = 1000; // 1 second
-    private static final long MAX_RECONNECT_DELAY_MS = 60000; // 60 seconds
+    private static final long MAX_RECONNECT_DELAY_MS = 30000; // 30 seconds
     private static final long SLOW_RECONNECT_DELAY_MS = 600000; // 10 minutes
     private static final AtomicBoolean consentGiven = new AtomicBoolean(false);
     private static final AtomicInteger status = new AtomicInteger(SDKStatus.IDLE);

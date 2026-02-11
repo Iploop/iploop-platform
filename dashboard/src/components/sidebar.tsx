@@ -39,6 +39,7 @@ const navigation = [
   { name: 'Billing', href: '/billing', icon: CreditCard, adminOnly: false },
   { name: 'Settings', href: '/settings', icon: Settings, adminOnly: false },
   { name: 'Support', href: '/support', icon: MessageCircle, adminOnly: false },
+  { name: 'Accounts', href: '/admin/users', icon: Users, adminOnly: true },
   { name: 'Admin', href: '/admin', icon: ShieldCheck, adminOnly: true },
 ]
 

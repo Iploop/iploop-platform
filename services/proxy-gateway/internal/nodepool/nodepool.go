@@ -1,20 +1,42 @@
 package nodepool
 
 import (
+	"bufio"
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"math/rand"
+	"net/http"
+	"net/url"
+	"os"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/go-redis/redis/v8"
+	"github.com/gorilla/websocket"
 	"github.com/sirupsen/logrus"
 )
 
 type NodePool struct {
-	rdb    *redis.Client
-	logger *logrus.Entry
+	rdb            *redis.Client
+	logger         *logrus.Entry
+	nodeRegURL     string
+	healthMu       sync.RWMutex
+	healthChecking map[string]bool // tracks nodes currently being checked
+
+	// Connected node cache: only nodes with active WebSocket to node-reg
+	connectedMu    sync.RWMutex
+	connectedNodes map[string]bool // node IDs confirmed connected
+
+	// Quality tracking: nodes that actually completed proxy requests
+	qualityMu     sync.RWMutex
+	provenNodes   map[string]time.Time // node ID → last successful proxy time
+
+	// In-memory node cache (avoids Redis roundtrips on every SelectNode)
+	nodeCacheMu   sync.RWMutex
+	nodeCache     map[string]*Node // node ID → cached node data
 }
 
 type Node struct {
@@ -60,21 +82,180 @@ type SessionState struct {
 }
 
 func NewNodePool(rdb *redis.Client, logger *logrus.Entry) *NodePool {
-	pool := &NodePool{
-		rdb:    rdb,
-		logger: logger.WithField("component", "nodepool"),
+	nodeRegURL := os.Getenv("NODE_REGISTRATION_URL")
+	if nodeRegURL == "" {
+		nodeRegURL = "http://node-registration:8001"
 	}
 
-	// Start background cleanup routine
+	pool := &NodePool{
+		rdb:            rdb,
+		logger:         logger.WithField("component", "nodepool"),
+		nodeRegURL:     nodeRegURL,
+		healthChecking: make(map[string]bool),
+		connectedNodes: make(map[string]bool),
+		provenNodes:    make(map[string]time.Time),
+		nodeCache:      make(map[string]*Node),
+	}
+
+	// Start background routines
 	go pool.cleanupInactiveNodes()
+	go pool.healthCheckLoop()
+	go pool.refreshConnectedNodes()
+	go pool.refreshNodeCache()
 
 	return pool
 }
 
+// refreshConnectedNodes periodically fetches connected node IDs from node-reg
+func (np *NodePool) refreshConnectedNodes() {
+	// Initial fetch immediately
+	np.fetchConnectedNodes()
+
+	ticker := time.NewTicker(3 * time.Second)
+	defer ticker.Stop()
+	for range ticker.C {
+		np.fetchConnectedNodes()
+	}
+}
+
+func (np *NodePool) fetchConnectedNodes() {
+	client := &http.Client{Timeout: 3 * time.Second}
+	resp, err := client.Get(np.nodeRegURL + "/internal/connected-nodes")
+	if err != nil {
+		np.logger.Warnf("Failed to fetch connected nodes: %v", err)
+		return
+	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return
+	}
+
+	var result struct {
+		NodeIDs []string `json:"node_ids"`
+		Count   int      `json:"count"`
+	}
+	if err := json.Unmarshal(body, &result); err != nil {
+		np.logger.Warnf("Failed to parse connected nodes: %v", err)
+		return
+	}
+
+	newMap := make(map[string]bool, len(result.NodeIDs))
+	for _, id := range result.NodeIDs {
+		newMap[id] = true
+	}
+
+	np.connectedMu.Lock()
+	np.connectedNodes = newMap
+	np.connectedMu.Unlock()
+
+	np.logger.Debugf("Refreshed connected nodes: %d", len(newMap))
+}
+
+// IsConnected checks if a node has an active WebSocket connection
+func (np *NodePool) IsConnected(nodeID string) bool {
+	np.connectedMu.RLock()
+	defer np.connectedMu.RUnlock()
+	return np.connectedNodes[nodeID]
+}
+
+// GetConnectedNodeIDs returns a copy of connected node IDs
+func (np *NodePool) GetConnectedNodeIDs() []string {
+	np.connectedMu.RLock()
+	defer np.connectedMu.RUnlock()
+	ids := make([]string, 0, len(np.connectedNodes))
+	for id := range np.connectedNodes {
+		ids = append(ids, id)
+	}
+	return ids
+}
+
+// refreshNodeCache periodically loads all connected node data from Redis into memory
+func (np *NodePool) refreshNodeCache() {
+	np.buildNodeCache()
+	ticker := time.NewTicker(30 * time.Second) // every 30s — not too aggressive
+	defer ticker.Stop()
+	for range ticker.C {
+		np.buildNodeCache()
+	}
+}
+
+func (np *NodePool) buildNodeCache() {
+	ctx := context.Background()
+	connectedIDs := np.GetConnectedNodeIDs()
+	if len(connectedIDs) == 0 {
+		return
+	}
+
+	newCache := make(map[string]*Node, len(connectedIDs))
+	
+	// Batch in chunks of 500 to avoid overwhelming Redis
+	chunkSize := 500
+	for i := 0; i < len(connectedIDs); i += chunkSize {
+		end := i + chunkSize
+		if end > len(connectedIDs) {
+			end = len(connectedIDs)
+		}
+		chunk := connectedIDs[i:end]
+		
+		pipe := np.rdb.Pipeline()
+		cmds := make(map[string]*redis.StringCmd, len(chunk))
+		for _, nodeID := range chunk {
+			cmds[nodeID] = pipe.Get(ctx, fmt.Sprintf("node:%s", nodeID))
+		}
+		pipe.Exec(ctx)
+
+		for nodeID, cmd := range cmds {
+			data, err := cmd.Result()
+			if err != nil {
+				continue
+			}
+			var node Node
+			if err := json.Unmarshal([]byte(data), &node); err != nil {
+				continue
+			}
+			newCache[nodeID] = &node
+		}
+	}
+
+	np.nodeCacheMu.Lock()
+	np.nodeCache = newCache
+	np.nodeCacheMu.Unlock()
+
+	np.logger.Debugf("Node cache refreshed: %d nodes", len(newCache))
+}
+
+// getCachedNode returns a node from the in-memory cache
+func (np *NodePool) getCachedNode(nodeID string) *Node {
+	np.nodeCacheMu.RLock()
+	defer np.nodeCacheMu.RUnlock()
+	return np.nodeCache[nodeID]
+}
+
+// MarkProven marks a node as having completed a successful proxy request
+func (np *NodePool) MarkProven(nodeID string) {
+	np.qualityMu.Lock()
+	np.provenNodes[nodeID] = time.Now()
+	np.qualityMu.Unlock()
+}
+
+// GetProvenNodes returns node IDs that successfully proxied in the last N minutes
+func (np *NodePool) GetProvenNodes(maxAge time.Duration) []string {
+	np.qualityMu.RLock()
+	defer np.qualityMu.RUnlock()
+	cutoff := time.Now().Add(-maxAge)
+	ids := make([]string, 0)
+	for id, t := range np.provenNodes {
+		if t.After(cutoff) {
+			ids = append(ids, id)
+		}
+	}
+	return ids
+}
+
 // SelectNode selects the best available node based on targeting criteria
 func (np *NodePool) SelectNode(selection *NodeSelection) (*Node, error) {
-	ctx := context.Background()
-
 	// If session ID is specified, try to get sticky node
 	if selection.SessionID != "" {
 		node, needsRotation, err := np.getStickyNode(selection.SessionID, selection.RotateAfter)
@@ -91,66 +272,72 @@ func (np *NodePool) SelectNode(selection *NodeSelection) (*Node, error) {
 		}
 	}
 
-	// Build Redis key pattern for node selection
-	// Country is uppercase, but city needs case-insensitive matching
-	pattern := "node:*"
+	// Fast path: pick random connected node from cache
+	np.nodeCacheMu.RLock()
+	cacheLen := len(np.nodeCache)
+	np.nodeCacheMu.RUnlock()
+
+	if cacheLen == 0 {
+		return nil, fmt.Errorf("no connected nodes in cache")
+	}
+
 	country := strings.ToUpper(selection.Country)
-	if selection.Country != "" {
-		pattern = fmt.Sprintf("node:%s:*", country)
-		// For city matching, get all nodes for country and filter later
-	}
 
-	// Get available nodes
-	keys, err := np.rdb.Keys(ctx, pattern).Result()
-	if err != nil {
-		return nil, fmt.Errorf("failed to query nodes: %v", err)
-	}
+	// Random sampling from cache — O(1) per attempt
+	var selectedNode *Node
+	maxTries := 50
 
-	if len(keys) == 0 {
-		return nil, fmt.Errorf("no nodes available for criteria: country=%s, city=%s", selection.Country, selection.City)
+	np.nodeCacheMu.RLock()
+	// Build a snapshot of keys for random access
+	cacheKeys := make([]string, 0, len(np.nodeCache))
+	for k := range np.nodeCache {
+		cacheKeys = append(cacheKeys, k)
 	}
+	np.nodeCacheMu.RUnlock()
 
-	// Get node data
-	var availableNodes []*Node
-	for _, key := range keys {
-		nodeData, err := np.rdb.Get(ctx, key).Result()
-		if err != nil {
+	for tried := 0; tried < maxTries && tried < len(cacheKeys); tried++ {
+		idx := rand.Intn(len(cacheKeys))
+		nodeID := cacheKeys[idx]
+
+		if np.IsNodeBlacklisted(nodeID) {
+			continue
+		}
+		if !np.IsConnected(nodeID) {
 			continue
 		}
 
-		var node Node
-		if err := json.Unmarshal([]byte(nodeData), &node); err != nil {
+		node := np.getCachedNode(nodeID)
+		if node == nil {
 			continue
 		}
 
-		// Check if node is available, healthy, and not blacklisted
-		if node.Status == "available" && np.isNodeHealthy(&node) && !np.IsNodeBlacklisted(node.ID) {
-			// Filter by city if specified (case and accent insensitive)
-			if selection.City != "" {
-				if normalizeCity(node.City) != normalizeCity(selection.City) {
-					continue
-				}
-			}
-			availableNodes = append(availableNodes, &node)
+		if country != "" && strings.ToUpper(node.Country) != country {
+			continue
 		}
+		if selection.City != "" && normalizeCity(node.City) != normalizeCity(selection.City) {
+			continue
+		}
+		if node.Status != "available" {
+			continue
+		}
+
+		selectedNode = node
+		break
 	}
 
-	if len(availableNodes) == 0 {
-		return nil, fmt.Errorf("no healthy nodes available")
+	if selectedNode == nil {
+		return nil, fmt.Errorf("no matching nodes for: country=%s, city=%s (cache=%d)", selection.Country, selection.City, cacheLen)
 	}
-
-	// Select best node based on quality score and load
-	selectedNode := np.selectBestNode(availableNodes)
 
 	// Create sticky session if session ID is provided
-	if selection.SessionID != "" && selectedNode != nil {
+	if selection.SessionID != "" {
 		np.createStickySession(selection.SessionID, selectedNode, selection)
 	}
 
 	// Mark node as busy temporarily
 	np.markNodeBusy(selectedNode.ID)
 
-	np.logger.Debugf("Selected node %s (%s) for request", selectedNode.ID, selectedNode.IPAddress)
+	np.logger.Debugf("Selected node %s (%s, %s) for request", selectedNode.ID, selectedNode.IPAddress, selectedNode.Country)
 	return selectedNode, nil
 }
 
@@ -302,24 +489,40 @@ func (np *NodePool) selectBestNode(nodes []*Node) *Node {
 		return nodes[0]
 	}
 
-	// Simple load balancing: prefer nodes with higher quality scores and lower current load
-	bestNode := nodes[0]
-	bestScore := np.calculateNodeScore(bestNode)
+	// Weighted random selection for maximum IP diversity
+	// Shuffle nodes and pick from top candidates weighted by score
+	// This ensures we spread traffic across all available nodes
+	
+	// Fisher-Yates shuffle
+	shuffled := make([]*Node, len(nodes))
+	copy(shuffled, nodes)
+	for i := len(shuffled) - 1; i > 0; i-- {
+		j := rand.Intn(i + 1)
+		shuffled[i], shuffled[j] = shuffled[j], shuffled[i]
+	}
 
-	for _, node := range nodes[1:] {
-		score := np.calculateNodeScore(node)
-		if score > bestScore {
-			bestNode = node
-			bestScore = score
+	// Pick from shuffled list with slight quality bias
+	// Take top 50% by quality, then random from those
+	if len(shuffled) > 4 {
+		// Score all nodes
+		type scored struct {
+			node  *Node
+			score float64
 		}
+		scoredNodes := make([]scored, len(shuffled))
+		for i, n := range shuffled {
+			scoredNodes[i] = scored{node: n, score: np.calculateNodeScore(n)}
+		}
+		// Sort by score descending (simple selection of top half)
+		topHalf := len(scoredNodes) / 2
+		if topHalf < 4 {
+			topHalf = len(scoredNodes)
+		}
+		// Just pick random from the pool - maximize diversity
+		return shuffled[rand.Intn(len(shuffled))]
 	}
 
-	// Add some randomization to prevent all traffic going to the same "best" node
-	if rand.Float64() < 0.2 {
-		return nodes[rand.Intn(len(nodes))]
-	}
-
-	return bestNode
+	return shuffled[rand.Intn(len(shuffled))]
 }
 
 func (np *NodePool) calculateNodeScore(node *Node) float64 {
@@ -459,14 +662,274 @@ func (np *NodePool) GetStatus() map[string]interface{} {
 	}
 
 	return map[string]interface{}{
-		"stats":     stats,
-		"countries": countries,
-		"timestamp": time.Now().UTC(),
+		"stats":        stats,
+		"countries":    countries,
+		"health_stats": np.GetHealthStats(),
+		"timestamp":    time.Now().UTC(),
 	}
 }
 // TEMP: Debug function
 func init() {
 	fmt.Println("[NODEPOOL DEBUG] Package initialized")
+}
+
+// ===== Health Check System =====
+
+const (
+	healthCheckInterval = 5 * time.Minute
+	healthCheckTimeout  = 8 * time.Second
+	healthKeyTTL        = 10 * time.Minute
+	healthConcurrency   = 5 // max concurrent health checks
+)
+
+// healthCheckLoop runs continuously, checking all nodes periodically
+func (np *NodePool) healthCheckLoop() {
+	// Wait a bit on startup to let nodes register
+	time.Sleep(30 * time.Second)
+	np.logger.Info("Health checker started")
+
+	// Run immediately on start, then every interval
+	np.runHealthChecks()
+
+	ticker := time.NewTicker(healthCheckInterval)
+	defer ticker.Stop()
+
+	for range ticker.C {
+		np.runHealthChecks()
+	}
+}
+
+// runHealthChecks checks all available nodes
+func (np *NodePool) runHealthChecks() {
+	ctx := context.Background()
+
+	keys, err := np.rdb.Keys(ctx, "node:*").Result()
+	if err != nil {
+		np.logger.Errorf("Health check: failed to list nodes: %v", err)
+		return
+	}
+
+	// Collect nodes that need checking
+	var nodesToCheck []*Node
+	for _, key := range keys {
+		// Skip non-node keys (busy, etc)
+		if strings.Contains(key, ":busy:") {
+			continue
+		}
+
+		nodeData, err := np.rdb.Get(ctx, key).Result()
+		if err != nil {
+			continue
+		}
+
+		var node Node
+		if err := json.Unmarshal([]byte(nodeData), &node); err != nil {
+			continue
+		}
+
+		if node.Status != "available" {
+			continue
+		}
+
+		// Check if already has a valid health status that hasn't expired
+		status := np.getHealthStatus(node.ID)
+		if status == "verified" {
+			// Already verified and TTL still valid, skip
+			continue
+		}
+
+		nodesToCheck = append(nodesToCheck, &node)
+	}
+
+	if len(nodesToCheck) == 0 {
+		return
+	}
+
+	np.logger.Debugf("Health check: %d nodes to check", len(nodesToCheck))
+
+	// Use a semaphore to limit concurrency
+	sem := make(chan struct{}, healthConcurrency)
+	var wg sync.WaitGroup
+
+	verified := 0
+	failed := 0
+	var mu sync.Mutex
+
+	for _, node := range nodesToCheck {
+		// Check if already being checked
+		np.healthMu.Lock()
+		if np.healthChecking[node.ID] {
+			np.healthMu.Unlock()
+			continue
+		}
+		np.healthChecking[node.ID] = true
+		np.healthMu.Unlock()
+
+		wg.Add(1)
+		go func(n *Node) {
+			defer wg.Done()
+			defer func() {
+				np.healthMu.Lock()
+				delete(np.healthChecking, n.ID)
+				np.healthMu.Unlock()
+			}()
+
+			sem <- struct{}{}        // acquire
+			defer func() { <-sem }() // release
+
+			ok := np.checkNodeHealth(n.ID)
+			mu.Lock()
+			if ok {
+				verified++
+			} else {
+				failed++
+			}
+			mu.Unlock()
+		}(node)
+	}
+
+	wg.Wait()
+
+	if verified > 0 || failed > 0 {
+		np.logger.Infof("Health check complete: %d verified, %d failed (of %d checked)", verified, failed, len(nodesToCheck))
+	}
+}
+
+// checkNodeHealth tests a single node by sending an HTTP request through its tunnel
+func (np *NodePool) checkNodeHealth(nodeID string) bool {
+	ctx := context.Background()
+
+	// Build WebSocket URL to node-registration tunnel endpoint
+	wsURL := strings.Replace(np.nodeRegURL, "http://", "ws://", 1)
+	wsURL = strings.Replace(wsURL, "https://", "wss://", 1)
+	tunnelURL := fmt.Sprintf("%s/internal/tunnel?node_id=%s&host=httpbin.org&port=80",
+		wsURL, url.QueryEscape(nodeID))
+
+	np.logger.Debugf("Health check node %s: connecting to %s", nodeID, tunnelURL)
+
+	// Connect with timeout
+	dialer := websocket.Dialer{
+		HandshakeTimeout: 5 * time.Second,
+	}
+
+	conn, _, err := dialer.Dial(tunnelURL, nil)
+	if err != nil {
+		np.logger.Debugf("Health check node %s: tunnel connect failed: %v", nodeID, err)
+		np.setHealthStatus(ctx, nodeID, "failed")
+		return false
+	}
+	defer conn.Close()
+
+	// Send HTTP request through the tunnel
+	httpReq := "GET /ip HTTP/1.1\r\nHost: httpbin.org\r\nConnection: close\r\n\r\n"
+	if err := conn.WriteMessage(websocket.BinaryMessage, []byte(httpReq)); err != nil {
+		np.logger.Debugf("Health check node %s: write failed: %v", nodeID, err)
+		np.setHealthStatus(ctx, nodeID, "failed")
+		return false
+	}
+
+	// Read response with timeout
+	conn.SetReadDeadline(time.Now().Add(healthCheckTimeout))
+
+	var responseData []byte
+	for {
+		_, msg, err := conn.ReadMessage()
+		if err != nil {
+			break
+		}
+		responseData = append(responseData, msg...)
+		// Check if we got a complete HTTP response
+		if strings.Contains(string(responseData), "\r\n\r\n") {
+			// We have headers at least - check for response body
+			break
+		}
+	}
+
+	responseStr := string(responseData)
+
+	// Validate: must be a valid HTTP response with 200 status
+	if strings.Contains(responseStr, "200 OK") || strings.Contains(responseStr, "200 ok") {
+		np.logger.Debugf("Health check node %s: VERIFIED", nodeID)
+		np.setHealthStatus(ctx, nodeID, "verified")
+		return true
+	}
+
+	// Also accept if we got any HTTP response - the tunnel works
+	if strings.HasPrefix(responseStr, "HTTP/") {
+		// Parse status code
+		scanner := bufio.NewScanner(strings.NewReader(responseStr))
+		if scanner.Scan() {
+			statusLine := scanner.Text()
+			np.logger.Debugf("Health check node %s: got response '%s' - marking verified", nodeID, statusLine)
+		}
+		np.setHealthStatus(ctx, nodeID, "verified")
+		return true
+	}
+
+	np.logger.Debugf("Health check node %s: FAILED (no valid HTTP response, got %d bytes)", nodeID, len(responseData))
+	np.setHealthStatus(ctx, nodeID, "failed")
+	return false
+}
+
+// setHealthStatus stores health status in Redis with TTL
+func (np *NodePool) setHealthStatus(ctx context.Context, nodeID string, status string) {
+	key := fmt.Sprintf("health:%s", nodeID)
+	np.rdb.Set(ctx, key, status, healthKeyTTL)
+}
+
+// getHealthStatus retrieves health status from Redis
+func (np *NodePool) getHealthStatus(nodeID string) string {
+	ctx := context.Background()
+	key := fmt.Sprintf("health:%s", nodeID)
+	status, err := np.rdb.Get(ctx, key).Result()
+	if err != nil {
+		return "unchecked"
+	}
+	return status
+}
+
+// GetHealthStats returns verified/failed/unchecked counts
+func (np *NodePool) GetHealthStats() map[string]int {
+	ctx := context.Background()
+
+	stats := map[string]int{
+		"verified":  0,
+		"failed":    0,
+		"unchecked": 0,
+	}
+
+	keys, err := np.rdb.Keys(ctx, "node:*").Result()
+	if err != nil {
+		return stats
+	}
+
+	for _, key := range keys {
+		if strings.Contains(key, ":busy:") {
+			continue
+		}
+
+		nodeData, err := np.rdb.Get(ctx, key).Result()
+		if err != nil {
+			continue
+		}
+
+		var node Node
+		if err := json.Unmarshal([]byte(nodeData), &node); err != nil {
+			continue
+		}
+
+		status := np.getHealthStatus(node.ID)
+		switch status {
+		case "verified":
+			stats["verified"]++
+		case "failed":
+			stats["failed"]++
+		default:
+			stats["unchecked"]++
+		}
+	}
+
+	return stats
 }
 
 // normalizeCity removes accents and lowercases for comparison

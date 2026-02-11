@@ -204,6 +204,8 @@ func (p *SOCKS5Proxy) dialThroughNode(ctx context.Context, network, addr string)
 		proxy:         p,
 		nodeID:        node.ID,
 		customerID:    auth.Customer.ID,
+		nodeCountry:   node.Country,
+		targetHost:    host,
 		startTime:     start,
 		bytesRead:     0,
 		bytesWritten:  0,
@@ -259,6 +261,8 @@ type trackedConnection struct {
 	proxy        *SOCKS5Proxy
 	nodeID       string
 	customerID   string
+	nodeCountry  string
+	targetHost   string
 	startTime    time.Time
 	bytesRead    int64
 	bytesWritten int64
@@ -284,7 +288,7 @@ func (tc *trackedConnection) Close() error {
 		// Record usage
 		totalBytes := tc.bytesRead + tc.bytesWritten
 		if totalBytes > 0 {
-			tc.proxy.authenticator.RecordUsage(tc.customerID, totalBytes, tc.nodeID, true)
+			tc.proxy.authenticator.RecordUsage(tc.customerID, totalBytes, tc.nodeID, true, tc.nodeCountry, tc.targetHost)
 		}
 
 		// Record metrics

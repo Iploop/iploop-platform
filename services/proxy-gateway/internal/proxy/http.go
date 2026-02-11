@@ -3,6 +3,7 @@ package proxy
 import (
 	"bufio"
 	"bytes"
+	"context"
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
@@ -13,6 +14,7 @@ import (
 	"os"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/gorilla/websocket"
@@ -27,10 +29,16 @@ type HTTPProxy struct {
 	authenticator   *auth.Authenticator
 	nodePool        *nodepool.NodePool
 	wsNodePool      *nodepool.WebSocketNodePool
+	warmPool        *nodepool.WarmPool
 	metrics         *metrics.Collector
 	logger          *logrus.Entry
 	nodeRegURL      string
 	httpClient      *http.Client
+}
+
+// SetWarmPool attaches a warm pool for fast-lane node selection.
+func (p *HTTPProxy) SetWarmPool(wp *nodepool.WarmPool) {
+	p.warmPool = wp
 }
 
 func NewHTTPProxy(authenticator *auth.Authenticator, nodePool *nodepool.NodePool, wsNodePool *nodepool.WebSocketNodePool, metrics *metrics.Collector, logger *logrus.Entry) *HTTPProxy {
@@ -70,61 +78,493 @@ func (p *HTTPProxy) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Select node
+	// For rotating/per-request sessions, don't use session ID (forces new node each time)
+	sessionID := auth.SessionID
+	if auth.SessionType == "rotating" || auth.SessionType == "per-request" {
+		sessionID = "" // Empty session = fresh node selection every request
+	}
 	selection := &nodepool.NodeSelection{
 		Country:   auth.Country,
 		City:      auth.City,
-		SessionID: auth.SessionID,
+		SessionID: sessionID,
 	}
 
-	node, err := p.nodePool.SelectNode(selection)
-	if err != nil {
-		p.logger.Errorf("Failed to select node: %v", err)
-		http.Error(w, "No nodes available", http.StatusBadGateway)
-		return
-	}
-	defer p.nodePool.ReleaseNode(node.ID)
-
-	// Handle CONNECT method (HTTPS tunneling)
 	if r.Method == http.MethodConnect {
-		p.handleConnect(w, r, node, auth)
+		// ── CONNECT: parallel node racing ──
+		node, ok := p.raceConnectTunnel(w, r, auth, selection)
+		if !ok {
+			// raceConnectTunnel already wrote the HTTP error
+			return
+		}
+		duration := time.Since(start)
+		p.metrics.RecordRequest(auth.Customer.ID, node.Country, duration, true)
+		p.logger.Debugf("Request completed in %v via node %s (race winner)", duration, node.ID)
 	} else {
-		p.handleHTTP(w, r, node, auth)
+		// ── Plain HTTP: parallel node racing with retry ──
+		// Buffer body so retries can re-send it
+		if r.Body != nil {
+			bodyData, _ := io.ReadAll(r.Body)
+			r.Body.Close()
+			r.Body = io.NopCloser(bytes.NewReader(bodyData))
+			r.ContentLength = int64(len(bodyData))
+			// Store for retries
+			r = r.Clone(r.Context())
+			r.Body = io.NopCloser(bytes.NewReader(bodyData))
+			r.GetBody = func() (io.ReadCloser, error) {
+				return io.NopCloser(bytes.NewReader(bodyData)), nil
+			}
+		}
+		maxHTTPRetries := 3
+		deadline := time.Now().Add(20 * time.Second) // total budget for all retries
+		var node *nodepool.Node
+		var ok bool
+		for attempt := 0; attempt < maxHTTPRetries; attempt++ {
+			if time.Now().After(deadline) {
+				p.logger.Warnf("HTTP retries exhausted time budget for %s", r.URL.String())
+				break
+			}
+			if attempt > 0 {
+				p.logger.Infof("HTTP retry attempt %d/%d for %s", attempt+1, maxHTTPRetries, r.URL.String())
+				// Reset body for retry
+				if r.GetBody != nil {
+					r.Body, _ = r.GetBody()
+				}
+			}
+			node, ok = p.raceHTTPTunnel(w, r, auth, selection)
+			if ok {
+				break
+			}
+		}
+		if !ok {
+			http.Error(w, "All proxy attempts failed after retries", http.StatusBadGateway)
+			return
+		}
+		duration := time.Since(start)
+		p.metrics.RecordRequest(auth.Customer.ID, node.Country, duration, true)
+		p.logger.Debugf("HTTP request completed in %v via node %s (race winner)", duration, node.ID)
 	}
-
-	// Record metrics
-	duration := time.Since(start)
-	p.metrics.RecordRequest(auth.Customer.ID, node.Country, duration, true)
-
-	p.logger.Debugf("Request completed in %v via node %s", duration, node.ID)
 }
 
-func (p *HTTPProxy) handleConnect(w http.ResponseWriter, r *http.Request, node *nodepool.Node, auth *auth.ProxyAuth) {
-	// Extract target host and port
+// raceResult carries the outcome of one parallel tunnel dial attempt.
+type raceResult struct {
+	node   *nodepool.Node
+	wsConn *websocket.Conn
+	err    error
+	warm   bool // true if this candidate came from the warm pool
+}
+
+// raceConnectTunnel selects up to 3 candidate nodes (preferring fast-lane),
+// dials them all in parallel, and uses the first successful tunnel.
+// Losers are closed/blacklisted. Returns the winning node or writes an error.
+func (p *HTTPProxy) raceConnectTunnel(w http.ResponseWriter, r *http.Request, proxyAuth *auth.ProxyAuth, selection *nodepool.NodeSelection) (*nodepool.Node, bool) {
 	host, port, err := net.SplitHostPort(r.Host)
 	if err != nil {
 		http.Error(w, "Invalid host", http.StatusBadRequest)
-		return
+		return nil, false
 	}
 
-	p.logger.Infof("CONNECT tunnel request to %s:%s via node %s (%s)", host, port, node.ID, node.IPAddress)
+	const racers = 5
+	p.logger.Infof("CONNECT race to %s:%s — selecting up to %d candidates", host, port, racers)
 
-	// Connect to node-registration tunnel WebSocket
+	// ── Gather candidates (warm-pool first, then normal pool) ──
+	candidates := make([]*nodepool.Node, 0, racers)
+	seen := make(map[string]bool) // de-duplicate by node ID
+	warmFlags := make([]bool, 0, racers)
+
+	// Pull from warm pool
+	if p.warmPool != nil && (proxyAuth.SessionType == "rotating" || proxyAuth.SessionType == "per-request" || selection.SessionID == "") {
+		for len(candidates) < racers {
+			fastID := p.warmPool.GetFastNode(proxyAuth.Country)
+			if fastID == "" {
+				break
+			}
+			if seen[fastID] {
+				continue
+			}
+			n, err := p.nodePool.GetNodeByID(fastID)
+			if err != nil || n == nil {
+				continue
+			}
+			seen[n.ID] = true
+			candidates = append(candidates, n)
+			warmFlags = append(warmFlags, true)
+		}
+	}
+
+	// Fill remaining slots from normal pool
+	for len(candidates) < racers {
+		n, err := p.nodePool.SelectNode(selection)
+		if err != nil {
+			break
+		}
+		if seen[n.ID] {
+			p.nodePool.ReleaseNode(n.ID)
+			continue
+		}
+		seen[n.ID] = true
+		candidates = append(candidates, n)
+		warmFlags = append(warmFlags, false)
+	}
+
+	if len(candidates) == 0 {
+		http.Error(w, "No nodes available", http.StatusBadGateway)
+		return nil, false
+	}
+
+	p.logger.Infof("CONNECT race to %s:%s — racing %d nodes", host, port, len(candidates))
+
+	// ── Launch parallel dials ──
+	resultCh := make(chan raceResult, len(candidates))
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	// Track how many goroutines are still running so we can drain safely.
+	var launched int32
+
+	for i, node := range candidates {
+		atomic.AddInt32(&launched, 1)
+		go func(n *nodepool.Node, isWarm bool) {
+			wsConn, dialErr := p.dialTunnel(ctx, n, host, port)
+			// If context was already cancelled and dial succeeded, close immediately.
+			select {
+			case <-ctx.Done():
+				if wsConn != nil {
+					wsConn.Close()
+				}
+				// Still send result so the drain loop can count it.
+				resultCh <- raceResult{node: n, wsConn: nil, err: context.Canceled, warm: isWarm}
+			case resultCh <- raceResult{node: n, wsConn: wsConn, err: dialErr, warm: isWarm}:
+			}
+		}(node, warmFlags[i])
+	}
+
+	// ── Wait for first success (or all failures) ──
+	var winner *raceResult
+	received := 0
+	total := int(atomic.LoadInt32(&launched))
+
+	for received < total {
+		res := <-resultCh
+		received++
+
+		if res.err == nil && winner == nil {
+			// First successful dial — claim it and cancel the rest.
+			winner = &res
+			cancel()
+			p.logger.Infof("CONNECT race winner: node %s (%s, warm=%v) in slot %d/%d",
+				res.node.ID, res.node.Country, res.warm, received, total)
+		} else if res.err == nil && winner != nil {
+			// A later success after we already have a winner — close it.
+			if res.wsConn != nil {
+				res.wsConn.Close()
+			}
+			p.nodePool.ReleaseNode(res.node.ID)
+			p.logger.Debugf("CONNECT race: closing runner-up node %s", res.node.ID)
+		} else if res.err != nil && res.err != context.Canceled {
+			// Genuine failure — blacklist.
+			p.logger.Warnf("CONNECT race: node %s failed: %v — blacklisting", res.node.ID, res.err)
+			p.nodePool.BlacklistNode(res.node.ID, 15*time.Minute)
+			p.nodePool.ReleaseNode(res.node.ID)
+		} else {
+			// Cancelled — just release.
+			p.nodePool.ReleaseNode(res.node.ID)
+		}
+	}
+
+	if winner == nil {
+		http.Error(w, "All tunnel attempts failed", http.StatusBadGateway)
+		return nil, false
+	}
+
+	// ── Hand off winning connection to the relay ──
+	p.handleConnectTunnel(w, r, winner.node, proxyAuth, winner.wsConn, host, port)
+	p.nodePool.ReleaseNode(winner.node.ID)
+	return winner.node, true
+}
+
+// raceHTTPTunnel selects up to 3 candidate nodes, dials them in parallel,
+// and uses the first successful tunnel for a plain HTTP request.
+func (p *HTTPProxy) raceHTTPTunnel(w http.ResponseWriter, r *http.Request, proxyAuth *auth.ProxyAuth, selection *nodepool.NodeSelection) (*nodepool.Node, bool) {
+	targetURL := r.URL
+	if !targetURL.IsAbs() {
+		http.Error(w, "Absolute URL required", http.StatusBadRequest)
+		return nil, false
+	}
+
+	host := targetURL.Hostname()
+	port := targetURL.Port()
+	if port == "" {
+		port = "80"
+	}
+
+	const racers = 5
+	p.logger.Infof("HTTP race to %s — selecting up to %d candidates", targetURL.String(), racers)
+
+	// ── Gather candidates (warm-pool first, then normal pool) ──
+	candidates := make([]*nodepool.Node, 0, racers)
+	seen := make(map[string]bool)
+	warmFlags := make([]bool, 0, racers)
+
+	if p.warmPool != nil && (proxyAuth.SessionType == "rotating" || proxyAuth.SessionType == "per-request" || selection.SessionID == "") {
+		for len(candidates) < racers {
+			fastID := p.warmPool.GetFastNode(proxyAuth.Country)
+			if fastID == "" {
+				break
+			}
+			if seen[fastID] {
+				continue
+			}
+			n, err := p.nodePool.GetNodeByID(fastID)
+			if err != nil || n == nil {
+				continue
+			}
+			seen[n.ID] = true
+			candidates = append(candidates, n)
+			warmFlags = append(warmFlags, true)
+		}
+	}
+
+	for len(candidates) < racers {
+		n, err := p.nodePool.SelectNode(selection)
+		if err != nil {
+			break
+		}
+		if seen[n.ID] {
+			p.nodePool.ReleaseNode(n.ID)
+			continue
+		}
+		seen[n.ID] = true
+		candidates = append(candidates, n)
+		warmFlags = append(warmFlags, false)
+	}
+
+	if len(candidates) == 0 {
+		p.logger.Warnf("HTTP race: no nodes available for %s", targetURL.String())
+		return nil, false
+	}
+
+	p.logger.Infof("HTTP race to %s — racing %d nodes", targetURL.String(), len(candidates))
+
+	// ── Launch parallel dials ──
+	resultCh := make(chan raceResult, len(candidates))
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	var launched int32
+
+	for i, node := range candidates {
+		atomic.AddInt32(&launched, 1)
+		go func(n *nodepool.Node, isWarm bool) {
+			wsConn, dialErr := p.dialTunnel(ctx, n, host, port)
+			select {
+			case <-ctx.Done():
+				if wsConn != nil {
+					wsConn.Close()
+				}
+				resultCh <- raceResult{node: n, wsConn: nil, err: context.Canceled, warm: isWarm}
+			case resultCh <- raceResult{node: n, wsConn: wsConn, err: dialErr, warm: isWarm}:
+			}
+		}(node, warmFlags[i])
+	}
+
+	// ── Wait for first success (or all failures) ──
+	var winner *raceResult
+	received := 0
+	total := int(atomic.LoadInt32(&launched))
+
+	for received < total {
+		res := <-resultCh
+		received++
+
+		if res.err == nil && winner == nil {
+			winner = &res
+			cancel()
+			p.logger.Infof("HTTP race winner: node %s (%s, warm=%v) in slot %d/%d",
+				res.node.ID, res.node.Country, res.warm, received, total)
+		} else if res.err == nil && winner != nil {
+			if res.wsConn != nil {
+				res.wsConn.Close()
+			}
+			p.nodePool.ReleaseNode(res.node.ID)
+		} else if res.err != nil && res.err != context.Canceled {
+			p.logger.Warnf("HTTP race: node %s failed: %v — blacklisting", res.node.ID, res.err)
+			p.nodePool.BlacklistNode(res.node.ID, 15*time.Minute)
+			p.nodePool.ReleaseNode(res.node.ID)
+		} else {
+			p.nodePool.ReleaseNode(res.node.ID)
+		}
+	}
+
+	if winner == nil {
+		p.logger.Warnf("HTTP race: all %d tunnel attempts failed for %s", len(candidates), targetURL.String())
+		return nil, false
+	}
+
+	// ── Send HTTP request through winning tunnel ──
+	success := p.handleHTTPWithConn(w, r, winner.node, proxyAuth, winner.wsConn, host)
+	p.nodePool.ReleaseNode(winner.node.ID)
+	if !success {
+		return winner.node, false // malformed response — caller should retry
+	}
+	return winner.node, true
+}
+
+// handleHTTPWithConn sends an HTTP request through a pre-established WebSocket tunnel.
+// Returns true if response was successfully parsed and written, false if malformed (should retry).
+func (p *HTTPProxy) handleHTTPWithConn(w http.ResponseWriter, r *http.Request, node *nodepool.Node, proxyAuth *auth.ProxyAuth, wsConn *websocket.Conn, host string) bool {
+	defer wsConn.Close()
+
+	targetURL := r.URL
+
+	// Build raw HTTP request
+	var reqBuf bytes.Buffer
+	path := targetURL.RequestURI()
+	if path == "" {
+		path = "/"
+	}
+	reqBuf.WriteString(fmt.Sprintf("%s %s HTTP/1.1\r\n", r.Method, path))
+	reqBuf.WriteString(fmt.Sprintf("Host: %s\r\n", targetURL.Host))
+
+	for name, values := range r.Header {
+		lowerName := strings.ToLower(name)
+		if lowerName == "proxy-authorization" || lowerName == "proxy-connection" {
+			continue
+		}
+		for _, v := range values {
+			reqBuf.WriteString(fmt.Sprintf("%s: %s\r\n", name, v))
+		}
+	}
+
+	var bodyBytes []byte
+	if r.Body != nil {
+		bodyBytes, _ = io.ReadAll(r.Body)
+	}
+	if len(bodyBytes) > 0 {
+		reqBuf.WriteString(fmt.Sprintf("Content-Length: %d\r\n", len(bodyBytes)))
+	}
+	reqBuf.WriteString("\r\n")
+	if len(bodyBytes) > 0 {
+		reqBuf.Write(bodyBytes)
+	}
+
+	if err := wsConn.WriteMessage(websocket.BinaryMessage, reqBuf.Bytes()); err != nil {
+		p.logger.Errorf("Failed to send request through tunnel: %v", err)
+		return false // retry
+	}
+	bytesUp := int64(reqBuf.Len())
+
+	// Read response
+	var respBuf bytes.Buffer
+	bytesDown := int64(0)
+
+	wsConn.SetReadDeadline(time.Now().Add(60 * time.Second))
+	messageType, data, err := wsConn.ReadMessage()
+	if err != nil {
+		p.logger.Errorf("Failed to read response from tunnel: %v", err)
+		return false // retry
+	}
+	if messageType == websocket.BinaryMessage || messageType == websocket.TextMessage {
+		respBuf.Write(data)
+		bytesDown += int64(len(data))
+	}
+
+	for {
+		wsConn.SetReadDeadline(time.Now().Add(500 * time.Millisecond))
+		messageType, data, err := wsConn.ReadMessage()
+		if err != nil {
+			break
+		}
+		if messageType == websocket.CloseMessage {
+			break
+		}
+		if messageType == websocket.BinaryMessage || messageType == websocket.TextMessage {
+			respBuf.Write(data)
+			bytesDown += int64(len(data))
+		}
+	}
+
+	respReader := bufio.NewReader(&respBuf)
+	httpResp, err := http.ReadResponse(respReader, r)
+	if err != nil {
+		p.logger.Warnf("Malformed HTTP response from node %s, blacklisting and retrying: %v", node.ID, err)
+		p.nodePool.BlacklistNode(node.ID, 15*time.Minute)
+		return false // retry with different node
+	}
+	defer httpResp.Body.Close()
+
+	for name, values := range httpResp.Header {
+		for _, v := range values {
+			w.Header().Add(name, v)
+		}
+	}
+	w.WriteHeader(httpResp.StatusCode)
+	bodyWritten, _ := io.Copy(w, httpResp.Body)
+
+	// Flush response to client immediately
+	if flusher, ok := w.(http.Flusher); ok {
+		flusher.Flush()
+	}
+
+	totalBytes := bytesUp + bytesDown
+	p.authenticator.RecordUsage(proxyAuth.Customer.ID, totalBytes, node.ID, true, node.Country, host)
+
+	// Mark this node as proven — it actually completed a request
+	p.nodePool.MarkProven(node.ID)
+
+	p.logger.Infof("HTTP tunnel completed: %s via node %s, status=%d, bytes: up=%d down=%d body=%d",
+		targetURL.String(), node.ID, httpResp.StatusCode, bytesUp, bytesDown, bodyWritten)
+	return true
+}
+
+// dialTunnel opens a WebSocket tunnel to node-registration for a single node.
+// It respects ctx cancellation so in-flight dials don't linger after a winner is chosen.
+func (p *HTTPProxy) dialTunnel(ctx context.Context, node *nodepool.Node, host, port string) (*websocket.Conn, error) {
 	tunnelURL := strings.Replace(p.nodeRegURL, "http://", "ws://", 1)
 	tunnelURL = strings.Replace(tunnelURL, "https://", "wss://", 1)
-	tunnelURL = fmt.Sprintf("%s/internal/tunnel?node_id=%s&host=%s&port=%s", tunnelURL, node.ID, host, port)
+	tunnelURL = fmt.Sprintf("%s/internal/tunnel?node_id=%s&host=%s&port=%s",
+		tunnelURL, node.ID, host, port)
 
-	p.logger.Debugf("Connecting to tunnel WebSocket: %s", tunnelURL)
-
-	// Connect to WebSocket
 	dialer := websocket.Dialer{
 		HandshakeTimeout: 10 * time.Second,
 	}
-	wsConn, _, err := dialer.Dial(tunnelURL, nil)
-	if err != nil {
-		p.logger.Errorf("Failed to connect to tunnel WebSocket: %v", err)
-		http.Error(w, "Failed to establish tunnel", http.StatusBadGateway)
-		return
+
+	// websocket.Dialer doesn't natively take a context for cancellation,
+	// but we can use DialContext via the underlying net.Dialer.
+	dialer.NetDialContext = (&net.Dialer{Timeout: 10 * time.Second}).DialContext
+
+	// Use a channel to bridge gorilla's Dial with our context.
+	type dialResult struct {
+		conn *websocket.Conn
+		err  error
 	}
+	ch := make(chan dialResult, 1)
+
+	go func() {
+		conn, _, err := dialer.Dial(tunnelURL, nil)
+		ch <- dialResult{conn, err}
+	}()
+
+	select {
+	case <-ctx.Done():
+		// Context cancelled — the dial goroutine will finish eventually;
+		// if it succeeds the caller (raceConnectTunnel) will close it.
+		return nil, ctx.Err()
+	case res := <-ch:
+		if res.err != nil {
+			return nil, res.err
+		}
+		// Double-check context hasn't been cancelled while we waited.
+		select {
+		case <-ctx.Done():
+			res.conn.Close()
+			return nil, ctx.Err()
+		default:
+		}
+		return res.conn, nil
+	}
+}
+
+func (p *HTTPProxy) handleConnectTunnel(w http.ResponseWriter, r *http.Request, node *nodepool.Node, auth *auth.ProxyAuth, wsConn *websocket.Conn, host, port string) {
 	defer wsConn.Close()
 
 	// Hijack the client connection
@@ -203,8 +643,14 @@ func (p *HTTPProxy) handleConnect(w http.ResponseWriter, r *http.Request, node *
 	totalBytes := bytesUp + bytesDown
 	p.logger.Infof("CONNECT tunnel closed: %s:%s via node %s, bytes: up=%d down=%d", host, port, node.ID, bytesUp, bytesDown)
 	
-	// Record usage
-	p.authenticator.RecordUsage(auth.Customer.ID, totalBytes, node.ID, true)
+	// Blacklist nodes that can't route traffic (very low response = tunnel failed)
+	if bytesDown < 100 && bytesUp > 100 {
+		p.logger.Warnf("Node %s returned only %d bytes — blacklisting for 15 min", node.ID, bytesDown)
+		p.nodePool.BlacklistNode(node.ID, 15*time.Minute)
+	}
+
+	// Record usage with country and target host
+	p.authenticator.RecordUsage(auth.Customer.ID, totalBytes, node.ID, bytesDown >= 100, node.Country, host)
 }
 
 func (p *HTTPProxy) handleHTTP(w http.ResponseWriter, r *http.Request, node *nodepool.Node, auth *auth.ProxyAuth) {
@@ -229,7 +675,7 @@ func (p *HTTPProxy) handleHTTP(w http.ResponseWriter, r *http.Request, node *nod
 	tunnelURL = fmt.Sprintf("%s/internal/tunnel?node_id=%s&host=%s&port=%s", tunnelURL, node.ID, host, port)
 
 	dialer := websocket.Dialer{
-		HandshakeTimeout: 10 * time.Second,
+		HandshakeTimeout: 15 * time.Second,
 	}
 	wsConn, _, err := dialer.Dial(tunnelURL, nil)
 	if err != nil {
@@ -349,9 +795,9 @@ func (p *HTTPProxy) handleHTTP(w http.ResponseWriter, r *http.Request, node *nod
 	// Copy response body
 	bodyWritten, _ := io.Copy(w, httpResp.Body)
 
-	// Record usage
+	// Record usage with country and target host
 	totalBytes := bytesUp + bytesDown
-	p.authenticator.RecordUsage(auth.Customer.ID, totalBytes, node.ID, true)
+	p.authenticator.RecordUsage(auth.Customer.ID, totalBytes, node.ID, true, node.Country, host)
 
 	p.logger.Infof("HTTP tunnel completed: %s via node %s, status=%d, bytes: up=%d down=%d body=%d", 
 		targetURL.String(), node.ID, httpResp.StatusCode, bytesUp, bytesDown, bodyWritten)

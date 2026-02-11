@@ -138,18 +138,29 @@ export default function AdminPage() {
         const data = await plansRes.json()
         setPlans(data.plans || [])
       }
+    } catch (err) {
+      console.error('Failed to fetch admin data:', err)
+    } finally {
+      setLoading(false)
+    }
+  }
 
-      // Fetch nodes/supply
-      const nodesRes = await fetch('/api/admin/nodes', {
+  const fetchSupplyData = async () => {
+    setLoading(true)
+    try {
+      const token = localStorage.getItem('token')
+      
+      // Only fetch health/stats (lightweight), not the full nodes list
+      const healthRes = await fetch(`/api/admin/nodes?limit=50`, {
         headers: { Authorization: `Bearer ${token}` }
       })
-      if (nodesRes.ok) {
-        const data = await nodesRes.json()
-        setNodes(data.nodes || [])
+      if (healthRes.ok) {
+        const data = await healthRes.json()
+        setNodes((data.nodes || []).slice(0, 50))
         setNodeStats(data.stats || null)
       }
     } catch (err) {
-      console.error('Failed to fetch admin data:', err)
+      console.error('Failed to fetch supply data:', err)
     } finally {
       setLoading(false)
     }
@@ -414,7 +425,7 @@ export default function AdminPage() {
           </Button>
           <Button 
             variant={activeTab === 'supply' ? 'default' : 'outline'}
-            onClick={() => setActiveTab('supply')}
+            onClick={() => { setActiveTab('supply'); if (nodes.length === 0) fetchSupplyData(); }}
           >
             <Server className="h-4 w-4 mr-2" />
             Supply

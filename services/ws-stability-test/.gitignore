@@ -1,0 +1,8 @@
+# Build artifacts
+server/ws-stability-server
+sdk/build/
+build/
+releases/*/ws-stability-server-tls
+releases/*/*.jar
+releases/*/StabilityTestSDK.java
+releases/*/main.go

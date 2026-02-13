@@ -1,0 +1,9 @@
+{
+  "testName": "leak-test",
+  "timestamp": "2026-02-12T17:18:15.824Z",
+  "duration": 229,
+  "passed": false,
+  "exitCode": 0,
+  "summary": {},
+  "output": "🔍 IPLoop IP Leak Detection Test\n==================================================\n\nDetecting server real IP...\nServer real IP: 178.128.172.81\n\n--- Test 1: Proxy IP Check ---\n❌ Error: \n\n--- Test 2: Header Leak Check ---\n❌ Error: \n\n--- Test 3: Consistency Check ---\napi.ipify.org?format=json: Error - \nip-api.com: Error - \nhttpbin.org: Error - \n\n--- Test 4: Fingerprint Check ---\nError: \n\n==================================================\nLEAK TEST SUMMARY\n==================================================\nIssues found:\n  🔴 IP check failed: \n"
+}

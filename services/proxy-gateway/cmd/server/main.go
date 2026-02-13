@@ -82,9 +82,14 @@ func main() {
 	warmPool := nodepool.NewWarmPool(nodePool, nodeRegURL, logger)
 	defer warmPool.Stop()
 
+	// Initialize pre-opened tunnel pool
+	tunnelPool := nodepool.NewTunnelPool(nodePool, warmPool, nodeRegURL, logger)
+	defer tunnelPool.Stop()
+
 	// Initialize proxy servers (with WebSocket node pool for real-time routing)
 	httpProxy := proxy.NewHTTPProxy(authenticator, nodePool, wsNodePool, metricsCollector, logger)
 	httpProxy.SetWarmPool(warmPool)
+	httpProxy.SetTunnelPool(tunnelPool)
 	socksProxy := proxy.NewSOCKS5Proxy(authenticator, nodePool, wsNodePool, metricsCollector, logger)
 
 	// Start HTTP proxy server

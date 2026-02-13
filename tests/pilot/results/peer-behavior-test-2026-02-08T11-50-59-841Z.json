@@ -1,0 +1,11 @@
+{
+  "testName": "peer-behavior-test",
+  "timestamp": "2026-02-08T11:50:59.841Z",
+  "duration": 37994,
+  "passed": false,
+  "exitCode": 0,
+  "summary": {
+    "uniqueIps": 0
+  },
+  "output": "👥 Peer Behavior Test\n============================================================\nProxy: localhost:8080\n============================================================\n\n--- Test 1: Load Balancing Distribution ---\nMaking 100 requests to see IP distribution...\n\n  Progress: 25/100\n  Progress: 50/100\n  Progress: 75/100\n  Progress: 100/100\n\nUnique IPs: 0\nUnique ISPs: 0\n\nIP Usage distribution:\n  Min: Infinity, Max: -Infinity, Avg: NaN\n\nTop 5 IPs:\n\nFairness score: 0%\n\n--- Test 2: Geographic Distribution ---\nChecking country distribution without targeting...\n\nCountry distribution:\n\n--- Test 3: Session Isolation ---\nTesting that different sessions get different treatment...\n\nSession stickiness:\n  session_A: ❌ Changed (0 unique IPs)\n  session_B: ❌ Changed (0 unique IPs)\n  session_C: ❌ Changed (0 unique IPs)\n\nSession isolation: 0 unique IPs across all sessions\n\n--- Test 4: Unavailable Target Handling ---\nTesting request to unavailable country...\n\nError: ECONNREFUSED\nProxy properly reported unavailable\n\n--- Test 5: Rapid Session Creation ---\nCreating 50 sessions rapidly...\n\nSuccess: 0/50\nUnique IPs assigned: 0\n\n============================================================\nPEER BEHAVIOR TEST RESULTS\n============================================================\n❌ Load Balancing\n❌ Geo Distribution\n❌ Session Isolation\n✅ Unavailable Target\n❌ Rapid Session Creation\n\nPassed: 1/5\n"
+}

@@ -57,6 +57,11 @@ type TunnelDataMessage struct {
 }
 
 // NewTunnelManager creates a new tunnel manager
+// GetHub returns the hub for node connection checks.
+func (tm *TunnelManager) GetHub() *Hub {
+	return tm.hub
+}
+
 func NewTunnelManager(hub *Hub, logger *logrus.Entry) *TunnelManager {
 	tm := &TunnelManager{
 		hub:     hub,

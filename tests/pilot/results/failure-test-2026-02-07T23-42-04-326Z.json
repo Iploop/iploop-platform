@@ -1,0 +1,9 @@
+{
+  "testName": "failure-test",
+  "timestamp": "2026-02-07T23:42:04.326Z",
+  "duration": 99,
+  "passed": false,
+  "exitCode": 0,
+  "summary": {},
+  "output": "🔥 IPLoop Failure & Recovery Test\n============================================================\nProxy: localhost:8080\n============================================================\n\nValid request (baseline)                ... ❌ Got: , Expected: {\"statusCode\":200}\nTarget timeout (10s delay, 5s timeout)  ... ✅ HTTP undefined (3ms)\nTarget 404                              ... ❌ Got: , Expected: {\"statusCode\":404}\nTarget 500                              ... ❌ Got: , Expected: {\"statusCode\":500}\nInvalid auth (wrong password)           ... ❌ Got: , Expected: {\"statusCode\":407}\nInvalid auth (empty)                    ... ✅ HTTP undefined (2ms)\nNon-existent domain                     ... ✅ HTTP undefined (2ms)\nConnection refused port                 ... ✅ HTTP undefined (1ms)\nLarge redirect chain                    ... ❌ Got: , Expected: {\"statusCode\":200}\nRecovery after failure                  ... ❌ Got: , Expected: {\"statusCode\":200}\n\n============================================================\nFAILURE HANDLING SUMMARY\n============================================================\nTests passed: 4/10\n\nFailed tests:\n  ❌ Valid request (baseline)\n  ❌ Target 404\n  ❌ Target 500\n  ❌ Invalid auth (wrong password)\n  ❌ Large redirect chain\n  ❌ Recovery after failure\n\n⚠️  Proxy may not have recovered properly after failures\n"
+}

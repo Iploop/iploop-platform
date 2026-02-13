@@ -7,10 +7,13 @@ export async function POST(request: Request) {
   try {
     const body = await request.json()
     
+    // Extract portalType for future backend differentiation, pass everything through
+    const { portalType, ...credentials } = body
+    
     const response = await fetch(`${CUSTOMER_API_URL}/api/v1/auth/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body)
+      body: JSON.stringify(credentials)
     })
 
     const data = await response.json()

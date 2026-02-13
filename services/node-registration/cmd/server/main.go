@@ -162,6 +162,11 @@ func main() {
 		tunnelHandler.HandleTunnelWebSocket(c.Writer, c.Request)
 	})
 
+	// Internal standby tunnel endpoint (pre-opened tunnel pool)
+	router.GET("/internal/tunnel-standby", func(c *gin.Context) {
+		tunnelHandler.HandleTunnelStandby(c.Writer, c.Request)
+	})
+
 	server := &http.Server{
 		Addr:    ":" + cfg.Port,
 		Handler: router,

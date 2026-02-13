@@ -1,0 +1,13 @@
+{
+  "testName": "sticky-stress",
+  "timestamp": "2026-02-12T08:13:38.610Z",
+  "duration": 12627,
+  "passed": false,
+  "exitCode": 0,
+  "summary": {
+    "failed": 0,
+    "totalRequests": 0,
+    "errors": 500
+  },
+  "output": "🔗 IPLoop Sticky Session Stress Test\n============================================================\nProxy: localhost:8080\nConcurrent sessions: 50\nRequests per session: 10\nSession lifetime: 60s\n============================================================\n\n[5.0s] Sessions: 0/50 | Requests: 0 | Sticky OK: 0 | Failed: 0\n[10.0s] Sessions: 0/50 | Requests: 0 | Sticky OK: 0 | Failed: 0\n\n============================================================\n📊 STICKY SESSION STRESS RESULTS\n============================================================\nDuration: 12.6s\nTotal sessions: 50\nTotal requests: 0\n\nSession Results:\n  ✅ Sticky maintained: 0 (0.0%)\n  ❌ Sticky broken: 0\n  ⚠️  Request errors: 500\n\n============================================================\n❌ FAIL: Significant session stickiness problems\n"
+}

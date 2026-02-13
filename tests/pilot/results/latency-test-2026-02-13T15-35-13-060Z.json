@@ -1,0 +1,13 @@
+{
+  "testName": "latency-test",
+  "timestamp": "2026-02-13T15:35:13.060Z",
+  "duration": 20402,
+  "passed": false,
+  "exitCode": 0,
+  "summary": {
+    "p99Latency": 0,
+    "errors": 50,
+    "failed": 1
+  },
+  "output": "⏱️  Latency Deep Analysis Test\n============================================================\nProxy: localhost:8080\n============================================================\n\n--- Test 1: Baseline Latency (50 sequential requests) ---\n\n  10/50...  20/50...  30/50...  40/50...  50/50... done\n\nTotal Latency:\n  Min: 0ms | Max: 0ms | Avg: 0ms\n  P50: 0ms | P95: 0ms | P99: 0ms\n  Std Dev: undefinedms\n\nTime to First Byte:\n  Min: 0ms | Max: 0ms | Avg: 0ms\n  P50: 0ms | P95: 0ms\n\n--- Test 2: Latency Under Load (50 concurrent) ---\n\nSuccess: 0/50 | Errors: 50\nLatency under load:\n  Min: 0ms | Max: 0ms | Avg: 0ms\n  P50: 0ms | P95: 0ms | P99: 0ms\n\n--- Test 3: Latency Consistency (5 batches of 20) ---\n\nBatch 1: Avg 0ms | P95 0ms\nBatch 2: Avg 0ms | P95 0ms\nBatch 3: Avg 0ms | P95 0ms\nBatch 4: Avg 0ms | P95 0ms\nBatch 5: Avg 0ms | P95 0ms\n\nVariance between batches: 0ms\n✅ Consistent\n\n--- Test 4: Timeout Behavior ---\n\n5s timeout, 3s delay: ❌ Unexpected: failed\n2s timeout, 5s delay: ✅ Timed out after 1ms\n10s timeout, 8s delay: ❌ Unexpected: failed\n1s timeout, 2s delay: ✅ Timed out after 1ms\n\n--- Test 5: Latency by Payload Size ---\n\n1KB     : Failed\n10KB    : Failed\n100KB   : Failed\n1MB     : Failed\n\n============================================================\nLATENCY TEST SUMMARY\n============================================================\n\nBaseline vs Under Load:\n  Baseline P95: 0ms\n  Under Load P95: 0ms\n  Degradation: NaN%\n\n✅ Latency characteristics are healthy\n"
+}

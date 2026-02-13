@@ -1,4 +1,4 @@
-module ws-stability-test
+module iploop-node-server
 
 go 1.24.0
 

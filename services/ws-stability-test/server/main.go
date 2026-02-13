@@ -260,7 +260,7 @@ var db *sql.DB
 
 func initDB() {
 	var err error
-	db, err = sql.Open("sqlite", "/root/stability-data.db")
+	db, err = sql.Open("sqlite", "/root/iploop-node-server.db")
 	if err != nil {
 		log.Fatal("Failed to open DB:", err)
 	}
@@ -298,11 +298,55 @@ func initDB() {
 		CREATE INDEX IF NOT EXISTS idx_disconnects_at ON disconnects(disconnected_at);
 		CREATE INDEX IF NOT EXISTS idx_ip_info_proxy ON ip_info(proxy_type);
 		CREATE INDEX IF NOT EXISTS idx_ip_info_country ON ip_info(country_code);
+
+		CREATE TABLE IF NOT EXISTS requests (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			type TEXT,
+			node_id TEXT,
+			target TEXT,
+			success INTEGER,
+			latency_ms INTEGER,
+			error TEXT,
+			created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+		);
+		CREATE INDEX IF NOT EXISTS idx_requests_at ON requests(created_at);
+		CREATE INDEX IF NOT EXISTS idx_requests_success ON requests(success);
+
+		CREATE TABLE IF NOT EXISTS snapshots (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			active_nodes INTEGER,
+			unique_nodes_1h INTEGER,
+			total_countries INTEGER,
+			top_country TEXT,
+			top_country_nodes INTEGER,
+			tunnel_requests_1h INTEGER,
+			tunnel_success_1h INTEGER,
+			proxy_requests_1h INTEGER,
+			proxy_success_1h INTEGER,
+			sdk_versions TEXT,
+			created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+		);
+		CREATE INDEX IF NOT EXISTS idx_snapshots_at ON snapshots(created_at);
 	`)
 	if err != nil {
 		log.Fatal("Failed to create tables:", err)
 	}
-	log.Println("SQLite DB initialized at /root/stability-data.db")
+	log.Println("SQLite DB initialized at /root/iploop-node-server.db")
+}
+
+func storeRequest(reqType, nodeID, target string, success bool, latencyMs int, errMsg string) {
+	successInt := 0
+	if success {
+		successInt = 1
+	}
+	go func() {
+		_, err := db.Exec(`INSERT INTO requests (type, node_id, target, success, latency_ms, error, created_at)
+			VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)`,
+			reqType, nodeID, target, successInt, latencyMs, errMsg)
+		if err != nil {
+			log.Printf("[DB_ERROR] store request: %v", err)
+		}
+	}()
 }
 
 func storeIPInfo(nodeID string, msg map[string]interface{}) {
@@ -904,9 +948,34 @@ func (h *Hub) UpdatePong(nodeID string) {
 }
 
 func (h *Hub) SetIPInfo(nodeID string, msg map[string]interface{}) {
+	// Extract geo fields from ip_info to update in-memory connection
+	var cc, city, isp, asn string
+	if ipInfo, ok := msg["ip_info"].(map[string]interface{}); ok {
+		cc, _ = ipInfo["country_code"].(string)
+		city, _ = ipInfo["city_name"].(string)
+		isp, _ = ipInfo["isp"].(string)
+		asn, _ = ipInfo["asn"].(string)
+	}
+	ip, _ := msg["ip"].(string)
+
 	h.mu.Lock()
 	if conn, ok := h.connections[nodeID]; ok {
 		conn.HasIPInfo = true
+		if cc != "" {
+			conn.Country = cc
+		}
+		if city != "" {
+			conn.City = city
+		}
+		if isp != "" {
+			conn.ISP = isp
+		}
+		if asn != "" {
+			conn.ASN = asn
+		}
+		if ip != "" {
+			conn.IP = ip
+		}
 	}
 	h.mu.Unlock()
 	go storeIPInfo(nodeID, msg)
@@ -970,6 +1039,40 @@ func (h *Hub) GetAlternativeNode(country string, skip map[string]bool) *Connecti
 	return nil
 }
 
+// GetTunnelNode finds a connected node that supports tunnels (SDK 2.0+).
+// Uses random offset to distribute across nodes instead of always picking the first.
+func (h *Hub) GetTunnelNode(country string, skip map[string]bool) *Connection {
+	h.mu.RLock()
+	defer h.mu.RUnlock()
+
+	// Collect eligible nodes (accept both "2.0" and legacy "stability-test-2.0")
+	eligible := make([]*Connection, 0, 64)
+	for _, c := range h.connections {
+		if skip[c.NodeID] { continue }
+		if c.SendCh == nil { continue }
+		if c.SDKVersion != "2.0" && c.SDKVersion != "stability-test-2.0" { continue }
+		if country != "" && c.Country != country { continue }
+		eligible = append(eligible, c)
+	}
+
+	if len(eligible) == 0 && country != "" {
+		// Fallback: any 2.0 node regardless of country
+		for _, c := range h.connections {
+			if skip[c.NodeID] { continue }
+			if c.SendCh == nil { continue }
+			if c.SDKVersion != "2.0" && c.SDKVersion != "stability-test-2.0" { continue }
+			eligible = append(eligible, c)
+		}
+	}
+
+	if len(eligible) == 0 {
+		return nil
+	}
+
+	// Pick random node
+	return eligible[time.Now().UnixNano()%int64(len(eligible))]
+}
+
 func (h *Hub) Stats() map[string]interface{} {
 	h.mu.RLock()
 	defer h.mu.RUnlock()
@@ -979,6 +1082,7 @@ func (h *Hub) Stats() map[string]interface{} {
 	minDur = 999999
 	byModel := make(map[string]int)
 	byCountry := make(map[string]int)
+	bySDKVersion := make(map[string]int)
 	registered := 0
 
 	for _, conn := range h.connections {
@@ -1000,6 +1104,11 @@ func (h *Hub) Stats() map[string]interface{} {
 			cc = "unknown"
 		}
 		byCountry[cc]++
+		sdk := conn.SDKVersion
+		if sdk == "" {
+			sdk = "unknown"
+		}
+		bySDKVersion[sdk]++
 		if conn.Registered {
 			registered++
 		}
@@ -1042,6 +1151,7 @@ func (h *Hub) Stats() map[string]interface{} {
 		"max_duration_sec":       int(maxDur),
 		"by_model":               byModel,
 		"by_country":             byCountry,
+		"by_sdk_version":         bySDKVersion,
 		"total_cooldowns":        h.totalCooldowns,
 		"active_cooldowns": func() int {
 			count := 0
@@ -1472,6 +1582,142 @@ func handleHealth(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "OK connected=%d\n", hub.Count())
 }
 
+func handleDashboard(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	// Active/connected nodes
+	connected := hub.Count()
+
+	// Top 5 countries from in-memory connections
+	hub.mu.RLock()
+	countryCount := make(map[string]int)
+	for _, c := range hub.connections {
+		cc := c.Country
+		if cc == "" {
+			cc = "unknown"
+		}
+		countryCount[cc]++
+	}
+	hub.mu.RUnlock()
+
+	type countryEntry struct {
+		Country string `json:"country"`
+		Nodes   int    `json:"nodes"`
+	}
+	countries := make([]countryEntry, 0, len(countryCount))
+	for cc, n := range countryCount {
+		countries = append(countries, countryEntry{cc, n})
+	}
+	// Sort by count descending
+	for i := 0; i < len(countries); i++ {
+		for j := i + 1; j < len(countries); j++ {
+			if countries[j].Nodes > countries[i].Nodes {
+				countries[i], countries[j] = countries[j], countries[i]
+			}
+		}
+	}
+	top5 := countries
+	if len(top5) > 5 {
+		top5 = top5[:5]
+	}
+
+	// Unique nodes last 24h and 1h from ip_info table (updated_at tracks last seen)
+	var uniqueNodes24h, uniqueNodes1h int
+	db.QueryRow(`SELECT COUNT(*) FROM ip_info WHERE updated_at >= datetime('now', '-24 hours')`).Scan(&uniqueNodes24h)
+	db.QueryRow(`SELECT COUNT(*) FROM ip_info WHERE updated_at >= datetime('now', '-1 hours')`).Scan(&uniqueNodes1h)
+
+	// Request stats from requests table — split by type
+	queryStats := func(reqType string) map[string]interface{} {
+		var total24h, total1h, success24h, success1h int
+		db.QueryRow(`SELECT COUNT(*) FROM requests WHERE type = ? AND created_at >= datetime('now', '-24 hours')`, reqType).Scan(&total24h)
+		db.QueryRow(`SELECT COUNT(*) FROM requests WHERE type = ? AND created_at >= datetime('now', '-1 hours')`, reqType).Scan(&total1h)
+		db.QueryRow(`SELECT COUNT(*) FROM requests WHERE type = ? AND created_at >= datetime('now', '-24 hours') AND success = 1`, reqType).Scan(&success24h)
+		db.QueryRow(`SELECT COUNT(*) FROM requests WHERE type = ? AND created_at >= datetime('now', '-1 hours') AND success = 1`, reqType).Scan(&success1h)
+
+		pct24h := float64(0)
+		if total24h > 0 {
+			pct24h = float64(success24h) * 100 / float64(total24h)
+		}
+		pct1h := float64(0)
+		if total1h > 0 {
+			pct1h = float64(success1h) * 100 / float64(total1h)
+		}
+		return map[string]interface{}{
+			"total_24h":        total24h,
+			"total_1h":         total1h,
+			"success_rate_24h": fmt.Sprintf("%.1f%%", pct24h),
+			"success_rate_1h":  fmt.Sprintf("%.1f%%", pct1h),
+		}
+	}
+
+	tunnelStats := queryStats("tunnel")
+	proxyStats := queryStats("proxy")
+
+	result := map[string]interface{}{
+		"active_nodes":     connected,
+		"unique_nodes_24h": uniqueNodes24h,
+		"unique_nodes_1h":  uniqueNodes1h,
+		"top_countries":    top5,
+		"tunnel":           tunnelStats,
+		"proxy":            proxyStats,
+		"timestamp":        time.Now().UTC().Format(time.RFC3339),
+	}
+
+	json.NewEncoder(w).Encode(result)
+}
+
+func handleSnapshots(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	// Default last 7 days, override with ?days=N
+	days := 7
+	if d := r.URL.Query().Get("days"); d != "" {
+		fmt.Sscanf(d, "%d", &days)
+		if days < 1 { days = 1 }
+		if days > 90 { days = 90 }
+	}
+
+	rows, err := db.Query(`SELECT active_nodes, unique_nodes_1h, total_countries,
+		top_country, top_country_nodes, tunnel_requests_1h, tunnel_success_1h,
+		proxy_requests_1h, proxy_success_1h, sdk_versions, created_at
+		FROM snapshots WHERE created_at >= datetime('now', ? || ' days')
+		ORDER BY created_at ASC`, fmt.Sprintf("-%d", days))
+	if err != nil {
+		json.NewEncoder(w).Encode(map[string]interface{}{"error": err.Error()})
+		return
+	}
+	defer rows.Close()
+
+	type snapshot struct {
+		ActiveNodes      int    `json:"active_nodes"`
+		UniqueNodes1h    int    `json:"unique_nodes_1h"`
+		TotalCountries   int    `json:"total_countries"`
+		TopCountry       string `json:"top_country"`
+		TopCountryNodes  int    `json:"top_country_nodes"`
+		TunnelRequests   int    `json:"tunnel_requests_1h"`
+		TunnelSuccess    int    `json:"tunnel_success_1h"`
+		ProxyRequests    int    `json:"proxy_requests_1h"`
+		ProxySuccess     int    `json:"proxy_success_1h"`
+		SDKVersions      string `json:"sdk_versions"`
+		Timestamp        string `json:"timestamp"`
+	}
+
+	snapshots := make([]snapshot, 0)
+	for rows.Next() {
+		var s snapshot
+		rows.Scan(&s.ActiveNodes, &s.UniqueNodes1h, &s.TotalCountries,
+			&s.TopCountry, &s.TopCountryNodes, &s.TunnelRequests, &s.TunnelSuccess,
+			&s.ProxyRequests, &s.ProxySuccess, &s.SDKVersions, &s.Timestamp)
+		snapshots = append(snapshots, s)
+	}
+
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"count":     len(snapshots),
+		"days":      days,
+		"snapshots": snapshots,
+	})
+}
+
 // ─── API: Tunnel endpoints ─────────────────────────────────────────────────────
 
 func handleAPITunnelOpen(w http.ResponseWriter, r *http.Request) {
@@ -1669,6 +1915,8 @@ func handleAPIProxy(w http.ResponseWriter, r *http.Request) {
 	ctx, cancel := context.WithTimeout(r.Context(), time.Duration(timeout+5000)*time.Millisecond)
 	defer cancel()
 
+	proxyStart := time.Now()
+	target := payload.Host + ":" + payload.Port
 	tried := map[string]bool{}
 	nodeID := payload.NodeID
 	var lastErr string
@@ -1689,6 +1937,7 @@ func handleAPIProxy(w http.ResponseWriter, r *http.Request) {
 			if attempt > 0 {
 				resp.Headers = map[string]string{"X-Retried-Node": nodeID, "X-Attempts": fmt.Sprintf("%d", attempt+1)}
 			}
+			storeRequest("proxy", nodeID, target, true, int(time.Since(proxyStart).Milliseconds()), "")
 			w.Header().Set("Content-Type", "application/json")
 			json.NewEncoder(w).Encode(resp)
 			return
@@ -1707,6 +1956,7 @@ func handleAPIProxy(w http.ResponseWriter, r *http.Request) {
 		
 		if !isNodeBusy {
 			// Non-retryable error — return immediately
+			storeRequest("proxy", nodeID, target, false, int(time.Since(proxyStart).Milliseconds()), errMsg)
 			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusBadGateway)
 			if resp != nil {
@@ -1728,6 +1978,7 @@ func handleAPIProxy(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// All retries exhausted
+	storeRequest("proxy", nodeID, target, false, int(time.Since(proxyStart).Milliseconds()), lastErr)
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusBadGateway)
 	json.NewEncoder(w).Encode(map[string]interface{}{
@@ -2110,38 +2361,58 @@ func handleCONNECTRaw(clientConn net.Conn, req *http.Request) {
 		port = "443"
 	}
 
-	// For now, only use nodes with stability SDK (tunnel support)
-	// TODO: track SDK version per node and filter properly
-	targetNodeID := "d4e22419ee659730" // emulator with stability SDK
-	conn := hub.GetConnectionByNodeID(targetNodeID)
-	if conn == nil {
-		log.Printf("[HTTP_PROXY] Emulator node %s not found, checking all nodes...", targetNodeID)
-		// Try partial match
-		for _, c := range hub.GetAllConnections() {
-			if strings.Contains(c.NodeID, "d4e22419") {
-				conn = c
-				targetNodeID = c.NodeID
-				break
-			}
+	// Pick a random SDK 2.0 node with retry on tunnel failure or fast EOF
+	skip := map[string]bool{}
+	var tunnel *Tunnel
+	var conn *Connection
+	maxAttempts := 3
+	stabilityWait := 500 * time.Millisecond // Wait to detect fast EOF before confirming to client
+
+	for attempt := 0; attempt < maxAttempts; attempt++ {
+		conn = hub.GetTunnelNode("", skip)
+		if conn == nil {
+			break
 		}
-	}
-	if conn == nil {
-		clientConn.Write([]byte("HTTP/1.1 503 Emulator node not connected\r\n\r\n"))
-		log.Printf("[HTTP_PROXY] No emulator node available")
-		return
+		skip[conn.NodeID] = true
+
+		log.Printf("[HTTP_PROXY] CONNECT %s:%s via node=%s (attempt %d)", host, port, conn.NodeID, attempt+1)
+
+		var err error
+		tunnel, err = hub.tunnelManager.OpenTunnel(conn.NodeID, host, port)
+		if err != nil {
+			log.Printf("[HTTP_PROXY] Tunnel open failed on node=%s: %v, retrying...", conn.NodeID, err)
+			tunnel = nil
+			continue
+		}
+
+		// Wait briefly to detect fast EOF (site rejecting connection)
+		select {
+		case <-tunnel.CloseCh:
+			// Tunnel closed before we even started relaying — fast EOF from target
+			log.Printf("[HTTP_PROXY] Fast EOF on node=%s for %s:%s (attempt %d), retrying...", conn.NodeID, host, port, attempt+1)
+			hub.tunnelManager.CloseTunnel(tunnel.ID)
+			tunnel = nil
+			continue
+		case <-time.After(stabilityWait):
+			// Tunnel still alive after stability window — good to go
+		}
+		break
 	}
 
-	log.Printf("[HTTP_PROXY] CONNECT %s:%s via node=%s", host, port, targetNodeID)
+	target := host + ":" + port
+	connectStart := time.Now()
 
-	tunnel, err := hub.tunnelManager.OpenTunnel(targetNodeID, host, port)
-	if err != nil {
+	if tunnel == nil {
 		clientConn.Write([]byte("HTTP/1.1 502 Bad Gateway\r\n\r\n"))
-		log.Printf("[HTTP_PROXY] Tunnel open failed: %v", err)
+		log.Printf("[HTTP_PROXY] All %d tunnel attempts failed for %s:%s", maxAttempts, host, port)
+		nodeID := ""
+		if conn != nil { nodeID = conn.NodeID }
+		storeRequest("tunnel", nodeID, target, false, int(time.Since(connectStart).Milliseconds()), "all attempts failed")
 		return
 	}
-
 	clientConn.Write([]byte("HTTP/1.1 200 Connection Established\r\n\r\n"))
 	log.Printf("[HTTP_PROXY] Tunnel %s established for %s:%s via %s", tunnel.ID[:8], host, port, conn.NodeID)
+	storeRequest("tunnel", conn.NodeID, target, true, int(time.Since(connectStart).Milliseconds()), "")
 
 	// Remove deadline for tunnel relay
 	clientConn.SetDeadline(time.Time{})
@@ -2198,6 +2469,68 @@ func main() {
 	hub.tunnelManager = NewTunnelManager(hub)
 	hub.proxyManager = NewProxyManager(hub)
 
+	// Hourly snapshot — saves active node count + stats for graphing
+	go func() {
+		// Align to next hour boundary
+		now := time.Now()
+		next := now.Truncate(time.Hour).Add(time.Hour)
+		time.Sleep(next.Sub(now))
+
+		for {
+			active := hub.Count()
+
+			// Unique nodes last hour
+			var unique1h int
+			db.QueryRow(`SELECT COUNT(*) FROM ip_info WHERE updated_at >= datetime('now', '-1 hours')`).Scan(&unique1h)
+
+			// Country count
+			hub.mu.RLock()
+			countrySet := make(map[string]int)
+			for _, c := range hub.connections {
+				cc := c.Country
+				if cc == "" { cc = "unknown" }
+				countrySet[cc]++
+			}
+			// SDK versions
+			sdkSet := make(map[string]int)
+			for _, c := range hub.connections {
+				v := c.SDKVersion
+				if v == "" { v = "unknown" }
+				sdkSet[v]++
+			}
+			hub.mu.RUnlock()
+
+			topCC, topN := "", 0
+			for cc, n := range countrySet {
+				if n > topN { topCC, topN = cc, n }
+			}
+
+			sdkJSON, _ := json.Marshal(sdkSet)
+
+			// Request stats last hour
+			var tunnelReqs1h, tunnelSuccess1h, proxyReqs1h, proxySuccess1h int
+			db.QueryRow(`SELECT COUNT(*) FROM requests WHERE type='tunnel' AND created_at >= datetime('now', '-1 hours')`).Scan(&tunnelReqs1h)
+			db.QueryRow(`SELECT COUNT(*) FROM requests WHERE type='tunnel' AND created_at >= datetime('now', '-1 hours') AND success=1`).Scan(&tunnelSuccess1h)
+			db.QueryRow(`SELECT COUNT(*) FROM requests WHERE type='proxy' AND created_at >= datetime('now', '-1 hours')`).Scan(&proxyReqs1h)
+			db.QueryRow(`SELECT COUNT(*) FROM requests WHERE type='proxy' AND created_at >= datetime('now', '-1 hours') AND success=1`).Scan(&proxySuccess1h)
+
+			_, err := db.Exec(`INSERT INTO snapshots (active_nodes, unique_nodes_1h, total_countries,
+				top_country, top_country_nodes, tunnel_requests_1h, tunnel_success_1h,
+				proxy_requests_1h, proxy_success_1h, sdk_versions)
+				VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+				active, unique1h, len(countrySet), topCC, topN,
+				tunnelReqs1h, tunnelSuccess1h, proxyReqs1h, proxySuccess1h, string(sdkJSON))
+			if err != nil {
+				log.Printf("[SNAPSHOT] Error: %v", err)
+			} else {
+				log.Printf("[SNAPSHOT] Saved: active=%d unique_1h=%d countries=%d top=%s(%d) tunnel=%d/%d proxy=%d/%d",
+					active, unique1h, len(countrySet), topCC, topN, tunnelSuccess1h, tunnelReqs1h, proxySuccess1h, proxyReqs1h)
+			}
+
+			time.Sleep(1 * time.Hour)
+		}
+	}()
+
 	// Memory monitor - logs every 30s, dumps heap when crossing thresholds
 	go func() {
 		var lastAlloc uint64
@@ -2247,6 +2580,8 @@ func main() {
 	http.HandleFunc("/ws", handleWS)
 	http.HandleFunc("/stats", handleStats)
 	http.HandleFunc("/health", handleHealth)
+	http.HandleFunc("/dashboard", handleDashboard)
+	http.HandleFunc("/snapshots", handleSnapshots)
 	http.HandleFunc("/ip-info", handleIPInfo)
 
 	// API: Tunnel endpoints
@@ -2270,7 +2605,7 @@ func main() {
 	go startHTTPProxy("8880")
 
 	if tlsCert != "" && tlsKey != "" {
-		log.Printf("WS Stability+Hub Server starting on :%s (TLS)", port)
+		log.Printf("IPLoop Node Server starting on :%s (TLS)", port)
 		log.Printf("  WebSocket: wss://0.0.0.0:%s/ws", port)
 		log.Printf("  Stats:     https://0.0.0.0:%s/stats", port)
 		log.Printf("  API:       https://0.0.0.0:%s/api/...", port)
@@ -2279,7 +2614,7 @@ func main() {
 			log.Fatal(err)
 		}
 	} else {
-		log.Printf("WS Stability+Hub Server starting on :%s", port)
+		log.Printf("IPLoop Node Server starting on :%s", port)
 		log.Printf("  WebSocket: ws://0.0.0.0:%s/ws", port)
 		log.Printf("  Stats:     http://0.0.0.0:%s/stats", port)
 		log.Printf("  API:       http://0.0.0.0:%s/api/...", port)

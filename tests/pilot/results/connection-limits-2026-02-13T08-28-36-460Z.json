@@ -1,0 +1,9 @@
+{
+  "testName": "connection-limits",
+  "timestamp": "2026-02-13T08:28:36.460Z",
+  "duration": 2156,
+  "passed": true,
+  "exitCode": 0,
+  "summary": {},
+  "output": "🔌 Connection Limits Test\n============================================================\n\n--- Test 1: Rapid Connection Burst (100 simultaneous) ---\nAttempted: 100\nConnected: 0\nMax concurrent: 100\nErrors: {\"ECONNREFUSED\":100}\n\n--- Test 2: Connection Holding (20 x 5s each) ---\n\nCompleted: 0/20\nMax concurrent held: 1\n\n--- Test 3: Escalating Load (find breaking point) ---\nTesting 50 connections... 0.0% success\n  ⚠️  Breaking point around 50 connections\n  Errors: {\"ECONNREFUSED\":50}\n\n============================================================\nConnection limits test complete\n"
+}

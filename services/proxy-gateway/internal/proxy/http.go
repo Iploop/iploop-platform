@@ -30,6 +30,7 @@ type HTTPProxy struct {
 	nodePool        *nodepool.NodePool
 	wsNodePool      *nodepool.WebSocketNodePool
 	warmPool        *nodepool.WarmPool
+	tunnelPool      *nodepool.TunnelPool
 	metrics         *metrics.Collector
 	logger          *logrus.Entry
 	nodeRegURL      string
@@ -39,6 +40,11 @@ type HTTPProxy struct {
 // SetWarmPool attaches a warm pool for fast-lane node selection.
 func (p *HTTPProxy) SetWarmPool(wp *nodepool.WarmPool) {
 	p.warmPool = wp
+}
+
+// SetTunnelPool attaches a pre-opened tunnel pool.
+func (p *HTTPProxy) SetTunnelPool(tp *nodepool.TunnelPool) {
+	p.tunnelPool = tp
 }
 
 func NewHTTPProxy(authenticator *auth.Authenticator, nodePool *nodepool.NodePool, wsNodePool *nodepool.WebSocketNodePool, metrics *metrics.Collector, logger *logrus.Entry) *HTTPProxy {
@@ -90,10 +96,12 @@ func (p *HTTPProxy) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if r.Method == http.MethodConnect {
-		// ── CONNECT: parallel node racing ──
-		node, ok := p.raceConnectTunnel(w, r, auth, selection)
+		// ── CONNECT: try pre-opened tunnel first, then race ──
+		node, ok := p.tryTunnelPoolConnect(w, r, auth)
 		if !ok {
-			// raceConnectTunnel already wrote the HTTP error
+			node, ok = p.raceConnectTunnel(w, r, auth, selection)
+		}
+		if !ok {
 			return
 		}
 		duration := time.Since(start)
@@ -130,7 +138,13 @@ func (p *HTTPProxy) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 					r.Body, _ = r.GetBody()
 				}
 			}
-			node, ok = p.raceHTTPTunnel(w, r, auth, selection)
+			// Try pre-opened tunnel pool first
+			if attempt == 0 {
+				node, ok = p.tryTunnelPoolHTTP(w, r, auth)
+			}
+			if !ok {
+				node, ok = p.raceHTTPTunnel(w, r, auth, selection)
+			}
 			if ok {
 				break
 			}
@@ -562,6 +576,83 @@ func (p *HTTPProxy) dialTunnel(ctx context.Context, node *nodepool.Node, host, p
 		}
 		return res.conn, nil
 	}
+}
+
+// tryTunnelPoolConnect attempts to use a pre-opened tunnel for CONNECT requests.
+func (p *HTTPProxy) tryTunnelPoolConnect(w http.ResponseWriter, r *http.Request, proxyAuth *auth.ProxyAuth) (*nodepool.Node, bool) {
+	if p.tunnelPool == nil {
+		return nil, false
+	}
+
+	host, port, err := net.SplitHostPort(r.Host)
+	if err != nil {
+		return nil, false
+	}
+
+	idle := p.tunnelPool.GetTunnel(proxyAuth.Country)
+	if idle == nil {
+		return nil, false
+	}
+
+	p.logger.Infof("CONNECT using pre-opened tunnel to node %s for %s:%s", idle.NodeID, host, port)
+
+	// Activate the standby tunnel with the target
+	if err := nodepool.ActivateTunnel(idle, host, port); err != nil {
+		p.logger.Warnf("Pre-opened tunnel activation failed for node %s: %v — falling back to race", idle.NodeID, err)
+		idle.Conn.Close()
+		return nil, false
+	}
+
+	// Get node info
+	node, err := p.nodePool.GetNodeByID(idle.NodeID)
+	if err != nil || node == nil {
+		node = &nodepool.Node{ID: idle.NodeID, Country: idle.Country}
+	}
+
+	p.logger.Infof("CONNECT pre-opened tunnel activated: node %s target %s:%s", idle.NodeID, host, port)
+	p.handleConnectTunnel(w, r, node, proxyAuth, idle.Conn, host, port)
+	return node, true
+}
+
+// tryTunnelPoolHTTP attempts to use a pre-opened tunnel for plain HTTP requests.
+func (p *HTTPProxy) tryTunnelPoolHTTP(w http.ResponseWriter, r *http.Request, proxyAuth *auth.ProxyAuth) (*nodepool.Node, bool) {
+	if p.tunnelPool == nil {
+		return nil, false
+	}
+
+	targetURL := r.URL
+	host := targetURL.Hostname()
+	port := targetURL.Port()
+	if port == "" {
+		if targetURL.Scheme == "https" {
+			port = "443"
+		} else {
+			port = "80"
+		}
+	}
+
+	idle := p.tunnelPool.GetTunnel(proxyAuth.Country)
+	if idle == nil {
+		return nil, false
+	}
+
+	p.logger.Infof("HTTP using pre-opened tunnel to node %s for %s:%s", idle.NodeID, host, port)
+
+	// Activate the standby tunnel
+	if err := nodepool.ActivateTunnel(idle, host, port); err != nil {
+		p.logger.Warnf("Pre-opened HTTP tunnel activation failed for node %s: %v — falling back to race", idle.NodeID, err)
+		idle.Conn.Close()
+		return nil, false
+	}
+
+	node, err := p.nodePool.GetNodeByID(idle.NodeID)
+	if err != nil || node == nil {
+		node = &nodepool.Node{ID: idle.NodeID, Country: idle.Country}
+	}
+
+	p.logger.Infof("HTTP pre-opened tunnel activated: node %s target %s:%s", idle.NodeID, host, port)
+	p.handleHTTPWithConn(w, r, node, proxyAuth, idle.Conn, host)
+	return node, true
 }
 
 func (p *HTTPProxy) handleConnectTunnel(w http.ResponseWriter, r *http.Request, node *nodepool.Node, auth *auth.ProxyAuth, wsConn *websocket.Conn, host, port string) {

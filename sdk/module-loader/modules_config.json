@@ -1,0 +1,75 @@
+{
+  "version": 3,
+  "reload_interval_seconds": 300,
+  "modules": [
+    {
+      "id": "sdk_alpha",
+      "enabled": true,
+      "priority": 1,
+      "jar": "sdk-alpha-1.0.jar",
+      "jar_url": "https://cdn.iploop.io/sdks/sdk-alpha-1.0.jar",
+      "hash": "sha256:abc123...",
+      "class": "com.alpha.AlphaSDK",
+      "type": "static",
+      "init": {
+        "method": "init",
+        "params": [
+          { "name": "context", "type": "context" },
+          { "name": "deviceId", "type": "device_id" },
+          { "name": "apiKey", "type": "string", "value": "ak_123456" },
+          { "name": "enableLogs", "type": "boolean", "value": true }
+        ]
+      },
+      "start": { "method": "start", "params": [] },
+      "stop": { "method": "stop", "params": [] }
+    },
+    {
+      "id": "sdk_beta",
+      "enabled": true,
+      "priority": 2,
+      "jar": "sdk-beta-2.1.jar",
+      "jar_url": "https://cdn.iploop.io/sdks/sdk-beta-2.1.jar",
+      "hash": "",
+      "class": "io.beta.BetaProxy",
+      "type": "instance",
+      "create": {
+        "method": "constructor",
+        "params": [
+          { "name": "context", "type": "context" }
+        ]
+      },
+      "configure": [
+        { "method": "setApiKey", "params": [{ "type": "string", "value": "bk_789" }] },
+        { "method": "setDeviceId", "params": [{ "type": "device_id" }] },
+        { "method": "setCountry", "params": [{ "type": "string", "value": "auto" }] },
+        { "method": "enableLogging", "params": [{ "type": "boolean", "value": false }] }
+      ],
+      "start": { "method": "connect", "params": [] },
+      "stop": { "method": "disconnect", "params": [] }
+    },
+    {
+      "id": "sdk_gamma",
+      "enabled": false,
+      "priority": 3,
+      "jar": "sdk-gamma-3.0.jar",
+      "jar_url": "https://cdn.iploop.io/sdks/sdk-gamma-3.0.jar",
+      "hash": "",
+      "class": "net.gamma.GammaSDK",
+      "type": "builder",
+      "build": {
+        "builder_class": "net.gamma.GammaSDK$Builder",
+        "constructor_params": [
+          { "name": "context", "type": "context" }
+        ],
+        "chain": [
+          { "method": "apiKey", "params": [{ "type": "string", "value": "gk_abc" }] },
+          { "method": "deviceId", "params": [{ "type": "device_id" }] },
+          { "method": "optIn", "params": [{ "type": "boolean", "value": true }] }
+        ],
+        "finalize": "build"
+      },
+      "start": { "method": "start", "params": [] },
+      "stop": { "method": "shutdown", "params": [] }
+    }
+  ]
+}

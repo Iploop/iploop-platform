@@ -164,6 +164,7 @@ func (a *NodeAgent) connect() error {
 		"device_model": dockerDeviceModel(),
 		"sdk_version":  "docker-" + version,
 		"os":           "docker",
+		"token":        a.token,
 	})
 	if err := a.safeWrite(websocket.TextMessage, hello); err != nil {
 		return fmt.Errorf("hello: %w", err)

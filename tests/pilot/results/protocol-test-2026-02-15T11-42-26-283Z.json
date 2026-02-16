@@ -1,0 +1,11 @@
+{
+  "testName": "protocol-test",
+  "timestamp": "2026-02-15T11:42:26.283Z",
+  "duration": 4734,
+  "passed": false,
+  "exitCode": 0,
+  "summary": {
+    "failed": 23
+  },
+  "output": "📡 Protocol Comprehensive Test\n============================================================\nProxy: localhost:8080\nTests: 23\n============================================================\n\nGET request                        ... ❌ \nPOST with JSON body                ... ❌ \nPOST with form data                ... ❌ \nPUT request                        ... ❌ \nDELETE request                     ... ❌ \nHEAD request                       ... ❌ \nOPTIONS request                    ... ❌ \nCustom headers preserved           ... ❌ \nUser-Agent preserved               ... ❌ \nGzip compressed response           ... ❌ \nDeflate compressed response        ... ❌ \nChunked response                   ... ❌ \nFollow redirect                    ... ❌ \nMultiple redirects (5)             ... ❌ \nAbsolute redirect                  ... ❌ \nSet-Cookie header received         ... ❌ \nSend cookies                       ... ❌ \nBinary response (image)            ... ❌ \nLarge response (100KB)             ... ❌ \nUTF-8 encoding                     ... ❌ \nStatus 201 Created                 ... ❌ \nStatus 204 No Content              ... ❌ \nStatus 418 Teapot                  ... ❌ \n\n============================================================\nPROTOCOL TEST RESULTS\n============================================================\nPassed: 0/23\nFailed: 23\n\nFailed tests:\n  ❌ GET request: \n  ❌ POST with JSON body: \n  ❌ POST with form data: \n  ❌ PUT request: \n  ❌ DELETE request: \n  ❌ HEAD request: \n  ❌ OPTIONS request: \n  ❌ Custom headers preserved: \n  ❌ User-Agent preserved: \n  ❌ Gzip compressed response: \n  ❌ Deflate compressed response: \n  ❌ Chunked response: \n  ❌ Follow redirect: \n  ❌ Multiple redirects (5): \n  ❌ Absolute redirect: \n  ❌ Set-Cookie header received: \n  ❌ Send cookies: \n  ❌ Binary response (image): \n  ❌ Large response (100KB): \n  ❌ UTF-8 encoding: \n  ❌ Status 201 Created: \n  ❌ Status 204 No Content: \n  ❌ Status 418 Teapot: \n"
+}

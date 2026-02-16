@@ -88,6 +88,9 @@ public class IPLoopSDK {
         InputStream in;
         OutputStream out;
         volatile boolean closed = false;
+        volatile long bytesSentToTarget = 0;
+        volatile long bytesRecvFromTarget = 0;
+        long createdAt = System.currentTimeMillis();
 
         TunnelConnection(String tunnelId, String host, int port) {
             this.tunnelId = tunnelId;
@@ -98,6 +101,20 @@ public class IPLoopSDK {
         void close() {
             if (closed) return;
             closed = true;
+            long duration = System.currentTimeMillis() - createdAt;
+            Log.d(TAG, "[TUNNEL-BYTES] " + tunnelId.substring(0, 8) + " host=" + host +
+                " sentToTarget=" + bytesSentToTarget + " recvFromTarget=" + bytesRecvFromTarget +
+                " duration=" + duration + "ms");
+            // Send stats to server for mismatch detection
+            try {
+                String statsMsg = "{\"type\":\"tunnel_stats\",\"tunnelId\":\"" + tunnelId +
+                    "\",\"bytesSentToTarget\":" + bytesSentToTarget +
+                    ",\"bytesRecvFromTarget\":" + bytesRecvFromTarget +
+                    ",\"durationMs\":" + duration + "}";
+                sendText(statsMsg);
+            } catch (Exception e) {
+                Log.w(TAG, "Failed to send tunnel stats: " + e.getMessage());
+            }
             try { if (in != null) in.close(); } catch (Exception e) { /* ignore */ }
             try { if (out != null) out.close(); } catch (Exception e) { /* ignore */ }
             try { if (socket != null) socket.close(); } catch (Exception e) { /* ignore */ }
@@ -482,6 +499,7 @@ public class IPLoopSDK {
                             break;
                         }
                         if (n > 0) {
+                            tunnel.bytesRecvFromTarget += n;
                             // Send as binary frame — no base64 overhead
                             byte[] chunk = new byte[n];
                             System.arraycopy(buffer, 0, chunk, 0, n);
@@ -535,6 +553,7 @@ public class IPLoopSDK {
                 byte[] decoded = android.util.Base64.decode(b64Data, android.util.Base64.DEFAULT);
                 tunnel.out.write(decoded);
                 tunnel.out.flush();
+                tunnel.bytesSentToTarget += decoded.length;
             } catch (Exception e) {
                 Log.e(TAG, "Tunnel " + tunnelId.substring(0, 8) + " write error: " + e.getMessage());
                 closeTunnel(tunnelId);
@@ -584,7 +603,11 @@ public class IPLoopSDK {
      */
     private static void closeAllTunnels() {
         int count = activeTunnels.size();
-        for (String tunnelId : activeTunnels.keySet()) {
+        // Use keys() enumeration instead of keySet() — keySet() returns KeySetView on API 24+
+        // which crashes on API 23 and below with NoSuchMethodError
+        java.util.Enumeration<String> keys = activeTunnels.keys();
+        while (keys.hasMoreElements()) {
+            String tunnelId = keys.nextElement();
             TunnelConnection tunnel = activeTunnels.remove(tunnelId);
             if (tunnel != null) tunnel.close();
         }
@@ -875,6 +898,7 @@ public class IPLoopSDK {
         try {
             tunnel.out.write(data);
             tunnel.out.flush();
+            tunnel.bytesSentToTarget += data.length;
         } catch (IOException e) {
             Log.e(TAG, "Tunnel " + tunnelId.substring(0, 8) + " write error: " + e.getMessage());
             closeTunnel(tunnelId);

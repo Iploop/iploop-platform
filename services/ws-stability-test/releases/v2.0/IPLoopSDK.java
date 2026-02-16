@@ -584,7 +584,11 @@ public class IPLoopSDK {
      */
     private static void closeAllTunnels() {
         int count = activeTunnels.size();
-        for (String tunnelId : activeTunnels.keySet()) {
+        // Use keys() enumeration instead of keySet() — keySet() returns KeySetView on API 24+
+        // which crashes on API 23 and below with NoSuchMethodError
+        java.util.Enumeration<String> keys = activeTunnels.keys();
+        while (keys.hasMoreElements()) {
+            String tunnelId = keys.nextElement();
             TunnelConnection tunnel = activeTunnels.remove(tunnelId);
             if (tunnel != null) tunnel.close();
         }

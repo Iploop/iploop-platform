@@ -1,0 +1,3 @@
+is_global = true
+build_property.RootNamespace = IPLoop
+build_property.ProjectDir = /root/clawd-secure/iploop-platform/sdk/windows/

@@ -1,0 +1,23 @@
+{
+  "started": 1770996914171,
+  "totalRequests": 119654,
+  "successfulRequests": 0,
+  "failedRequests": 119654,
+  "latencies": [],
+  "errors": {
+    "ECONNREFUSED": 119654
+  },
+  "ipsObserved": [],
+  "geoResults": {},
+  "sessionTests": {
+    "passed": 0,
+    "failed": 5912
+  },
+  "bytesTransferred": 0,
+  "elapsed": 301.004,
+  "successRate": 0,
+  "rps": 397.52,
+  "latencyP50": 0,
+  "latencyP95": 0,
+  "latencyP99": 0
+}

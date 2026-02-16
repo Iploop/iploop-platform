@@ -1,0 +1,9 @@
+{
+  "testName": "bandwidth-test",
+  "timestamp": "2026-02-15T23:28:42.239Z",
+  "duration": 82,
+  "passed": false,
+  "exitCode": 0,
+  "summary": {},
+  "output": "📊 IPLoop Bandwidth Test\n============================================================\nProxy: localhost:8080\n============================================================\n\nTesting 1KB            ... ❌ Error: \nTesting 10KB           ... ❌ Error: \nTesting 100KB          ... ❌ Error: \nTesting 1MB            ... ❌ Error: \nTesting Stream 10KB    ... ❌ Error: \nTesting Drip 5KB/1s    ... ❌ Error: \n\n============================================================\nBANDWIDTH SUMMARY\n============================================================\n\n❌ Failed tests: 1KB, 10KB, 100KB, 1MB, Stream 10KB, Drip 5KB/1s\n"
+}

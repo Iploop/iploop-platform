@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IPLoop — Enterprise Proxy Infrastructure</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+  
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  
+  @page { size: A4; margin: 0; }
+  
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    color: #0f172a;
+    background: #ffffff;
+    width: 210mm;
+    min-height: 297mm;
+    margin: 0 auto;
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* === HEADER === */
+  .header {
+    background: linear-gradient(145deg, #0a0a1a 0%, #111827 40%, #1e1b4b 100%);
+    padding: 42px 48px 36px;
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .header::after {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -10%;
+    width: 400px;
+    height: 400px;
+    background: radial-gradient(circle, rgba(99,102,241,0.15) 0%, transparent 70%);
+    border-radius: 50%;
+  }
+
+  .header-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 28px;
+    position: relative;
+    z-index: 1;
+  }
+
+  .logo {
+    font-size: 32px;
+    font-weight: 900;
+    color: #ffffff;
+    letter-spacing: -0.5px;
+  }
+
+  .logo span {
+    color: #818cf8;
+  }
+
+  .header-contact {
+    text-align: right;
+    font-size: 11px;
+    color: #94a3b8;
+    line-height: 1.8;
+  }
+
+  .header-contact a {
+    color: #a5b4fc;
+    text-decoration: none;
+  }
+
+  .headline {
+    position: relative;
+    z-index: 1;
+  }
+
+  .headline h1 {
+    font-size: 21px;
+    font-weight: 700;
+    color: #ffffff;
+    line-height: 1.4;
+    margin-bottom: 12px;
+    max-width: 520px;
+  }
+
+  .headline p {
+    font-size: 12.5px;
+    color: #94a3b8;
+    line-height: 1.7;
+    max-width: 560px;
+  }
+
+  /* === STATS BAR === */
+  .stats {
+    display: flex;
+    background: #f8fafc;
+    border-bottom: 1px solid #e2e8f0;
+  }
+
+  .stat-item {
+    flex: 1;
+    text-align: center;
+    padding: 18px 12px;
+    border-right: 1px solid #e2e8f0;
+  }
+
+  .stat-item:last-child { border-right: none; }
+
+  .stat-num {
+    font-size: 22px;
+    font-weight: 800;
+    color: #4338ca;
+    letter-spacing: -0.5px;
+  }
+
+  .stat-label {
+    font-size: 9px;
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+    color: #64748b;
+    margin-top: 3px;
+    font-weight: 600;
+  }
+
+  /* === MAIN CONTENT === */
+  .content {
+    padding: 28px 48px;
+  }
+
+  .two-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 28px;
+  }
+
+  .section-title {
+    font-size: 13px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: #4338ca;
+    margin-bottom: 16px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid #e0e7ff;
+  }
+
+  /* === SERVICES === */
+  .service {
+    margin-bottom: 16px;
+  }
+
+  .service h3 {
+    font-size: 13px;
+    font-weight: 700;
+    color: #1e293b;
+    margin-bottom: 4px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .service h3 .dot {
+    width: 6px;
+    height: 6px;
+    background: #4338ca;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .service p {
+    font-size: 11px;
+    color: #475569;
+    line-height: 1.6;
+    padding-left: 12px;
+  }
+
+  /* === DIFFERENTIATORS === */
+  .diff-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  .diff-item {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 12px 14px;
+  }
+
+  .diff-item h4 {
+    font-size: 11px;
+    font-weight: 700;
+    color: #1e293b;
+    margin-bottom: 3px;
+  }
+
+  .diff-item p {
+    font-size: 10px;
+    color: #64748b;
+    line-height: 1.5;
+  }
+
+  /* === USE CASES === */
+  .use-cases-section {
+    padding: 20px 48px;
+    background: #fafafe;
+    border-top: 1px solid #e2e8f0;
+    border-bottom: 1px solid #e2e8f0;
+  }
+
+  .use-cases-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+  }
+
+  .use-case {
+    font-size: 10.5px;
+    font-weight: 500;
+    color: #334155;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    padding: 8px 10px;
+    text-align: center;
+  }
+
+  /* === BOTTOM === */
+  .bottom-section {
+    padding: 20px 48px 0;
+  }
+
+  .tech-specs {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    overflow: hidden;
+    margin-bottom: 20px;
+  }
+
+  .spec {
+    padding: 14px 16px;
+    border-right: 1px solid #e2e8f0;
+    background: #ffffff;
+  }
+
+  .spec:last-child { border-right: none; }
+
+  .spec-label {
+    font-size: 9px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: #94a3b8;
+    font-weight: 600;
+    margin-bottom: 4px;
+  }
+
+  .spec-value {
+    font-size: 12px;
+    font-weight: 600;
+    color: #1e293b;
+  }
+
+  /* === FOOTER CTA === */
+  .footer {
+    background: linear-gradient(145deg, #0a0a1a 0%, #1e1b4b 100%);
+    padding: 28px 48px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+  }
+
+  .footer-left h2 {
+    font-size: 16px;
+    font-weight: 700;
+    color: #ffffff;
+    margin-bottom: 4px;
+  }
+
+  .footer-left p {
+    font-size: 11px;
+    color: #94a3b8;
+  }
+
+  .footer-right {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+  }
+
+  .footer-btn {
+    display: inline-block;
+    padding: 10px 24px;
+    border-radius: 6px;
+    font-weight: 700;
+    font-size: 12px;
+    text-decoration: none;
+    background: #4f46e5;
+    color: white;
+    letter-spacing: 0.3px;
+  }
+
+  .footer-link {
+    font-size: 11px;
+    color: #a5b4fc;
+    text-decoration: none;
+  }
+
+  /* === PRINT === */
+  @media print {
+    body { width: 100%; margin: 0; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .header, .footer { -webkit-print-color-adjust: exact; }
+  }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="header-top">
+    <div class="logo">IP<span>Loop</span></div>
+    <div class="header-contact">
+      <a href="https://iploop.io">iploop.io</a><br>
+      <a href="mailto:partners@iploop.io">partners@iploop.io</a>
+    </div>
+  </div>
+  <div class="headline">
+    <h1>Enterprise-Grade Residential Proxy Infrastructure With Direct Device Access</h1>
+    <p>IPLoop operates a network of 280,000+ real residential devices with direct SDK-level access. 
+    99% success rates, worldwide coverage with strong US concentration, and the speed that comes from 
+    connecting directly to the machine — not through shared pools.</p>
+  </div>
+</div>
+
+<!-- STATS -->
+<div class="stats">
+  <div class="stat-item">
+    <div class="stat-num">280K+</div>
+    <div class="stat-label">Residential Devices</div>
+  </div>
+  <div class="stat-item">
+    <div class="stat-num">150K</div>
+    <div class="stat-label">Mobile IPs</div>
+  </div>
+  <div class="stat-item">
+    <div class="stat-num">100K</div>
+    <div class="stat-label">Windows IPs</div>
+  </div>
+  <div class="stat-item">
+    <div class="stat-num">30K</div>
+    <div class="stat-label">macOS IPs</div>
+  </div>
+  <div class="stat-item">
+    <div class="stat-num">99%</div>
+    <div class="stat-label">Success Rate</div>
+  </div>
+</div>
+
+<!-- MAIN CONTENT -->
+<div class="content">
+  <div class="two-col">
+    <!-- LEFT: Services -->
+    <div>
+      <div class="section-title">What We Offer</div>
+      
+      <div class="service">
+        <h3><span class="dot"></span>Residential Proxy Network</h3>
+        <p>280K+ real residential devices across mobile, Windows, and macOS. Geo-target by country, city, or zip code with authentic residential IPs that don't get flagged.</p>
+      </div>
+
+      <div class="service">
+        <h3><span class="dot"></span>Direct SDK Access</h3>
+        <p>Our client SDK is deployed directly on user devices — giving you dedicated, unshared connections with superior speed and reliability. No middlemen.</p>
+      </div>
+
+      <div class="service">
+        <h3><span class="dot"></span>Data for AI</h3>
+        <p>Structured data extraction pipelines built for AI training sets, market intelligence, and real-time business feeds at scale.</p>
+      </div>
+
+      <div class="service">
+        <h3><span class="dot"></span>SDK Monetization for Developers</h3>
+        <p>App developers integrate our lightweight SDK and earn revenue per DAU, MAU, or fixed rates. We pay worldwide — competitive rates, flexible terms.</p>
+      </div>
+    </div>
+
+    <!-- RIGHT: Why IPLoop -->
+    <div>
+      <div class="section-title">Why IPLoop</div>
+      
+      <div class="diff-grid">
+        <div class="diff-item">
+          <h4>⚡ Direct Machine Access</h4>
+          <p>SDK on the device itself. No shared pools — dedicated, fast connections.</p>
+        </div>
+        <div class="diff-item">
+          <h4>🇺🇸 Strong US Coverage</h4>
+          <p>High concentration of US-based residential IPs with worldwide reach.</p>
+        </div>
+        <div class="diff-item">
+          <h4>📊 99% Success Rate</h4>
+          <p>Real residential traffic that passes detection. Fast and reliable.</p>
+        </div>
+        <div class="diff-item">
+          <h4>🤝 Personalized Service</h4>
+          <p>Real partnerships, not ticket numbers. Custom solutions, flexible terms.</p>
+        </div>
+        <div class="diff-item">
+          <h4>💰 Developer Revenue</h4>
+          <p>Pay per DAU, MAU, or fixed — competitive rates for SDK partners worldwide.</p>
+        </div>
+        <div class="diff-item">
+          <h4>🔒 Compliance First</h4>
+          <p>Ethical sourcing with full user consent. Transparent and auditable.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- EXECUTIVE DIGEST -->
+<div class="use-cases-section" style="background: linear-gradient(135deg, #f0f0ff 0%, #faf5ff 100%); border-top: 3px solid #4338ca; border-bottom: 1px solid #e2e8f0;">
+  <div class="section-title" style="color: #1e1b4b; border-bottom-color: #4338ca;">Executive Digest</div>
+  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
+    <div>
+      <div style="font-size: 12px; font-weight: 700; color: #1e293b; margin-bottom: 8px;">The Opportunity</div>
+      <p style="font-size: 11px; color: #475569; line-height: 1.7; margin-bottom: 12px;">
+        The residential proxy market is projected to exceed <strong>$8.7B by 2027</strong>, driven by explosive demand 
+        for AI training data, ad verification, and web intelligence. Enterprises need authentic residential IPs 
+        at scale — and they need them fast, reliable, and undetectable.
+      </p>
+      <div style="font-size: 12px; font-weight: 700; color: #1e293b; margin-bottom: 8px;">Our Edge</div>
+      <p style="font-size: 11px; color: #475569; line-height: 1.7;">
+        While competitors route through shared proxy pools, <strong>IPLoop connects directly to 280K+ real devices</strong> 
+        via our proprietary SDK. This means faster speeds, higher success rates, and traffic that's 
+        indistinguishable from real users — because it <em>is</em> real users.
+      </p>
+    </div>
+    <div>
+      <div style="font-size: 12px; font-weight: 700; color: #1e293b; margin-bottom: 8px;">Key Metrics</div>
+      <div style="display: grid; gap: 6px;">
+        <div style="display: flex; justify-content: space-between; padding: 8px 12px; background: white; border-radius: 6px; border: 1px solid #e2e8f0;">
+          <span style="font-size: 10.5px; color: #64748b;">Network Size</span>
+          <span style="font-size: 10.5px; font-weight: 700; color: #4338ca;">280,000+ Devices</span>
+        </div>
+        <div style="display: flex; justify-content: space-between; padding: 8px 12px; background: white; border-radius: 6px; border: 1px solid #e2e8f0;">
+          <span style="font-size: 10.5px; color: #64748b;">Request Success Rate</span>
+          <span style="font-size: 10.5px; font-weight: 700; color: #4338ca;">99%</span>
+        </div>
+        <div style="display: flex; justify-content: space-between; padding: 8px 12px; background: white; border-radius: 6px; border: 1px solid #e2e8f0;">
+          <span style="font-size: 10.5px; color: #64748b;">Top Geo Coverage</span>
+          <span style="font-size: 10.5px; font-weight: 700; color: #4338ca;">USA (High Density)</span>
+        </div>
+        <div style="display: flex; justify-content: space-between; padding: 8px 12px; background: white; border-radius: 6px; border: 1px solid #e2e8f0;">
+          <span style="font-size: 10.5px; color: #64748b;">Device Mix</span>
+          <span style="font-size: 10.5px; font-weight: 700; color: #4338ca;">Mobile / Win / Mac</span>
+        </div>
+        <div style="display: flex; justify-content: space-between; padding: 8px 12px; background: white; border-radius: 6px; border: 1px solid #e2e8f0;">
+          <span style="font-size: 10.5px; color: #64748b;">Integration</span>
+          <span style="font-size: 10.5px; font-weight: 700; color: #4338ca;">Direct SDK on Device</span>
+        </div>
+        <div style="display: flex; justify-content: space-between; padding: 8px 12px; background: white; border-radius: 6px; border: 1px solid #e2e8f0;">
+          <span style="font-size: 10.5px; color: #64748b;">Compliance</span>
+          <span style="font-size: 10.5px; font-weight: 700; color: #4338ca;">Ethical / Consent-Based</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- USE CASES -->
+<div class="use-cases-section">
+  <div class="section-title">Use Cases We Power</div>
+  <div class="use-cases-grid">
+    <div class="use-case">Web Scraping & Data Extraction</div>
+    <div class="use-case">AI / ML Training Data</div>
+    <div class="use-case">Ad Verification</div>
+    <div class="use-case">Price Monitoring</div>
+    <div class="use-case">SEO & SERP Tracking</div>
+    <div class="use-case">Brand Protection</div>
+    <div class="use-case">Market Research</div>
+    <div class="use-case">Travel Fare Aggregation</div>
+  </div>
+</div>
+
+<!-- TECH SPECS -->
+<div class="bottom-section">
+  <div class="section-title">Technical Specifications</div>
+  <div class="tech-specs">
+    <div class="spec">
+      <div class="spec-label">Protocols</div>
+      <div class="spec-value">HTTP / HTTPS / SOCKS5</div>
+    </div>
+    <div class="spec">
+      <div class="spec-label">Session Types</div>
+      <div class="spec-value">Rotating & Sticky Sessions</div>
+    </div>
+    <div class="spec">
+      <div class="spec-label">Targeting</div>
+      <div class="spec-value">Country / City / ZIP / ASN</div>
+    </div>
+    <div class="spec">
+      <div class="spec-label">Device Types</div>
+      <div class="spec-value">Mobile / Windows / macOS</div>
+    </div>
+    <div class="spec">
+      <div class="spec-label">Integration</div>
+      <div class="spec-value">API / SDK / Direct Access</div>
+    </div>
+    <div class="spec">
+      <div class="spec-label">Coverage</div>
+      <div class="spec-value">Worldwide — High US Density</div>
+    </div>
+  </div>
+</div>
+
+<!-- FOOTER CTA -->
+<div class="footer">
+  <div class="footer-left">
+    <h2>Ready to Scale Your Data Operations?</h2>
+    <p>Enterprise solutions • Developer SDK partnerships • Custom integrations</p>
+  </div>
+  <div class="footer-right">
+    <a href="https://iploop.io" class="footer-link">iploop.io</a>
+    <a href="mailto:partners@iploop.io" class="footer-btn">Get in Touch →</a>
+  </div>
+</div>
+
+</body>
+</html>

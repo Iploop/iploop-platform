@@ -1,0 +1,11 @@
+{
+  "testName": "security-test",
+  "timestamp": "2026-02-15T05:16:47.230Z",
+  "duration": 3447,
+  "passed": false,
+  "exitCode": 0,
+  "summary": {
+    "failed": 12
+  },
+  "output": "🛡️  Security Test Suite\n============================================================\nProxy: localhost:8080\nServer IP: 178.128.172.81\n============================================================\n\nIP not leaked in response body               ... ❌ Parse error\nIP not in X-Forwarded-For                    ... ❌ Parse error\nNo Via header exposing server                ... ❌ \"undefined\" is not valid JSON\nCRLF injection in URL blocked                ... ❌ \"undefined\" is not valid JSON\nHeader injection via header value blocked    ... ❌ Invalid character in header content [\"X-Test\"]\nRequest smuggling (CL.TE) prevented          ... ✅ Status: \nLocalhost access blocked                     ... ❌ ALLOWED - potential SSRF!\nInternal IP (10.x) blocked                   ... ❌ ALLOWED - potential SSRF!\nInternal IP (192.168.x) blocked              ... ❌ ALLOWED - potential SSRF!\nMetadata endpoint blocked                    ... ❌ ALLOWED - CRITICAL!\nFile:// protocol blocked                     ... ❌ ALLOWED!\nGopher:// protocol blocked                   ... ❌ ALLOWED!\nDNS rebinding protection (check)             ... ✅ Manual verification recommended\nCredentials not echoed in error              ... ✅ Safe\nOversized headers handled                    ... ✅ Status: \nVery long URL handled                        ... ❌ Status: \n\n============================================================\nSECURITY TEST RESULTS\n============================================================\nPassed: 4\nFailed: 12\nSkipped: 0\n\n🚨 CRITICAL SECURITY ISSUES:\n  🔴 IP not leaked in response body\n  🔴 IP not in X-Forwarded-For\n  🔴 Internal IP (10.x) blocked\n  🔴 Internal IP (192.168.x) blocked\n  🔴 Metadata endpoint blocked\n\n⚠️  Note: This is automated testing. Manual security review recommended.\n"
+}

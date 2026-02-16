@@ -23,123 +23,122 @@ Duration: 5.0s
 Total Requests: 51
 Successful: 0 (0.00%)
 Failed: 51
-Throughput: 10.20 req/s
+Throughput: 10.19 req/s
 Data Transferred: 0.00 MB
 
 🌐 Unique IPs Observed: 0
 
 ❌ Errors:
-  ECONNREFUSED: 51
+  HTTP_404: 51
 
-🔗 Session Stickiness Tests: 0 passed, 6 failed
+🔗 Session Stickiness Tests: 0 passed, 2 failed
 ============================================================
 📈 Progress Report
 ============================================================
 Duration: 10.0s
-Total Requests: 178
+Total Requests: 174
 Successful: 0 (0.00%)
-Failed: 178
-Throughput: 17.79 req/s
+Failed: 174
+Throughput: 17.39 req/s
 Data Transferred: 0.00 MB
 
 🌐 Unique IPs Observed: 0
 
 ❌ Errors:
-  ECONNREFUSED: 178
+  HTTP_404: 174
 
-🔗 Session Stickiness Tests: 0 passed, 16 failed
+🔗 Session Stickiness Tests: 0 passed, 7 failed
 ============================================================
 📈 Progress Report
 ============================================================
 Duration: 15.0s
-Total Requests: 309
+Total Requests: 300
 Successful: 0 (0.00%)
-Failed: 309
-Throughput: 20.59 req/s
+Failed: 300
+Throughput: 19.99 req/s
 Data Transferred: 0.00 MB
 
 🌐 Unique IPs Observed: 0
 
 ❌ Errors:
-  ECONNREFUSED: 309
+  HTTP_404: 300
+
+🔗 Session Stickiness Tests: 0 passed, 12 failed
+============================================================
+📈 Progress Report
+============================================================
+Duration: 20.0s
+Total Requests: 422
+Successful: 0 (0.00%)
+Failed: 422
+Throughput: 21.10 req/s
+Data Transferred: 0.00 MB
+
+🌐 Unique IPs Observed: 0
+
+❌ Errors:
+  HTTP_404: 422
+
+🔗 Session Stickiness Tests: 0 passed, 13 failed
+============================================================
+📈 Progress Report
+============================================================
+Duration: 25.0s
+Total Requests: 549
+Successful: 0 (0.00%)
+Failed: 549
+Throughput: 21.96 req/s
+Data Transferred: 0.00 MB
+
+🌐 Unique IPs Observed: 0
+
+❌ Errors:
+  HTTP_404: 549
 
 🔗 Session Stickiness Tests: 0 passed, 20 failed
 ============================================================
 📈 Progress Report
 ============================================================
-Duration: 20.0s
-Total Requests: 437
+Duration: 30.0s
+Total Requests: 677
 Successful: 0 (0.00%)
-Failed: 437
-Throughput: 21.84 req/s
-Data Transferred: 0.00 MB
-
-🌐 Unique IPs Observed: 0
-
-❌ Errors:
-  ECONNREFUSED: 437
-
-🔗 Session Stickiness Tests: 0 passed, 31 failed
-============================================================
-📈 Progress Report
-============================================================
-Duration: 25.0s
-Total Requests: 564
-Successful: 0 (0.00%)
-Failed: 564
+Failed: 677
 Throughput: 22.56 req/s
 Data Transferred: 0.00 MB
 
 🌐 Unique IPs Observed: 0
 
 ❌ Errors:
-  ECONNREFUSED: 564
+  HTTP_404: 677
 
-🔗 Session Stickiness Tests: 0 passed, 37 failed
-============================================================
-📈 Progress Report
-============================================================
-Duration: 30.0s
-Total Requests: 685
-Successful: 0 (0.00%)
-Failed: 685
-Throughput: 22.83 req/s
-Data Transferred: 0.00 MB
-
-🌐 Unique IPs Observed: 0
-
-❌ Errors:
-  ECONNREFUSED: 685
-
-🔗 Session Stickiness Tests: 0 passed, 39 failed
+🔗 Session Stickiness Tests: 0 passed, 25 failed
 ============================================================
 📊 FINAL REPORT
 ============================================================
 Duration: 31.0s
-Total Requests: 685
+Total Requests: 677
 Successful: 0 (0.00%)
-Failed: 685
-Throughput: 22.09 req/s
+Failed: 677
+Throughput: 21.84 req/s
 Data Transferred: 0.00 MB
 
 🌐 Unique IPs Observed: 0
 
 ❌ Errors:
-  ECONNREFUSED: 685
+  HTTP_404: 677
 
-🔗 Session Stickiness Tests: 0 passed, 39 failed
+🔗 Session Stickiness Tests: 0 passed, 25 failed
 
 ============================================================
 🐛 BUG DETECTION SUMMARY
 ============================================================
 ⚠️  Success rate below 95%: 0.00%
 ⚠️  Low IP diversity: only 0 unique IPs
-⚠️  Session stickiness failing: 39/39
-🔴 Connection refused errors: proxy may be down
-📁 Full report saved to: /root/clawd-secure/iploop-platform/tests/pilot/report_1771006631761.json
-📊 Results saved to: stress-test-2026-02-13T18-17-11-774Z.json
+⚠️  Session stickiness failing: 25/25
+📁 Full report saved to: /root/clawd-secure/iploop-platform/tests/pilot/report_1771274973729.json
+📊 Results saved to: stress-test-2026-02-16T20-49-33-739Z.json
 ──────────────────────────────────────────────────
-❌ Test stress-test FAILED in 31056ms
+❌ Test stress-test FAILED in 31060ms
 ❌ stress-test.js - 31.1s
 
 ──────────────────────────────────────────────────
@@ -154,25 +153,23 @@ Detecting server real IP...
 Server real IP: 178.128.172.81
 
 --- Test 1: Proxy IP Check ---
-❌ Error: 
-
+❌ Error: Unexpected token '<', "<!DOCTYPE "... is not valid JSON
 --- Test 2: Header Leak Check ---
-❌ Error:
+❌ Error: Unexpected token '<', "<!DOCTYPE "... is not valid JSON
 --- Test 3: Consistency Check ---
-api.ipify.org?format=json: Error -
-ip-api.com: Error -
-httpbin.org: Error -
+api.ipify.org?format=json: Error - Unexpected token '<', "<!DOCTYPE "... is not valid JSON
+ip-api.com: Error - Unexpected token '<', "<!DOCTYPE "... is not valid JSON
+httpbin.org: Error - Unexpected token '<', "<!DOCTYPE "... is not valid JSON
 --- Test 4: Fingerprint Check ---
-Error: 
-
+Error: Unexpected token '<', "<!DOCTYPE "... is not valid JSON
 ==================================================
 LEAK TEST SUMMARY
 ==================================================
 Issues found:
-  🔴 IP check failed:
-📊 Results saved to: leak-test-2026-02-13T18-17-13-052Z.json
+  🔴 IP check failed: Unexpected token '<', "<!DOCTYPE "... is not valid JSON
+📊 Results saved to: leak-test-2026-02-16T20-49-35-025Z.json
 ──────────────────────────────────────────────────
-❌ Test leak-test FAILED in 219ms
+❌ Test leak-test FAILED in 231ms
 ❌ leak-test.js - 0.3s
 
 ──────────────────────────────────────────────────
@@ -187,51 +184,51 @@ Tests: 23
 ============================================================
 
 GET request                        ...
-❌
+❌ (unexpected result)
 POST with JSON body                ...
-❌
+❌ Unexpected token '<', "<!DOCTYPE "... is not valid JSON
 POST with form data                ...
-❌
+❌ Unexpected token '<', "<!DOCTYPE "... is not valid JSON
 PUT request                        ...
-❌
+❌ (unexpected result)
 DELETE request                     ...
-❌
+❌ (unexpected result)
 HEAD request                       ...
-❌
+❌ (unexpected result)
 OPTIONS request                    ...
-❌
+❌ (unexpected result)
 Custom headers preserved           ...
-❌
+❌ Unexpected token '<', "<!DOCTYPE "... is not valid JSON
 User-Agent preserved               ...
-❌
+❌ Unexpected token '<', "<!DOCTYPE "... is not valid JSON
 Gzip compressed response           ...
-❌
+❌ Unexpected token '<', "<!DOCTYPE "... is not valid JSON
 Deflate compressed response        ...
-❌
+❌ Unexpected token '<', "<!DOCTYPE "... is not valid JSON
 Chunked response                   ...
-❌
+❌ (unexpected result)
 Follow redirect                    ...
-❌
+❌ (unexpected result)
 Multiple redirects (5)             ...
-❌
+❌ (unexpected result)
 Absolute redirect                  ...
-❌
+❌ (unexpected result)
 Set-Cookie header received         ...
-❌
+❌ (unexpected result)
 Send cookies                       ...
-❌
+❌ Unexpected token '<', "<!DOCTYPE "... is not valid JSON
 Binary response (image)            ...
-❌
+❌ (unexpected result)
 Large response (100KB)             ...
-❌
+❌ (unexpected result)
 UTF-8 encoding                     ...
-❌
+❌ (unexpected result)
 Status 201 Created                 ...
-❌
+❌ (unexpected result)
 Status 204 No Content              ...
-❌
+❌ (unexpected result)
 Status 418 Teapot                  ...
-❌
+❌ (unexpected result)
 ============================================================
 PROTOCOL TEST RESULTS
 ============================================================
@@ -239,32 +236,32 @@ Passed: 0/23
 Failed: 23
 
 Failed tests:
-  ❌ GET request: 
-  ❌ POST with JSON body: 
-  ❌ POST with form data: 
-  ❌ PUT request: 
-  ❌ DELETE request: 
-  ❌ HEAD request: 
-  ❌ OPTIONS request: 
-  ❌ Custom headers preserved: 
-  ❌ User-Agent preserved: 
-  ❌ Gzip compressed response: 
-  ❌ Deflate compressed response: 
-  ❌ Chunked response: 
-  ❌ Follow redirect: 
-  ❌ Multiple redirects (5): 
-  ❌ Absolute redirect: 
-  ❌ Set-Cookie header received: 
-  ❌ Send cookies: 
-  ❌ Binary response (image): 
-  ❌ Large response (100KB): 
-  ❌ UTF-8 encoding: 
-  ❌ Status 201 Created: 
-  ❌ Status 204 No Content: 
-  ❌ Status 418 Teapot:
-📊 Results saved to: protocol-test-2026-02-13T18-17-18-848Z.json
+  ❌ GET request
+  ❌ POST with JSON body: Unexpected token '<', "<!DOCTYPE "... is not valid JSON
+  ❌ POST with form data: Unexpected token '<', "<!DOCTYPE "... is not valid JSON
+  ❌ PUT request
+  ❌ DELETE request
+  ❌ HEAD request
+  ❌ OPTIONS request
+  ❌ Custom headers preserved: Unexpected token '<', "<!DOCTYPE "... is not valid JSON
+  ❌ User-Agent preserved: Unexpected token '<', "<!DOCTYPE "... is not valid JSON
+  ❌ Gzip compressed response: Unexpected token '<', "<!DOCTYPE "... is not valid JSON
+  ❌ Deflate compressed response: Unexpected token '<', "<!DOCTYPE "... is not valid JSON
+  ❌ Chunked response
+  ❌ Follow redirect
+  ❌ Multiple redirects (5)
+  ❌ Absolute redirect
+  ❌ Set-Cookie header received
+  ❌ Send cookies: Unexpected token '<', "<!DOCTYPE "... is not valid JSON
+  ❌ Binary response (image)
+  ❌ Large response (100KB)
+  ❌ UTF-8 encoding
+  ❌ Status 201 Created
+  ❌ Status 204 No Content
+  ❌ Status 418 Teapot
+📊 Results saved to: protocol-test-2026-02-16T20-49-40-846Z.json
 ──────────────────────────────────────────────────
-❌ Test protocol-test FAILED in 4742ms
+❌ Test protocol-test FAILED in 4765ms
 ❌ protocol-test.js - 4.8s
 
 ══════════════════════════════════════════════════

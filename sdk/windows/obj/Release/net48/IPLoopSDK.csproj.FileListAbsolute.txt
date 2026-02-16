@@ -1,0 +1,5 @@
+/root/clawd-secure/iploop-platform/sdk/windows/obj/Release/net48/IPLoopSDK.csproj.AssemblyReference.cache
+/root/clawd-secure/iploop-platform/sdk/windows/obj/Release/net48/IPLoopSDK.GeneratedMSBuildEditorConfig.editorconfig
+/root/clawd-secure/iploop-platform/sdk/windows/obj/Release/net48/IPLoopSDK.AssemblyInfoInputs.cache
+/root/clawd-secure/iploop-platform/sdk/windows/obj/Release/net48/IPLoopSDK.AssemblyInfo.cs
+/root/clawd-secure/iploop-platform/sdk/windows/obj/Release/net48/IPLoopSDK.csproj.CoreCompileInputs.cache

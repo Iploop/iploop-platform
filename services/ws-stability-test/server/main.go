@@ -135,6 +135,7 @@ type Connection struct {
 	HasIPInfo      bool      `json:"has_ip_info"`
 	ProxyType      string    `json:"proxy_type"`
 	OS             string    `json:"os"`
+	Token          string    `json:"token"`
 	Registered     bool      `json:"registered"`
 
 	// WebSocket writer — guarded by write mutex
@@ -435,6 +436,38 @@ func initDB() {
 			enabled INTEGER DEFAULT 1,
 			created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 		);
+
+		CREATE TABLE IF NOT EXISTS credit_users (
+			user_id TEXT PRIMARY KEY,
+			token TEXT UNIQUE NOT NULL,
+			credits REAL DEFAULT 0,
+			total_earned REAL DEFAULT 0,
+			total_spent REAL DEFAULT 0,
+			proxy_gb_used REAL DEFAULT 0,
+			created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+		);
+
+		CREATE TABLE IF NOT EXISTS credit_sessions (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			node_id TEXT NOT NULL,
+			user_id TEXT NOT NULL,
+			connected_at DATETIME NOT NULL,
+			disconnected_at DATETIME,
+			uptime_hours REAL DEFAULT 0,
+			credits_earned REAL DEFAULT 0
+		);
+		CREATE INDEX IF NOT EXISTS idx_credit_sessions_user ON credit_sessions(user_id);
+		CREATE INDEX IF NOT EXISTS idx_credit_sessions_node ON credit_sessions(node_id);
+		CREATE INDEX IF NOT EXISTS idx_credit_sessions_active ON credit_sessions(disconnected_at) WHERE disconnected_at IS NULL;
+
+		CREATE TABLE IF NOT EXISTS credit_log (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			user_id TEXT NOT NULL,
+			amount REAL NOT NULL,
+			reason TEXT NOT NULL,
+			created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+		);
+		CREATE INDEX IF NOT EXISTS idx_credit_log_user ON credit_log(user_id);
 	`)
 	if err != nil {
 		log.Fatal("Failed to create tables:", err)
@@ -453,6 +486,80 @@ func storeBandwidth(customer, routeType, target string, bytesIn, bytesOut int64)
 		if err != nil {
 			log.Printf("[DB_ERROR] store bandwidth: %v", err)
 		}
+	}()
+}
+
+// ─── Credit System ─────────────────────────────────────────────────────────────
+
+const (
+	creditsPerHour     = 1.0
+	defaultGBPerCredit = 0.1  // 10 credits = 1 GB
+	uptimeBonus24h     = 1.5
+	uptimeBonus72h     = 2.0
+	multiDeviceBonus   = 0.2
+)
+
+func creditNodeConnected(nodeID, token string) {
+	if token == "" {
+		return
+	}
+	go func() {
+		// Ensure user exists
+		db.Exec(`INSERT OR IGNORE INTO credit_users (user_id, token) VALUES (?, ?)`, token, token)
+		// Open session
+		db.Exec(`INSERT INTO credit_sessions (node_id, user_id, connected_at) VALUES (?, ?, CURRENT_TIMESTAMP)`,
+			nodeID, token)
+		log.Printf("[CREDITS] session opened: node=%s user=%s", nodeID, token)
+	}()
+}
+
+func creditNodeDisconnected(nodeID string) {
+	go func() {
+		var sessionID int64
+		var userID string
+		var connectedAt string
+		err := db.QueryRow(
+			`SELECT id, user_id, connected_at FROM credit_sessions
+			 WHERE node_id = ? AND disconnected_at IS NULL
+			 ORDER BY connected_at DESC LIMIT 1`, nodeID,
+		).Scan(&sessionID, &userID, &connectedAt)
+		if err != nil {
+			return // No active credit session
+		}
+
+		// Calculate hours from connected_at
+		var hours float64
+		db.QueryRow(`SELECT (julianday(CURRENT_TIMESTAMP) - julianday(?)) * 24`, connectedAt).Scan(&hours)
+		if hours < 0.001 {
+			hours = 0.001
+		}
+
+		credits := hours * creditsPerHour
+
+		// Uptime streak bonus
+		var totalUptime float64
+		db.QueryRow(`SELECT COALESCE(SUM(uptime_hours), 0) FROM credit_sessions WHERE user_id = ? AND disconnected_at IS NOT NULL`, userID).Scan(&totalUptime)
+		if totalUptime+hours >= 72 {
+			credits *= uptimeBonus72h
+		} else if totalUptime+hours >= 24 {
+			credits *= uptimeBonus24h
+		}
+
+		// Multi-device bonus
+		var activeDevices int
+		db.QueryRow(`SELECT COUNT(*) FROM credit_sessions WHERE user_id = ? AND disconnected_at IS NULL`, userID).Scan(&activeDevices)
+		if activeDevices > 1 {
+			credits *= 1.0 + float64(activeDevices-1)*multiDeviceBonus
+		}
+
+		// Close session + add credits
+		db.Exec(`UPDATE credit_sessions SET disconnected_at = CURRENT_TIMESTAMP, uptime_hours = ?, credits_earned = ? WHERE id = ?`,
+			hours, credits, sessionID)
+		db.Exec(`UPDATE credit_users SET credits = credits + ?, total_earned = total_earned + ? WHERE user_id = ?`,
+			credits, credits, userID)
+		db.Exec(`INSERT INTO credit_log (user_id, amount, reason) VALUES (?, ?, ?)`,
+			userID, credits, fmt.Sprintf("uptime %.2fh node=%s", hours, nodeID))
+		log.Printf("[CREDITS] session closed: node=%s user=%s hours=%.2f credits=%.2f", nodeID, userID, hours, credits)
 	}()
 }
 
@@ -1417,6 +1524,10 @@ func (h *Hub) Add(nodeID string, conn *Connection) {
 	h.totalConns++
 	h.mu.Unlock()
 	log.Printf("[CONNECT] node=%s ip=%s model=%s os=%s sdk=%s total=%d", nodeID, conn.IP, conn.DeviceModel, conn.OS, conn.SDKVersion, h.Count())
+	// Credit tracking for Docker/community nodes
+	if conn.Token != "" {
+		creditNodeConnected(nodeID, conn.Token)
+	}
 }
 
 func (h *Hub) Remove(nodeID, reason string) {
@@ -1453,6 +1564,10 @@ func (h *Hub) Remove(nodeID, reason string) {
 		h.totalDiscons++
 		h.mu.Unlock()
 		go storeDisconnect(event)
+		// Credit tracking
+		if conn.Token != "" {
+			creditNodeDisconnected(nodeID)
+		}
 		log.Printf("[DISCONNECT] node=%s reason=%q duration=%s pings=%d/%d total=%d",
 			nodeID, reason, dur.Round(time.Second), conn.PongsRecv, conn.PingsSent, h.Count())
 	} else {
@@ -1782,6 +1897,7 @@ func handleWS(w http.ResponseWriter, r *http.Request) {
 		DeviceModel string `json:"device_model"`
 		SDKVersion  string `json:"sdk_version"`
 		OS          string `json:"os"`
+		Token       string `json:"token"`
 	}
 	if err := json.Unmarshal(msg, &hello); err != nil || hello.NodeID == "" {
 		log.Printf("[ERROR] bad hello from %s: %v", ip, err)
@@ -1824,6 +1940,7 @@ func handleWS(w http.ResponseWriter, r *http.Request) {
 		DeviceModel: hello.DeviceModel,
 		SDKVersion:  hello.SDKVersion,
 		OS:          nodeOS,
+		Token:       hello.Token,
 		IP:          ip,
 		ConnectedAt: time.Now(),
 		LastPong:    time.Now(),
@@ -3535,6 +3652,66 @@ func handleAPIBandwidth(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(result)
 }
 
+func handleAPICredits(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	userID := r.URL.Query().Get("user")
+
+	if userID != "" {
+		// Single user balance
+		var credits, totalEarned, totalSpent, proxyGBUsed float64
+		err := db.QueryRow(`SELECT credits, total_earned, total_spent, proxy_gb_used FROM credit_users WHERE user_id = ?`, userID).
+			Scan(&credits, &totalEarned, &totalSpent, &proxyGBUsed)
+		if err != nil {
+			json.NewEncoder(w).Encode(map[string]string{"error": "user not found"})
+			return
+		}
+		var activeDevices int
+		db.QueryRow(`SELECT COUNT(*) FROM credit_sessions WHERE user_id = ? AND disconnected_at IS NULL`, userID).Scan(&activeDevices)
+		var totalUptime float64
+		db.QueryRow(`SELECT COALESCE(SUM(uptime_hours), 0) FROM credit_sessions WHERE user_id = ?`, userID).Scan(&totalUptime)
+
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"user_id":          userID,
+			"credits":          credits,
+			"total_earned":     totalEarned,
+			"total_spent":      totalSpent,
+			"proxy_gb_used":    proxyGBUsed,
+			"proxy_gb_balance": credits * defaultGBPerCredit,
+			"active_devices":   activeDevices,
+			"total_uptime_h":   totalUptime,
+		})
+		return
+	}
+
+	// All users summary
+	rows, err := db.Query(`SELECT user_id, credits, total_earned, total_spent, proxy_gb_used, created_at FROM credit_users ORDER BY credits DESC`)
+	if err != nil {
+		json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
+		return
+	}
+	defer rows.Close()
+
+	var users []map[string]interface{}
+	for rows.Next() {
+		var uid, createdAt string
+		var credits, earned, spent, gbUsed float64
+		rows.Scan(&uid, &credits, &earned, &spent, &gbUsed, &createdAt)
+		users = append(users, map[string]interface{}{
+			"user_id":      uid,
+			"credits":      credits,
+			"total_earned": earned,
+			"total_spent":  spent,
+			"proxy_gb":     gbUsed,
+			"created_at":   createdAt,
+		})
+	}
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"users": users,
+		"total": len(users),
+	})
+}
+
 func handleAPICustomers(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
@@ -3770,6 +3947,7 @@ func main() {
 	// API: Node quality scores
 	http.HandleFunc("/api/node-scores", handleAPINodeScores)
 	http.HandleFunc("/api/bandwidth", handleAPIBandwidth)
+	http.HandleFunc("/api/credits", handleAPICredits)
 	http.HandleFunc("/api/customers", handleAPICustomers)
 
 	tlsCert := os.Getenv("TLS_CERT")

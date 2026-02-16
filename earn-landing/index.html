@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IPLoop — Share Bandwidth. Get Free VPN + Proxy.</title>
+<meta name="description" content="Share your unused bandwidth and earn free VPN access + proxy credits. Install on Mac, Linux, Windows, Docker, Android, Fire TV.">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#0a0a0f;--bg2:#12121a;--bg3:#1a1a2e;--blue:#3b82f6;--green:#10b981;--purple:#8b5cf6;--text:#e2e8f0;--text2:#94a3b8;--border:#1e293b}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--text);line-height:1.6;overflow-x:hidden}
+a{color:var(--blue);text-decoration:none}
+.container{max-width:1200px;margin:0 auto;padding:0 24px}
+
+/* Nav */
+nav{padding:20px 0;border-bottom:1px solid var(--border);position:sticky;top:0;background:rgba(10,10,15,.95);backdrop-filter:blur(12px);z-index:100}
+nav .container{display:flex;justify-content:space-between;align-items:center}
+.logo{font-size:1.5rem;font-weight:800;background:linear-gradient(135deg,var(--blue),var(--purple));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.nav-links{display:flex;gap:24px;align-items:center}
+.nav-links a{color:var(--text2);font-size:.9rem;transition:color .2s}
+.nav-links a:hover{color:var(--text)}
+.btn{display:inline-block;padding:10px 24px;border-radius:8px;font-weight:600;font-size:.95rem;transition:all .2s;border:none;cursor:pointer}
+.btn-primary{background:linear-gradient(135deg,var(--blue),var(--purple));color:#fff}
+.btn-primary:hover{transform:translateY(-2px);box-shadow:0 8px 30px rgba(59,130,246,.3)}
+.btn-outline{border:1px solid var(--border);color:var(--text);background:transparent}
+.btn-outline:hover{border-color:var(--blue);color:var(--blue)}
+.btn-green{background:linear-gradient(135deg,var(--green),#059669);color:#fff}
+.btn-green:hover{transform:translateY(-2px);box-shadow:0 8px 30px rgba(16,185,129,.3)}
+
+/* Hero */
+.hero{padding:100px 0 80px;text-align:center;position:relative}
+.hero::before{content:'';position:absolute;top:0;left:50%;transform:translateX(-50%);width:800px;height:600px;background:radial-gradient(ellipse,rgba(59,130,246,.08),transparent 70%);pointer-events:none}
+.hero h1{font-size:clamp(2.5rem,6vw,4.5rem);font-weight:800;line-height:1.1;margin-bottom:24px}
+.hero h1 .grad{background:linear-gradient(135deg,var(--blue),var(--green));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.hero p{font-size:1.25rem;color:var(--text2);max-width:600px;margin:0 auto 40px}
+.hero-btns{display:flex;gap:16px;justify-content:center;flex-wrap:wrap}
+.hero-stats{display:flex;gap:48px;justify-content:center;margin-top:60px;flex-wrap:wrap}
+.hero-stats .stat{text-align:center}
+.hero-stats .stat .num{font-size:2rem;font-weight:800;color:var(--green)}
+.hero-stats .stat .label{font-size:.85rem;color:var(--text2)}
+
+/* Sections */
+section{padding:80px 0}
+.section-title{text-align:center;margin-bottom:60px}
+.section-title h2{font-size:2.5rem;font-weight:700;margin-bottom:12px}
+.section-title p{color:var(--text2);font-size:1.1rem}
+
+/* Value Props */
+.values{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:32px}
+.value-card{background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:36px;transition:all .3s}
+.value-card:hover{border-color:var(--blue);transform:translateY(-4px)}
+.value-card .icon{font-size:2.5rem;margin-bottom:16px}
+.value-card h3{font-size:1.3rem;margin-bottom:8px}
+.value-card p{color:var(--text2);font-size:.95rem}
+
+/* How it works */
+.steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:32px;position:relative}
+.step{text-align:center;padding:32px}
+.step .num{width:56px;height:56px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:1.3rem;font-weight:800;margin-bottom:20px}
+.step:nth-child(1) .num{background:rgba(59,130,246,.15);color:var(--blue)}
+.step:nth-child(2) .num{background:rgba(139,92,246,.15);color:var(--purple)}
+.step:nth-child(3) .num{background:rgba(16,185,129,.15);color:var(--green)}
+.step h3{font-size:1.2rem;margin-bottom:8px}
+.step p{color:var(--text2);font-size:.95rem}
+
+/* Platforms */
+.platforms{display:flex;gap:24px;justify-content:center;flex-wrap:wrap;margin-top:20px}
+.platform{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:20px 28px;text-align:center;min-width:120px;transition:all .3s}
+.platform:hover{border-color:var(--purple);transform:translateY(-2px)}
+.platform .p-icon{font-size:2rem;margin-bottom:8px}
+.platform .p-name{font-size:.85rem;color:var(--text2)}
+
+/* Calculator */
+.calc-wrap{max-width:700px;margin:0 auto;background:var(--bg2);border:1px solid var(--border);border-radius:20px;padding:48px}
+.calc-wrap label{font-size:1.1rem;font-weight:600;display:block;margin-bottom:16px}
+.calc-slider{width:100%;-webkit-appearance:none;height:8px;border-radius:4px;background:var(--bg3);outline:none;margin-bottom:8px}
+.calc-slider::-webkit-slider-thumb{-webkit-appearance:none;width:24px;height:24px;border-radius:50%;background:linear-gradient(135deg,var(--blue),var(--purple));cursor:pointer}
+.calc-slider::-moz-range-thumb{width:24px;height:24px;border-radius:50%;background:linear-gradient(135deg,var(--blue),var(--purple));cursor:pointer;border:none}
+.calc-val{text-align:center;font-size:1rem;color:var(--text2);margin-bottom:32px}
+.calc-results{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:20px}
+.calc-result{background:var(--bg3);border-radius:12px;padding:24px;text-align:center}
+.calc-result .cr-num{font-size:2rem;font-weight:800;margin-bottom:4px}
+.calc-result:nth-child(1) .cr-num{color:var(--green)}
+.calc-result:nth-child(2) .cr-num{color:var(--blue)}
+.calc-result:nth-child(3) .cr-num{color:var(--purple)}
+.calc-result .cr-label{font-size:.85rem;color:var(--text2)}
+
+/* Comparison */
+.comp-table{overflow-x:auto}
+.comp-table table{width:100%;border-collapse:collapse;min-width:600px}
+.comp-table th,.comp-table td{padding:16px 20px;text-align:center;border-bottom:1px solid var(--border)}
+.comp-table th{color:var(--text2);font-size:.85rem;text-transform:uppercase;letter-spacing:1px;font-weight:600}
+.comp-table td{font-size:.95rem}
+.comp-table tr td:first-child{text-align:left;font-weight:600}
+.comp-table .highlight{background:rgba(59,130,246,.05)}
+.comp-table .highlight td:first-child{color:var(--blue)}
+.check{color:var(--green);font-weight:700}
+.cross{color:#ef4444;font-weight:700}
+
+/* Install */
+.install-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:20px}
+.install-card{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:20px 24px;display:flex;align-items:center;gap:16px}
+.install-card .ic-icon{font-size:1.5rem;flex-shrink:0}
+.install-card .ic-label{font-size:.8rem;color:var(--text2);margin-bottom:4px}
+.install-card code{font-family:'SF Mono',Monaco,Consolas,monospace;font-size:.82rem;color:var(--green);background:var(--bg);padding:6px 12px;border-radius:6px;display:block;word-break:break-all;cursor:pointer;position:relative}
+.install-card code:hover::after{content:'Click to copy';position:absolute;top:-28px;left:50%;transform:translateX(-50%);background:var(--bg3);color:var(--text2);font-size:.7rem;padding:4px 8px;border-radius:4px;white-space:nowrap}
+.install-card .ic-content{flex:1;min-width:0}
+
+/* FAQ */
+.faq-list{max-width:800px;margin:0 auto}
+.faq-item{border-bottom:1px solid var(--border)}
+.faq-q{padding:20px 0;cursor:pointer;display:flex;justify-content:space-between;align-items:center;font-weight:600;font-size:1.05rem}
+.faq-q::after{content:'+';font-size:1.5rem;color:var(--text2);transition:transform .2s}
+.faq-item.open .faq-q::after{transform:rotate(45deg)}
+.faq-a{max-height:0;overflow:hidden;transition:max-height .3s;color:var(--text2);font-size:.95rem;line-height:1.7}
+.faq-item.open .faq-a{max-height:300px}
+.faq-a-inner{padding-bottom:20px}
+
+/* Footer */
+footer{border-top:1px solid var(--border);padding:48px 0 32px;color:var(--text2);font-size:.9rem}
+.footer-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:32px;margin-bottom:32px}
+.footer-grid h4{color:var(--text);margin-bottom:12px;font-size:.95rem}
+.footer-grid a{display:block;color:var(--text2);margin-bottom:8px;font-size:.85rem;transition:color .2s}
+.footer-grid a:hover{color:var(--blue)}
+.footer-bottom{text-align:center;padding-top:24px;border-top:1px solid var(--border);font-size:.8rem}
+
+/* Responsive */
+@media(max-width:768px){
+  .hero{padding:60px 0 40px}
+  .hero h1{font-size:2.2rem}
+  .hero-stats{gap:24px}
+  .nav-links{display:none}
+  section{padding:60px 0}
+  .calc-wrap{padding:28px}
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="container">
+    <div class="logo">IPLoop</div>
+    <div class="nav-links">
+      <a href="#how-it-works">How It Works</a>
+      <a href="#calculator">Earnings</a>
+      <a href="#install">Install</a>
+      <a href="#faq">FAQ</a>
+      <a href="#" class="btn btn-primary">Get Started</a>
+    </div>
+  </div>
+</nav>
+
+<!-- Hero -->
+<section class="hero">
+  <div class="container">
+    <h1>Share Bandwidth.<br><span class="grad">Get Free VPN + Proxy.</span></h1>
+    <p>Install IPLoop on your devices, share unused bandwidth, and earn free VPN access and proxy credits. It's that simple.</p>
+    <div class="hero-btns">
+      <a href="#install" class="btn btn-primary">Start Earning</a>
+      <a href="#how-it-works" class="btn btn-outline">Learn More</a>
+    </div>
+    <div class="hero-stats">
+      <div class="stat"><div class="num">100+</div><div class="label">Credits per GB</div></div>
+      <div class="stat"><div class="num">6</div><div class="label">Platforms</div></div>
+      <div class="stat"><div class="num">Free</div><div class="label">VPN Access</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- Value Props -->
+<section>
+  <div class="container">
+    <div class="section-title">
+      <h2>Why IPLoop?</h2>
+      <p>The only platform that gives you free VPN + proxy just for sharing bandwidth.</p>
+    </div>
+    <div class="values">
+      <div class="value-card">
+        <div class="icon">🛡️</div>
+        <h3>Free VPN Access</h3>
+        <p>Share bandwidth from any device and instantly unlock free VPN. Stay protected while you earn — no subscription needed.</p>
+      </div>
+      <div class="value-card">
+        <div class="icon">💰</div>
+        <h3>Earn Proxy Credits</h3>
+        <p>Every GB you share earns ~100 credits. Use them for residential proxy requests worldwide. More devices = more credits.</p>
+      </div>
+      <div class="value-card">
+        <div class="icon">📱</div>
+        <h3>Multi-Device Bonus</h3>
+        <p>Run IPLoop on 3+ devices and earn 2x credits. Supports Mac, Linux, Windows, Docker, Android, and Fire TV.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- How It Works -->
+<section id="how-it-works" style="background:var(--bg2)">
+  <div class="container">
+    <div class="section-title">
+      <h2>How It Works</h2>
+      <p>Three simple steps to start earning.</p>
+    </div>
+    <div class="steps">
+      <div class="step">
+        <div class="num">1</div>
+        <h3>Install</h3>
+        <p>Download IPLoop on any device — Mac, Linux, Windows, Docker, Android, or Fire TV. One command is all it takes.</p>
+      </div>
+      <div class="step">
+        <div class="num">2</div>
+        <h3>Share</h3>
+        <p>IPLoop securely shares your unused bandwidth in the background. No noticeable impact on your speed or data usage.</p>
+      </div>
+      <div class="step">
+        <div class="num">3</div>
+        <h3>Earn</h3>
+        <p>Credits accumulate automatically. Use them for free VPN or proxy requests. More devices and uptime = bigger bonuses.</p>
+      </div>
+    </div>
+    <div style="text-align:center;margin-top:48px">
+      <div class="section-title" style="margin-bottom:32px"><h2 style="font-size:1.5rem">Supported Platforms</h2></div>
+      <div class="platforms">
+        <div class="platform"><div class="p-icon">🍎</div><div class="p-name">Mac</div></div>
+        <div class="platform"><div class="p-icon">🐧</div><div class="p-name">Linux</div></div>
+        <div class="platform"><div class="p-icon">🪟</div><div class="p-name">Windows</div></div>
+        <div class="platform"><div class="p-icon">🐳</div><div class="p-name">Docker</div></div>
+        <div class="platform"><div class="p-icon">📱</div><div class="p-name">Android</div></div>
+        <div class="platform"><div class="p-icon">🔥</div><div class="p-name">Fire TV</div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Calculator -->
+<section id="calculator">
+  <div class="container">
+    <div class="section-title">
+      <h2>Earnings Calculator</h2>
+      <p>See how much you can earn based on your devices.</p>
+    </div>
+    <div class="calc-wrap">
+      <label>Number of Devices: <span id="deviceCount">1</span></label>
+      <input type="range" class="calc-slider" id="deviceSlider" min="1" max="20" value="1">
+      <div class="calc-val">Slide to adjust — more devices = more earnings</div>
+      <div class="calc-results">
+        <div class="calc-result">
+          <div class="cr-num" id="dailyCredits">240</div>
+          <div class="cr-label">Daily Credits</div>
+        </div>
+        <div class="calc-result">
+          <div class="cr-num" id="dailyRequests">240</div>
+          <div class="cr-label">Free Proxy Requests / Day</div>
+        </div>
+        <div class="calc-result">
+          <div class="cr-num" id="monthlyCredits">7,200</div>
+          <div class="cr-label">Monthly Credits</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Comparison -->
+<section style="background:var(--bg2)">
+  <div class="container">
+    <div class="section-title">
+      <h2>IPLoop vs Competitors</h2>
+      <p>See why IPLoop offers the best value.</p>
+    </div>
+    <div class="comp-table">
+      <table>
+        <thead>
+          <tr><th>Feature</th><th>IPLoop</th><th>Honeygain</th><th>Massive</th><th>Bright Data</th></tr>
+        </thead>
+        <tbody>
+          <tr class="highlight"><td>Free VPN</td><td class="check">✓</td><td class="cross">✗</td><td class="cross">✗</td><td class="cross">✗</td></tr>
+          <tr class="highlight"><td>Free Proxy Credits</td><td class="check">✓</td><td class="cross">✗</td><td class="cross">✗</td><td class="cross">✗</td></tr>
+          <tr><td>Earn from Bandwidth</td><td class="check">✓</td><td class="check">✓</td><td class="check">✓</td><td class="check">✓</td></tr>
+          <tr class="highlight"><td>Multi-Device Bonus</td><td class="check">2x at 3+</td><td class="cross">✗</td><td class="cross">✗</td><td class="cross">✗</td></tr>
+          <tr><td>Rare Geo Bonus</td><td class="check">Up to 3x</td><td class="cross">✗</td><td class="cross">✗</td><td class="cross">✗</td></tr>
+          <tr class="highlight"><td>Docker Support</td><td class="check">✓</td><td class="cross">✗</td><td class="cross">✗</td><td class="check">✓</td></tr>
+          <tr><td>Fire TV / Android TV</td><td class="check">✓</td><td class="cross">✗</td><td class="cross">✗</td><td class="cross">✗</td></tr>
+          <tr class="highlight"><td>Minimum Payout</td><td>No minimum</td><td>$20</td><td>$5</td><td>N/A</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- Install -->
+<section id="install">
+  <div class="container">
+    <div class="section-title">
+      <h2>Install in Seconds</h2>
+      <p>One command. That's it.</p>
+    </div>
+    <div class="install-grid">
+      <div class="install-card">
+        <div class="ic-icon">🐧</div>
+        <div class="ic-content">
+          <div class="ic-label">Linux / Ubuntu / Debian</div>
+          <code onclick="copyCmd(this)">curl -fsSL https://iploop.io/install.sh | sh</code>
+        </div>
+      </div>
+      <div class="install-card">
+        <div class="ic-icon">🍎</div>
+        <div class="ic-content">
+          <div class="ic-label">macOS</div>
+          <code onclick="copyCmd(this)">brew install iploop && iploop start</code>
+        </div>
+      </div>
+      <div class="install-card">
+        <div class="ic-icon">🪟</div>
+        <div class="ic-content">
+          <div class="ic-label">Windows</div>
+          <code onclick="copyCmd(this)">winget install iploop</code>
+        </div>
+      </div>
+      <div class="install-card">
+        <div class="ic-icon">🐳</div>
+        <div class="ic-content">
+          <div class="ic-label">Docker</div>
+          <code onclick="copyCmd(this)">docker run -d --name iploop iploop/node</code>
+        </div>
+      </div>
+      <div class="install-card">
+        <div class="ic-icon">📱</div>
+        <div class="ic-content">
+          <div class="ic-label">Android</div>
+          <code onclick="copyCmd(this)">Download from Google Play →</code>
+        </div>
+      </div>
+      <div class="install-card">
+        <div class="ic-icon">🔥</div>
+        <div class="ic-content">
+          <div class="ic-label">Fire TV / Android TV</div>
+          <code onclick="copyCmd(this)">Search "IPLoop" in Amazon Appstore</code>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FAQ -->
+<section id="faq" style="background:var(--bg2)">
+  <div class="container">
+    <div class="section-title">
+      <h2>Frequently Asked Questions</h2>
+    </div>
+    <div class="faq-list">
+      <div class="faq-item">
+        <div class="faq-q">Is my data safe?</div>
+        <div class="faq-a"><div class="faq-a-inner">Absolutely. IPLoop only routes publicly available web requests through your connection. We never access your personal data, files, or browsing history. All traffic is encrypted.</div></div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q">Will it slow down my internet?</div>
+        <div class="faq-a"><div class="faq-a-inner">No. IPLoop uses only idle bandwidth — typically less than 5% of your connection. You won't notice any difference in your browsing or streaming.</div></div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q">How do credits work?</div>
+        <div class="faq-a"><div class="faq-a-inner">Every GB of bandwidth you share earns approximately 100 credits. Each proxy request costs about 1 credit. Credits are calculated automatically and added to your balance in real-time.</div></div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q">How do I get free VPN?</div>
+        <div class="faq-a"><div class="faq-a-inner">Simply keep at least one device actively sharing bandwidth. As long as you're contributing, your VPN access stays active — no extra cost.</div></div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q">What's the multi-device bonus?</div>
+        <div class="faq-a"><div class="faq-a-inner">Run IPLoop on 3 or more devices simultaneously and earn 2x credits on all bandwidth shared. Stack it with the 24-hour uptime bonus (1.5x) and rare geo bonus (up to 3x) for maximum earnings.</div></div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q">Which platforms are supported?</div>
+        <div class="faq-a"><div class="faq-a-inner">Mac, Linux, Windows, Docker, Android, Fire TV, and Android TV. We're adding iOS support soon.</div></div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q">Is there a minimum to cash out?</div>
+        <div class="faq-a"><div class="faq-a-inner">No minimum. Your credits are immediately usable for proxy requests or VPN access. No waiting, no thresholds.</div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section style="text-align:center;padding:100px 0">
+  <div class="container">
+    <h2 style="font-size:2.5rem;font-weight:800;margin-bottom:16px">Ready to <span style="background:linear-gradient(135deg,var(--green),var(--blue));-webkit-background-clip:text;-webkit-text-fill-color:transparent">start earning</span>?</h2>
+    <p style="color:var(--text2);font-size:1.1rem;margin-bottom:32px">Join thousands of users sharing bandwidth and earning free VPN + proxy.</p>
+    <a href="#install" class="btn btn-green" style="font-size:1.1rem;padding:14px 36px">Get Started — It's Free</a>
+  </div>
+</section>
+
+<!-- Footer -->
+<footer>
+  <div class="container">
+    <div class="footer-grid">
+      <div>
+        <h4 style="font-size:1.3rem;background:linear-gradient(135deg,var(--blue),var(--purple));-webkit-background-clip:text;-webkit-text-fill-color:transparent">IPLoop</h4>
+        <p style="font-size:.85rem;margin-top:8px">Share bandwidth. Earn credits. Get free VPN + proxy access.</p>
+      </div>
+      <div>
+        <h4>Product</h4>
+        <a href="#">Earn Credits</a>
+        <a href="#">Free VPN</a>
+        <a href="#">Proxy Network</a>
+        <a href="#">Pricing</a>
+      </div>
+      <div>
+        <h4>Resources</h4>
+        <a href="#">Documentation</a>
+        <a href="#">API Reference</a>
+        <a href="#">SDK Guide</a>
+        <a href="#">Status</a>
+      </div>
+      <div>
+        <h4>Company</h4>
+        <a href="#">About</a>
+        <a href="#">Privacy Policy</a>
+        <a href="#">Terms of Service</a>
+        <a href="#">Contact</a>
+      </div>
+    </div>
+    <div class="footer-bottom">&copy; 2025 IPLoop. All rights reserved.</div>
+  </div>
+</footer>
+
+<script>
+// Calculator
+const slider = document.getElementById('deviceSlider');
+const deviceCount = document.getElementById('deviceCount');
+const dailyCredits = document.getElementById('dailyCredits');
+const dailyRequests = document.getElementById('dailyRequests');
+const monthlyCredits = document.getElementById('monthlyCredits');
+
+function updateCalc() {
+  const d = parseInt(slider.value);
+  deviceCount.textContent = d;
+  // ~2.4 GB/day per device, 100 credits/GB
+  const base = d * 240;
+  const mult = d >= 3 ? 2 : 1;
+  const daily = base * mult;
+  dailyCredits.textContent = daily.toLocaleString();
+  dailyRequests.textContent = daily.toLocaleString();
+  monthlyCredits.textContent = (daily * 30).toLocaleString();
+}
+slider.addEventListener('input', updateCalc);
+updateCalc();
+
+// FAQ
+document.querySelectorAll('.faq-q').forEach(q => {
+  q.addEventListener('click', () => q.parentElement.classList.toggle('open'));
+});
+
+// Copy command
+function copyCmd(el) {
+  navigator.clipboard.writeText(el.textContent).then(() => {
+    const orig = el.textContent;
+    el.textContent = 'Copied!';
+    setTimeout(() => el.textContent = orig, 1500);
+  });
+}
+</script>
+</body>
+</html>

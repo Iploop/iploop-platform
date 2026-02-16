@@ -1,0 +1,1 @@
+/root/clawd-secure/iploop-platform/sdk/windows/obj/Release/net6.0/IPLoopSDK.csproj.AssemblyReference.cache

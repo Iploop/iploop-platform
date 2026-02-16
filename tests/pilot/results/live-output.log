@@ -1,144 +1,171 @@
 ══════════════════════════════════════════════════
-📋 QUICK SUITE: Quick health check
+📋 SECURITY SUITE: Security audit
 Total tests: 3
 ══════════════════════════════════════════════════
 
 ──────────────────────────────────────────────────
-🧪 Running: stress-test.js --profile=smoke
+🧪 Running: security-test.js
 ──────────────────────────────────────────────────
-🧪 Running test: stress-test
+🧪 Running test: security-test
 ──────────────────────────────────────────────────
-🚀 IPLoop Pilot Stress Test
+🛡️  Security Test Suite
 ============================================================
-Profile: smoke
-Target concurrency: 5
-Duration: 30s
-Ramp time: 5s
 Proxy: localhost:8080
+Server IP: 178.128.172.81
 ============================================================
+IP not leaked in response body               ...
+❌ Parse error
+IP not in X-Forwarded-For                    ...
+❌ Parse error
+No Via header exposing server                ...
+❌ Unexpected token '<', "<!DOCTYPE "... is not valid JSON
+CRLF injection in URL blocked                ...
+❌ Unexpected token '<', "<!DOCTYPE "... is not valid JSON
+Header injection via header value blocked    ...
+❌ Invalid character in header content ["X-Test"]
+Request smuggling (CL.TE) prevented          ...
+✅ Status: 501
+Localhost access blocked                     ...
+✅ Blocked
+Internal IP (10.x) blocked                   ...
+✅ Blocked
+Internal IP (192.168.x) blocked              ...
+✅ Blocked
+Metadata endpoint blocked                    ...
+✅ Blocked
+File:// protocol blocked                     ...
+✅ Blocked
+Gopher:// protocol blocked                   ...
+✅ Blocked
+DNS rebinding protection (check)             ...
+✅ Manual verification recommended
+Credentials not echoed in error              ...
+✅ Safe
+Oversized headers handled                    ...
+✅ Status: 431
+Very long URL handled                        ...
+❌ Status: 404
 ============================================================
-📈 Progress Report
+SECURITY TEST RESULTS
 ============================================================
-Duration: 5.0s
-Total Requests: 47
-Successful: 0 (0.00%)
-Failed: 47
-Throughput: 9.40 req/s
-Data Transferred: 0.00 MB
+Passed: 10
+Failed: 6
+Skipped: 0
 
-🌐 Unique IPs Observed: 0
+🚨 CRITICAL SECURITY ISSUES:
+  🔴 IP not leaked in response body
+  🔴 IP not in X-Forwarded-For
 
-❌ Errors:
-  HTTP_404: 47
-
-🔗 Session Stickiness Tests: 0 passed, 2 failed
-============================================================
-📈 Progress Report
-============================================================
-Duration: 10.0s
-Total Requests: 169
-Successful: 0 (0.00%)
-Failed: 169
-Throughput: 16.90 req/s
-Data Transferred: 0.00 MB
-
-🌐 Unique IPs Observed: 0
-
-❌ Errors:
-  HTTP_404: 169
-
-🔗 Session Stickiness Tests: 0 passed, 10 failed
-============================================================
-📈 Progress Report
-============================================================
-Duration: 15.0s
-Total Requests: 291
-Successful: 0 (0.00%)
-Failed: 291
-Throughput: 19.40 req/s
-Data Transferred: 0.00 MB
-
-🌐 Unique IPs Observed: 0
-
-❌ Errors:
-  HTTP_404: 291
-
-🔗 Session Stickiness Tests: 0 passed, 16 failed
-============================================================
-📈 Progress Report
-============================================================
-Duration: 20.0s
-Total Requests: 416
-Successful: 0 (0.00%)
-Failed: 415
-Throughput: 20.80 req/s
-Data Transferred: 0.00 MB
-
-🌐 Unique IPs Observed: 0
-
-❌ Errors:
-  HTTP_404: 415
-
-🔗 Session Stickiness Tests: 0 passed, 19 failed
-============================================================
-📈 Progress Report
-============================================================
-Duration: 25.0s
-Total Requests: 539
-Successful: 0 (0.00%)
-Failed: 539
-Throughput: 21.56 req/s
-Data Transferred: 0.00 MB
-
-🌐 Unique IPs Observed: 0
-
-❌ Errors:
-  HTTP_404: 539
-
-🔗 Session Stickiness Tests: 0 passed, 25 failed
-============================================================
-📈 Progress Report
-============================================================
-Duration: 30.0s
-Total Requests: 662
-Successful: 0 (0.00%)
-Failed: 662
-Throughput: 22.07 req/s
-Data Transferred: 0.00 MB
-
-🌐 Unique IPs Observed: 0
-
-❌ Errors:
-  HTTP_404: 662
-
-🔗 Session Stickiness Tests: 0 passed, 31 failed
-============================================================
-📊 FINAL REPORT
-============================================================
-Duration: 31.0s
-Total Requests: 662
-Successful: 0 (0.00%)
-Failed: 662
-Throughput: 21.35 req/s
-Data Transferred: 0.00 MB
-🌐 Unique IPs Observed: 0
-
-❌ Errors:
-  HTTP_404: 662
-
-🔗 Session Stickiness Tests: 0 passed, 31 failed
-
-============================================================
-🐛 BUG DETECTION SUMMARY
-============================================================
-⚠️  Success rate below 95%: 0.00%
-⚠️  Low IP diversity: only 0 unique IPs
-⚠️  Session stickiness failing: 31/31
-📁 Full report saved to: /root/clawd-secure/iploop-platform/tests/pilot/report_1771276848592.json
-📊 Results saved to: stress-test-2026-02-16T21-20-48-604Z.json
+⚠️  Note: This is automated testing. Manual security review recommended.
+📊 Results saved to: security-test-2026-02-16T21-30-00-716Z.json
 ──────────────────────────────────────────────────
-❌ Test stress-test FAILED in 31054ms
-❌ stress-test.js - 31.1s
+❌ Test security-test FAILED in 3485ms
+❌ security-test.js - 3.5s
+
+──────────────────────────────────────────────────
+🧪 Running: auth-test.js
+──────────────────────────────────────────────────
+🧪 Running test: auth-test
+──────────────────────────────────────────────────
+🔐 Authentication Comprehensive Test
+============================================================
+Proxy: localhost:8080
+Tests: 26
+============================================================
+
+Valid credentials                       ...
+❌ HTTP 404 (expected 200)
+Wrong password                          ...
+❌ HTTP 404 (expected 401/403/407)
+Wrong username                          ...
+❌ HTTP 404 (expected 401/403/407)
+Empty password                          ...
+❌ HTTP 404 (expected 401/403/407)
+Empty username                          ...
+❌ HTTP 404 (expected 401/403/407)
+No credentials (null)                   ...
+❌ HTTP 404 (expected 401/403/407)
+Empty string                            ...
+❌ HTTP 404 (expected 401/403/407/400)
+Missing colon separator                 ...
+❌ HTTP 404 (expected 401/403/407/400)
+Multiple colons                         ...
+❌ HTTP 404 (expected 401/403/407/200)
+Invalid base64                          ...
+❌ HTTP 404 (expected 401/403/407/400)
+Wrong auth scheme (Bearer)              ...
+❌ HTTP 404 (expected 401/403/407)
+With country param                      ...
+❌ HTTP 404 (expected 200)
+With city param                         ...
+❌ HTTP 404 (expected 200)
+With session param                      ...
+❌ HTTP 404 (expected 200)
+With sesstype sticky                    ...
+❌ HTTP 404 (expected 200)
+With sesstype rotating                  ...
+❌ HTTP 404 (expected 200)
+Multiple params combined                ...
+❌ HTTP 404 (expected 200)
+Invalid country code                    ...
+❌ HTTP 404 (expected 200/400/502)
+Unknown param (should ignore)           ...
+❌ HTTP 404 (expected 200)
+Password with special chars             ...
+❌ HTTP 404 (expected 401/403/407)
+Username with dots                      ...
+❌ HTTP 404 (expected 401/403/407)
+Unicode in auth                         ...
+❌ HTTP 404 (expected 401/403/407/400)
+Very long username (1000 chars)         ...
+❌ HTTP 404 (expected 401/403/407/400/413)
+Very long password (1000 chars)         ...
+❌ HTTP 404 (expected 401/403/407/400/413)
+Newline in auth                         ...
+❌ HTTP 404 (expected 401/403/407/400)
+Null byte in auth                       ...
+❌ HTTP 404 (expected 401/403/407/400)
+============================================================
+AUTH TEST RESULTS
+============================================================
+Passed: 0/26
+Failed: 26
+
+Failed tests:
+  ❌ Valid credentials: got 404
+  ❌ Wrong password: got 404
+  ❌ Wrong username: got 404
+  ❌ Empty password: got 404
+  ❌ Empty username: got 404
+  ❌ No credentials (null): got 404
+  ❌ Empty string: got 404
+  ❌ Missing colon separator: got 404
+  ❌ Multiple colons: got 404
+  ❌ Invalid base64: got 404
+  ❌ Wrong auth scheme (Bearer): got 404
+  ❌ With country param: got 404
+  ❌ With city param: got 404
+  ❌ With session param: got 404
+  ❌ With sesstype sticky: got 404
+  ❌ With sesstype rotating: got 404
+  ❌ Multiple params combined: got 404
+  ❌ Invalid country code: got 404
+  ❌ Unknown param (should ignore): got 404
+  ❌ Password with special chars: got 404
+  ❌ Username with dots: got 404
+  ❌ Unicode in auth: got 404
+  ❌ Very long username (1000 chars): got 404
+  ❌ Very long password (1000 chars): got 404
+  ❌ Newline in auth: got 404
+  ❌ Null byte in auth: got 404
+
+🔒 Security Assessment:
+Auth rejection: Tests above show if invalid creds are rejected
+📊 Results saved to: auth-test-2026-02-16T21-30-04-568Z.json
+
+──────────────────────────────────────────────────
+❌ Test auth-test FAILED in 2793ms
+❌ auth-test.js - 2.9s
 
 ──────────────────────────────────────────────────
 🧪 Running: leak-test.js
@@ -166,102 +193,11 @@ LEAK TEST SUMMARY
 ==================================================
 Issues found:
   🔴 IP check failed: Unexpected token '<', "<!DOCTYPE "... is not valid JSON
-📊 Results saved to: leak-test-2026-02-16T21-20-49-921Z.json
+📊 Results saved to: leak-test-2026-02-16T21-30-05-866Z.json
+
 ──────────────────────────────────────────────────
-❌ Test leak-test FAILED in 261ms
+❌ Test leak-test FAILED in 242ms
 ❌ leak-test.js - 0.3s
-
-──────────────────────────────────────────────────
-🧪 Running: protocol-test.js
-──────────────────────────────────────────────────
-🧪 Running test: protocol-test
-──────────────────────────────────────────────────
-📡 Protocol Comprehensive Test
-============================================================
-Proxy: localhost:8080
-Tests: 23
-============================================================
-
-GET request                        ...
-❌ (unexpected result)
-POST with JSON body                ...
-❌ Unexpected token '<', "<!DOCTYPE "... is not valid JSON
-POST with form data                ...
-❌ Unexpected token '<', "<!DOCTYPE "... is not valid JSON
-PUT request                        ...
-❌ (unexpected result)
-DELETE request                     ...
-❌ (unexpected result)
-HEAD request                       ...
-❌ (unexpected result)
-OPTIONS request                    ...
-❌ (unexpected result)
-Custom headers preserved           ...
-❌ Unexpected token '<', "<!DOCTYPE "... is not valid JSON
-User-Agent preserved               ...
-❌ Unexpected token '<', "<!DOCTYPE "... is not valid JSON
-Gzip compressed response           ...
-❌ Unexpected token '<', "<!DOCTYPE "... is not valid JSON
-Deflate compressed response        ...
-❌ Unexpected token '<', "<!DOCTYPE "... is not valid JSON
-Chunked response                   ...
-❌ (unexpected result)
-Follow redirect                    ...
-❌ (unexpected result)
-Multiple redirects (5)             ...
-❌ (unexpected result)
-Absolute redirect                  ...
-❌ (unexpected result)
-Set-Cookie header received         ...
-❌ (unexpected result)
-Send cookies                       ...
-❌ Unexpected token '<', "<!DOCTYPE "... is not valid JSON
-Binary response (image)            ...
-❌ (unexpected result)
-Large response (100KB)             ...
-❌ (unexpected result)
-UTF-8 encoding                     ...
-❌ (unexpected result)
-Status 201 Created                 ...
-❌ (unexpected result)
-Status 204 No Content              ...
-❌ (unexpected result)
-Status 418 Teapot                  ...
-❌ (unexpected result)
-============================================================
-PROTOCOL TEST RESULTS
-============================================================
-Passed: 0/23
-Failed: 23
-
-Failed tests:
-  ❌ GET request
-  ❌ POST with JSON body: Unexpected token '<', "<!DOCTYPE "... is not valid JSON
-  ❌ POST with form data: Unexpected token '<', "<!DOCTYPE "... is not valid JSON
-  ❌ PUT request
-  ❌ DELETE request
-  ❌ HEAD request
-  ❌ OPTIONS request
-  ❌ Custom headers preserved: Unexpected token '<', "<!DOCTYPE "... is not valid JSON
-  ❌ User-Agent preserved: Unexpected token '<', "<!DOCTYPE "... is not valid JSON
-  ❌ Gzip compressed response: Unexpected token '<', "<!DOCTYPE "... is not valid JSON
-  ❌ Deflate compressed response: Unexpected token '<', "<!DOCTYPE "... is not valid JSON
-  ❌ Chunked response
-  ❌ Follow redirect
-  ❌ Multiple redirects (5)
-  ❌ Absolute redirect
-  ❌ Set-Cookie header received
-  ❌ Send cookies: Unexpected token '<', "<!DOCTYPE "... is not valid JSON
-  ❌ Binary response (image)
-  ❌ Large response (100KB)
-  ❌ UTF-8 encoding
-  ❌ Status 201 Created
-  ❌ Status 204 No Content
-  ❌ Status 418 Teapot
-📊 Results saved to: protocol-test-2026-02-16T21-20-55-775Z.json
-──────────────────────────────────────────────────
-❌ Test protocol-test FAILED in 4789ms
-❌ protocol-test.js - 4.8s
 
 ══════════════════════════════════════════════════
 📊 SUITE COMPLETE: 0/3 passed, 3 failed

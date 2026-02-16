@@ -1,16 +1,16 @@
 {
   "running": false,
-  "suite": "quick",
-  "description": "Quick health check",
+  "suite": "security",
+  "description": "Security audit",
   "total": 3,
   "progress": 3,
   "currentTest": null,
-  "startTime": 1771276850937,
-  "suiteStartTime": 1771276817505,
+  "startTime": 1771277405584,
+  "suiteStartTime": 1771277397187,
   "queue": [],
   "lastTest": {
-    "name": "protocol-test.js",
+    "name": "leak-test.js",
     "passed": false,
-    "duration": 4845
+    "duration": 290
   }
 }

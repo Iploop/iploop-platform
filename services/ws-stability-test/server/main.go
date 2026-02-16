@@ -412,11 +412,38 @@ func initDB() {
 			created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 		);
 		CREATE INDEX IF NOT EXISTS idx_snapshots_at ON snapshots(created_at);
+
+		CREATE TABLE IF NOT EXISTS bandwidth (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			customer TEXT NOT NULL,
+			route_type TEXT NOT NULL,
+			target TEXT,
+			bytes_in INTEGER DEFAULT 0,
+			bytes_out INTEGER DEFAULT 0,
+			created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+		);
+		CREATE INDEX IF NOT EXISTS idx_bandwidth_customer ON bandwidth(customer);
+		CREATE INDEX IF NOT EXISTS idx_bandwidth_at ON bandwidth(created_at);
+		CREATE INDEX IF NOT EXISTS idx_bandwidth_customer_at ON bandwidth(customer, created_at);
 	`)
 	if err != nil {
 		log.Fatal("Failed to create tables:", err)
 	}
 	log.Println("SQLite DB initialized at /root/iploop-node-server.db")
+}
+
+func storeBandwidth(customer, routeType, target string, bytesIn, bytesOut int64) {
+	if customer == "" {
+		customer = "unknown"
+	}
+	go func() {
+		_, err := db.Exec(`INSERT INTO bandwidth (customer, route_type, target, bytes_in, bytes_out, created_at)
+			VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)`,
+			customer, routeType, target, bytesIn, bytesOut)
+		if err != nil {
+			log.Printf("[DB_ERROR] store bandwidth: %v", err)
+		}
+	}()
 }
 
 func storeRequest(reqType, nodeID, target string, success bool, latencyMs int, errMsg string) {
@@ -1304,11 +1331,15 @@ func (h *Hub) GetConnectionByIP(ip string) *Connection {
 // Format: user:apikey-node-NODEID-ip-ADDRESS-country-XX
 // Returns: nodeID, ip, country (any may be empty)
 func parseProxyAuth(req *http.Request) (targetNode, targetIP, targetCountry string) {
+	targetNode, targetIP, targetCountry, _ = parseProxyAuthFull(req)
+	return
+}
+
+func parseProxyAuthFull(req *http.Request) (targetNode, targetIP, targetCountry, customer string) {
 	auth := req.Header.Get("Proxy-Authorization")
 	if auth == "" {
 		return
 	}
-	// Basic auth: "Basic base64(user:pass)"
 	if !strings.HasPrefix(auth, "Basic ") {
 		return
 	}
@@ -1320,8 +1351,8 @@ func parseProxyAuth(req *http.Request) (targetNode, targetIP, targetCountry stri
 	if len(parts) < 2 {
 		return
 	}
+	customer = parts[0]
 	password := parts[1]
-	// Parse key-value pairs separated by -
 	tokens := strings.Split(password, "-")
 	for i := 0; i < len(tokens)-1; i++ {
 		switch tokens[i] {
@@ -2785,7 +2816,7 @@ func shouldUsePartner(targetCountry string) bool {
 
 // handlePartnerCONNECT chains a CONNECT request through a random partner server+peer.
 // Returns true if handled (success or fail), false if partner unavailable and should fallback.
-func handlePartnerCONNECT(clientConn net.Conn, target string) bool {
+func handlePartnerCONNECT(clientConn net.Conn, target, customer string) bool {
 	// Pick random server and peer
 	server := partnerServers[rand.Intn(len(partnerServers))]
 	peer := rand.Intn(partnerPeersPerSvr) + 1
@@ -2843,17 +2874,19 @@ func handlePartnerCONNECT(clientConn net.Conn, target string) bool {
 	upstream.SetDeadline(time.Time{})
 	clientConn.SetDeadline(time.Time{})
 
-	// Bidirectional relay
+	// Bidirectional relay with byte counting
 	var wg sync.WaitGroup
 	wg.Add(2)
+	var bytesIn, bytesOut int64
 
-	// Client → Partner upstream
+	// Client → Partner upstream (bytes_in = client upload)
 	go func() {
 		defer wg.Done()
 		buf := make([]byte, 32768)
 		for {
 			n, err := clientConn.Read(buf)
 			if n > 0 {
+				atomic.AddInt64(&bytesIn, int64(n))
 				if _, wErr := upstream.Write(buf[:n]); wErr != nil {
 					break
 				}
@@ -2864,13 +2897,14 @@ func handlePartnerCONNECT(clientConn net.Conn, target string) bool {
 		}
 	}()
 
-	// Partner upstream → Client
+	// Partner upstream → Client (bytes_out = client download)
 	go func() {
 		defer wg.Done()
 		buf := make([]byte, 32768)
 		for {
 			n, err := upstream.Read(buf)
 			if n > 0 {
+				atomic.AddInt64(&bytesOut, int64(n))
 				if _, wErr := clientConn.Write(buf[:n]); wErr != nil {
 					break
 				}
@@ -2882,6 +2916,7 @@ func handlePartnerCONNECT(clientConn net.Conn, target string) bool {
 	}()
 
 	wg.Wait()
+	storeBandwidth(customer, "partner", target, atomic.LoadInt64(&bytesIn), atomic.LoadInt64(&bytesOut))
 	return true
 }
 
@@ -2897,7 +2932,7 @@ func handleCONNECTRaw(clientConn net.Conn, req *http.Request) {
 	stabilityWait := 300 * time.Millisecond
 
 	// Parse targeting from auth: node-XXX, ip-XXX, country-XX
-	targetNode, targetIP, targetCountry := parseProxyAuth(req)
+	targetNode, targetIP, targetCountry, customer := parseProxyAuthFull(req)
 
 	// If specific node or IP requested, try direct routing
 	if targetNode != "" || targetIP != "" {
@@ -2940,6 +2975,7 @@ func handleCONNECTRaw(clientConn net.Conn, req *http.Request) {
 
 		var wg sync.WaitGroup
 		wg.Add(2)
+		var tBytesIn, tBytesOut int64
 		// Client → Node
 		go func() {
 			defer wg.Done()
@@ -2947,7 +2983,7 @@ func handleCONNECTRaw(clientConn net.Conn, req *http.Request) {
 			for {
 				n, rErr := clientConn.Read(buf)
 				if n > 0 {
-					// Must copy: buf is reused, but Write sends slice to channel asynchronously
+					atomic.AddInt64(&tBytesIn, int64(n))
 					cpy := make([]byte, n)
 					copy(cpy, buf[:n])
 					if wErr := t.Write(cpy); wErr != nil { break }
@@ -2961,6 +2997,7 @@ func handleCONNECTRaw(clientConn net.Conn, req *http.Request) {
 			for {
 				data, rErr := t.Read()
 				if len(data) > 0 {
+					atomic.AddInt64(&tBytesOut, int64(len(data)))
 					if _, wErr := clientConn.Write(data); wErr != nil { break }
 				}
 				if rErr != nil { break }
@@ -2968,12 +3005,13 @@ func handleCONNECTRaw(clientConn net.Conn, req *http.Request) {
 		}()
 		wg.Wait()
 		hub.tunnelManager.CloseTunnel(t.ID)
+		storeBandwidth(customer, "tunnel", target, atomic.LoadInt64(&tBytesIn), atomic.LoadInt64(&tBytesOut))
 		return
 	}
 
 	// ── Partner pool routing (US residential, 95/5 split) ──
 	if shouldUsePartner(targetCountry) {
-		if handlePartnerCONNECT(clientConn, target) {
+		if handlePartnerCONNECT(clientConn, target, customer) {
 			return // handled by partner
 		}
 		// Partner failed, fall through to our own nodes
@@ -3133,6 +3171,7 @@ func handleCONNECTRaw(clientConn net.Conn, req *http.Request) {
 
 	var wg sync.WaitGroup
 	wg.Add(2)
+	var mainBytesIn, mainBytesOut int64
 
 	// Client → Node
 	go func() {
@@ -3141,7 +3180,7 @@ func handleCONNECTRaw(clientConn net.Conn, req *http.Request) {
 		for {
 			n, err := clientConn.Read(buf)
 			if n > 0 {
-				// Must copy: buf is reused, but Write sends slice to channel asynchronously
+				atomic.AddInt64(&mainBytesIn, int64(n))
 				cpy := make([]byte, n)
 				copy(cpy, buf[:n])
 				if writeErr := winTunnel.Write(cpy); writeErr != nil {
@@ -3162,6 +3201,7 @@ func handleCONNECTRaw(clientConn net.Conn, req *http.Request) {
 			if err != nil {
 				break
 			}
+			atomic.AddInt64(&mainBytesOut, int64(len(data)))
 			if _, writeErr := clientConn.Write(data); writeErr != nil {
 				break
 			}
@@ -3170,7 +3210,87 @@ func handleCONNECTRaw(clientConn net.Conn, req *http.Request) {
 
 	wg.Wait()
 	hub.tunnelManager.CloseTunnel(winTunnel.ID)
+	storeBandwidth(customer, "tunnel", target, atomic.LoadInt64(&mainBytesIn), atomic.LoadInt64(&mainBytesOut))
 	log.Printf("[HTTP_PROXY] Tunnel %s closed for %s", winTunnel.ID[:8], target)
+}
+
+// ─── Bandwidth API ─────────────────────────────────────────────────────────────
+
+func handleAPIBandwidth(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	customer := r.URL.Query().Get("customer")
+	period := r.URL.Query().Get("period")
+	if period == "" {
+		period = "24h"
+	}
+
+	var since string
+	switch period {
+	case "1h":
+		since = "datetime('now', '-1 hours')"
+	case "24h":
+		since = "datetime('now', '-24 hours')"
+	case "7d":
+		since = "datetime('now', '-7 days')"
+	case "30d":
+		since = "datetime('now', '-30 days')"
+	case "all":
+		since = "datetime('2000-01-01')"
+	default:
+		since = "datetime('now', '-24 hours')"
+	}
+
+	// Per-customer summary
+	query := fmt.Sprintf(`SELECT customer, route_type, 
+		COUNT(*) as requests, 
+		SUM(bytes_in) as total_in, 
+		SUM(bytes_out) as total_out,
+		SUM(bytes_in + bytes_out) as total_bytes
+		FROM bandwidth WHERE created_at >= %s`, since)
+	
+	if customer != "" {
+		query += fmt.Sprintf(` AND customer = '%s'`, customer)
+	}
+	query += ` GROUP BY customer, route_type ORDER BY total_bytes DESC`
+
+	rows, err := db.Query(query)
+	if err != nil {
+		json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
+		return
+	}
+	defer rows.Close()
+
+	type BandwidthEntry struct {
+		Customer   string  `json:"customer"`
+		RouteType  string  `json:"route_type"`
+		Requests   int64   `json:"requests"`
+		BytesIn    int64   `json:"bytes_in"`
+		BytesOut   int64   `json:"bytes_out"`
+		TotalBytes int64   `json:"total_bytes"`
+		TotalMB    float64 `json:"total_mb"`
+		TotalGB    float64 `json:"total_gb"`
+	}
+
+	var entries []BandwidthEntry
+	var grandTotal int64
+	for rows.Next() {
+		var e BandwidthEntry
+		rows.Scan(&e.Customer, &e.RouteType, &e.Requests, &e.BytesIn, &e.BytesOut, &e.TotalBytes)
+		e.TotalMB = float64(e.TotalBytes) / (1024 * 1024)
+		e.TotalGB = float64(e.TotalBytes) / (1024 * 1024 * 1024)
+		grandTotal += e.TotalBytes
+		entries = append(entries, e)
+	}
+
+	result := map[string]interface{}{
+		"period":      period,
+		"entries":     entries,
+		"total_bytes": grandTotal,
+		"total_mb":    float64(grandTotal) / (1024 * 1024),
+		"total_gb":    float64(grandTotal) / (1024 * 1024 * 1024),
+	}
+	json.NewEncoder(w).Encode(result)
 }
 
 func main() {
@@ -3317,6 +3437,7 @@ func main() {
 
 	// API: Node quality scores
 	http.HandleFunc("/api/node-scores", handleAPINodeScores)
+	http.HandleFunc("/api/bandwidth", handleAPIBandwidth)
 
 	tlsCert := os.Getenv("TLS_CERT")
 	tlsKey := os.Getenv("TLS_KEY")

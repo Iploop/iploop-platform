@@ -13,8 +13,8 @@ import (
 // 1 device × 1 hour = 1 credit
 // Credits convert to proxy GB at configurable rate
 const (
-	CreditsPerHour     = 1.0
-	DefaultGBPerCredit = 0.1 // 10 credits = 1 GB
+	CreditsPerHour     = 100.0
+	DefaultGBPerCredit = 0.001 // 1000 credits = 1 GB
 	UptimeMultiplier24 = 1.5 // 24h+ streak bonus
 	UptimeMultiplier72 = 2.0 // 72h+ streak bonus
 	MultiDeviceBonus   = 0.2 // +20% per extra device

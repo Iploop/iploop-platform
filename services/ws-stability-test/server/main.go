@@ -492,8 +492,8 @@ func storeBandwidth(customer, routeType, target string, bytesIn, bytesOut int64)
 // ─── Credit System ─────────────────────────────────────────────────────────────
 
 const (
-	creditsPerHour     = 1.0
-	defaultGBPerCredit = 0.1  // 10 credits = 1 GB
+	creditsPerHour     = 100.0
+	defaultGBPerCredit = 0.001 // 1000 credits = 1 GB
 	uptimeBonus24h     = 1.5
 	uptimeBonus72h     = 2.0
 	multiDeviceBonus   = 0.2

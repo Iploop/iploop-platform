@@ -182,8 +182,8 @@ func (a *NodeAgent) connect() error {
 	}
 	log.Printf("[NODE] Connected to gateway")
 
-	// Send IP info
-	go a.sendIPInfo()
+	// Send registration + IP info
+	go a.registerAndSendIPInfo()
 
 	// Pong handler
 	conn.SetPongHandler(func(string) error {
@@ -369,7 +369,7 @@ func (a *NodeAgent) handleBinaryTunnelData(raw []byte) {
 
 // ─── IP Info ───────────────────────────────────────────────────────────────────
 
-func (a *NodeAgent) sendIPInfo() {
+func (a *NodeAgent) registerAndSendIPInfo() {
 	client := &http.Client{Timeout: 10 * time.Second}
 	resp, err := client.Get(ipInfoURL)
 	if err != nil {
@@ -398,6 +398,26 @@ func (a *NodeAgent) sendIPInfo() {
 	})
 	a.safeWrite(websocket.TextMessage, msg)
 	log.Printf("[NODE] IP: %s (%s, %s)", info.IP, info.Country, info.City)
+
+	// Send register message (data wrapped for server parser)
+	reg, _ := json.Marshal(map[string]interface{}{
+		"type": "register",
+		"data": map[string]interface{}{
+			"device_id":       a.nodeID,
+			"ip_address":      info.IP,
+			"country":         info.Country,
+			"country_name":    info.CountryName,
+			"city":            info.City,
+			"region":          info.Region,
+			"isp":             info.ISP,
+			"asn":             0,
+			"connection_type": "wired",
+			"device_type":     "docker",
+			"sdk_version":     "2.0.0",
+		},
+	})
+	a.safeWrite(websocket.TextMessage, reg)
+	log.Printf("[NODE] Registered")
 }
 
 // ─── Helpers ───────────────────────────────────────────────────────────────────
@@ -422,7 +442,7 @@ func generateNodeID(token string) string {
 	}
 	b := make([]byte, 8)
 	binary.BigEndian.PutUint64(b, h)
-	return fmt.Sprintf("docker-%x-%x-%x-%x-%x",
+	return fmt.Sprintf("docker_%x%x%x%x%x",
 		b[0:2], b[2:4], b[4:5], b[5:6], b[6:8])
 }
 

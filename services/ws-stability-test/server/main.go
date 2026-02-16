@@ -9,13 +9,17 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"math"
+	"math/rand"
 	"net"
 	"net/http"
 	"os"
 	"runtime"
 	"runtime/pprof"
+	"sort"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/google/uuid"
@@ -23,6 +27,39 @@ import (
 	_ "modernc.org/sqlite"
 	_ "net/http/pprof"
 )
+
+// ─── Node Quality Scoring ──────────────────────────────────────────────────────
+
+type NodeScore struct {
+	SuccessCount int64     `json:"success_count"`
+	FailCount    int64     `json:"fail_count"`
+	TotalLatency int64     `json:"total_latency_ms"`
+	LastUsed     time.Time `json:"last_used"`
+	Quarantined  time.Time `json:"quarantined_until"`
+}
+
+func (ns *NodeScore) Total() int64 {
+	return ns.SuccessCount + ns.FailCount
+}
+
+func (ns *NodeScore) SuccessRate() float64 {
+	total := ns.Total()
+	if total == 0 {
+		return 0.5 // neutral for unknown nodes
+	}
+	return float64(ns.SuccessCount) / float64(total)
+}
+
+func (ns *NodeScore) AvgLatency() float64 {
+	if ns.SuccessCount == 0 {
+		return 9999
+	}
+	return float64(ns.TotalLatency) / float64(ns.SuccessCount)
+}
+
+func (ns *NodeScore) IsQuarantined() bool {
+	return time.Now().Before(ns.Quarantined)
+}
 
 // ─── Constants ─────────────────────────────────────────────────────────────────
 
@@ -35,8 +72,8 @@ const (
 
 var upgrader = websocket.Upgrader{
 	CheckOrigin:     func(r *http.Request) bool { return true },
-	ReadBufferSize:  4096,
-	WriteBufferSize: 4096,
+	ReadBufferSize:  65536,
+	WriteBufferSize: 65536,
 }
 
 // ─── Connection ────────────────────────────────────────────────────────────────
@@ -59,6 +96,7 @@ type Connection struct {
 	PingsSent      int64     `json:"pings_sent"`
 	PongsRecv      int64     `json:"pongs_received"`
 	HasIPInfo      bool      `json:"has_ip_info"`
+	ProxyType      string    `json:"proxy_type"`
 	Registered     bool      `json:"registered"`
 
 	// WebSocket writer — guarded by write mutex
@@ -142,6 +180,8 @@ type Tunnel struct {
 	closed    bool
 	ready     bool
 	readyErr  string
+	BytesSentToNode     int64
+	BytesRecvFromNode   int64
 }
 
 func (t *Tunnel) Close() {
@@ -151,6 +191,12 @@ func (t *Tunnel) Close() {
 		return
 	}
 	t.closed = true
+	sent := atomic.LoadInt64(&t.BytesSentToNode)
+	recv := atomic.LoadInt64(&t.BytesRecvFromNode)
+	if sent > 0 || recv > 0 {
+		log.Printf("[TUNNEL-BYTES] %s node=%s host=%s sent=%d recv=%d duration=%v",
+			t.ID[:8], t.NodeID[:8], t.Host, sent, recv, time.Since(t.CreatedAt))
+	}
 	close(t.CloseCh)
 }
 
@@ -166,11 +212,12 @@ func (t *Tunnel) Write(data []byte) error {
 	}
 	select {
 	case t.WriteCh <- data:
+		atomic.AddInt64(&t.BytesSentToNode, int64(len(data)))
 		return nil
 	case <-t.CloseCh:
 		return fmt.Errorf("tunnel closed")
-	default:
-		return fmt.Errorf("tunnel buffer full")
+	case <-time.After(5 * time.Second):
+		return fmt.Errorf("tunnel write timeout")
 	}
 }
 
@@ -510,8 +557,8 @@ func (tm *TunnelManager) OpenTunnel(nodeID, host, port string) (*Tunnel, error) 
 		Host:      host,
 		Port:      port,
 		Conn:      conn,
-		DataCh:    make(chan []byte, 256),
-		WriteCh:   make(chan []byte, 256),
+		DataCh:    make(chan []byte, 1024),
+		WriteCh:   make(chan []byte, 1024),
 		CloseCh:   make(chan struct{}),
 		ReadyCh:   make(chan bool, 1),
 		CreatedAt: time.Now(),
@@ -606,8 +653,12 @@ func (tm *TunnelManager) tunnelWriter(tunnel *Tunnel) {
 			frame := encodeBinaryTunnelData(tunnel.ID, data, false)
 			select {
 			case tunnel.Conn.BinaryCh <- frame:
-			default:
-				log.Printf("[TUNNEL] %s binary send channel full, dropping data", tunnel.ID[:8])
+			case <-time.After(10 * time.Second):
+				log.Printf("[TUNNEL] %s binary send timeout, closing tunnel", tunnel.ID[:8])
+				go tm.CloseTunnel(tunnel.ID)
+				return
+			case <-tunnel.CloseCh:
+				return
 			}
 		case <-tunnel.CloseCh:
 			return
@@ -638,7 +689,7 @@ func (tm *TunnelManager) CloseTunnel(tunnelID string) {
 		eofFrame := encodeBinaryTunnelData(tunnelID, nil, true)
 		select {
 		case tunnel.Conn.BinaryCh <- eofFrame:
-		default:
+		case <-time.After(5 * time.Second):
 		}
 
 		log.Printf("[TUNNEL] Closed %s", tunnelID[:8])
@@ -699,8 +750,10 @@ func (tm *TunnelManager) HandleTunnelData(data *TunnelDataMessage) {
 
 	select {
 	case tunnel.DataCh <- payload:
-	default:
-		log.Printf("[TUNNEL] %s data channel full, dropping %d bytes", data.TunnelID[:8], len(payload))
+		atomic.AddInt64(&tunnel.BytesRecvFromNode, int64(len(payload)))
+	case <-time.After(5 * time.Second):
+		log.Printf("[TUNNEL] %s data channel timeout, closing tunnel (%d bytes lost)", data.TunnelID[:8], len(payload))
+		go tm.CloseTunnel(data.TunnelID)
 	}
 }
 
@@ -843,6 +896,9 @@ type Hub struct {
 	totalCooldowns int64
 	proxyManager   *ProxyManager
 	tunnelManager  *TunnelManager
+
+	scoresMu sync.RWMutex
+	scores   map[string]*NodeScore
 }
 
 func NewHub() *Hub {
@@ -850,7 +906,176 @@ func NewHub() *Hub {
 		connections: make(map[string]*Connection),
 		disconnects: make([]DisconnectEvent, 0, 10000),
 		cooldowns:   make(map[string]*NodeCooldown),
+		scores:      make(map[string]*NodeScore),
 	}
+}
+
+// RecordNodeResult updates quality scores for a node after a tunnel/proxy attempt.
+func (h *Hub) RecordNodeResult(nodeID string, success bool, latencyMs int64) {
+	h.scoresMu.Lock()
+	defer h.scoresMu.Unlock()
+
+	s, ok := h.scores[nodeID]
+	if !ok {
+		s = &NodeScore{}
+		h.scores[nodeID] = s
+	}
+
+	if success {
+		atomic.AddInt64(&s.SuccessCount, 1)
+		atomic.AddInt64(&s.TotalLatency, latencyMs)
+	} else {
+		atomic.AddInt64(&s.FailCount, 1)
+	}
+	s.LastUsed = time.Now()
+
+	// Quarantine: if >=5 requests and success rate < 30%, quarantine 10 min
+	if s.Total() >= 5 && s.SuccessRate() < 0.30 {
+		s.Quarantined = time.Now().Add(10 * time.Minute)
+		log.Printf("[SCORE] Quarantined node %s: %.0f%% success (%d/%d)", nodeID, s.SuccessRate()*100, s.SuccessCount, s.Total())
+	}
+}
+
+// GetNodeScore returns the score for a node (nil if unknown).
+func (h *Hub) GetNodeScore(nodeID string) *NodeScore {
+	h.scoresMu.RLock()
+	defer h.scoresMu.RUnlock()
+	return h.scores[nodeID]
+}
+
+// GetTopNodes returns up to `count` best connected tunnel-capable nodes, sorted by quality score.
+// Excludes quarantined nodes and nodes in skip set.
+func (h *Hub) GetTopNodes(country string, count int, skip map[string]bool) []*Connection {
+	h.mu.RLock()
+	eligible := make([]*Connection, 0, 64)
+	for _, c := range h.connections {
+		if skip[c.NodeID] {
+			continue
+		}
+		if c.SendCh == nil {
+			continue
+		}
+		if c.SDKVersion != "2.0" && c.SDKVersion != "stability-test-2.0" {
+			continue
+		}
+		if country != "" && c.Country != country {
+			continue
+		}
+		eligible = append(eligible, c)
+	}
+	// Fallback: ignore country
+	if len(eligible) == 0 && country != "" {
+		for _, c := range h.connections {
+			if skip[c.NodeID] || c.SendCh == nil {
+				continue
+			}
+			if c.SDKVersion != "2.0" && c.SDKVersion != "stability-test-2.0" {
+				continue
+			}
+			eligible = append(eligible, c)
+		}
+	}
+	h.mu.RUnlock()
+
+	// Tiered node selection: good / unknown / bad
+	// Good nodes get most traffic, unknown get exploration, bad get minimal
+	h.scoresMu.RLock()
+	var good, unknown, bad []*Connection
+	for _, c := range eligible {
+		s := h.scores[c.NodeID]
+		if s != nil && s.IsQuarantined() {
+			continue
+		}
+		// Deprioritize VPN/DCH/PUB within each tier
+		isVPN := c.ProxyType == "VPN" || c.ProxyType == "DCH" || c.ProxyType == "PUB"
+
+		if s == nil || s.Total() < 3 {
+			// Not enough data — exploration pool
+			if !isVPN {
+				unknown = append(unknown, c)
+			} else {
+				bad = append(bad, c) // VPN with no data → bad
+			}
+		} else if s.SuccessRate() >= 0.5 {
+			// Proven good node
+			if !isVPN {
+				good = append(good, c)
+			} else {
+				unknown = append(unknown, c) // VPN but works → unknown tier
+			}
+		} else {
+			// Bad success rate
+			bad = append(bad, c)
+		}
+	}
+	h.scoresMu.RUnlock()
+
+	// Shuffle each tier for load distribution
+	rand.Shuffle(len(good), func(i, j int) { good[i], good[j] = good[j], good[i] })
+	rand.Shuffle(len(unknown), func(i, j int) { unknown[i], unknown[j] = unknown[j], unknown[i] })
+	rand.Shuffle(len(bad), func(i, j int) { bad[i], bad[j] = bad[j], bad[i] })
+
+	// Weighted selection: 80% good, 15% unknown (exploration), 5% bad (re-evaluation)
+	var selected []*Connection
+	goodCount := int(math.Ceil(float64(count) * 0.80))
+	unknownCount := int(math.Ceil(float64(count) * 0.15))
+	if unknownCount < 1 {
+		unknownCount = 1
+	}
+
+	// Take from good tier
+	if goodCount > len(good) {
+		goodCount = len(good)
+	}
+	selected = append(selected, good[:goodCount]...)
+
+	// Take from unknown tier (exploration)
+	remaining := count - len(selected)
+	if unknownCount > remaining {
+		unknownCount = remaining
+	}
+	if unknownCount > len(unknown) {
+		unknownCount = len(unknown)
+	}
+	if unknownCount > 0 {
+		selected = append(selected, unknown[:unknownCount]...)
+	}
+
+	// Fill remaining from whatever is available: good → unknown → bad
+	remaining = count - len(selected)
+	if remaining > 0 {
+		// More good nodes
+		extraGood := good[goodCount:]
+		if remaining <= len(extraGood) {
+			selected = append(selected, extraGood[:remaining]...)
+		} else {
+			selected = append(selected, extraGood...)
+			remaining = count - len(selected)
+			// More unknown
+			extraUnknown := unknown[unknownCount:]
+			if remaining <= len(extraUnknown) {
+				selected = append(selected, extraUnknown[:remaining]...)
+			} else {
+				selected = append(selected, extraUnknown...)
+				remaining = count - len(selected)
+				// Last resort: bad nodes
+				if remaining > len(bad) {
+					remaining = len(bad)
+				}
+				if remaining > 0 {
+					selected = append(selected, bad[:remaining]...)
+				}
+			}
+		}
+	}
+
+	// Final shuffle so parallel tunnels don't always hit same order
+	rand.Shuffle(len(selected), func(i, j int) { selected[i], selected[j] = selected[j], selected[i] })
+
+	if len(selected) > count {
+		selected = selected[:count]
+	}
+	return selected
 }
 
 func (h *Hub) CheckCooldown(nodeID string) bool {
@@ -958,6 +1183,14 @@ func (h *Hub) SetIPInfo(nodeID string, msg map[string]interface{}) {
 	}
 	ip, _ := msg["ip"].(string)
 
+	// Extract proxy type
+	proxyType := ""
+	if ipInfo, ok2 := msg["ip_info"].(map[string]interface{}); ok2 {
+		if proxy, ok3 := ipInfo["proxy"].(map[string]interface{}); ok3 {
+			proxyType, _ = proxy["proxy_type"].(string)
+		}
+	}
+
 	h.mu.Lock()
 	if conn, ok := h.connections[nodeID]; ok {
 		conn.HasIPInfo = true
@@ -975,6 +1208,9 @@ func (h *Hub) SetIPInfo(nodeID string, msg map[string]interface{}) {
 		}
 		if ip != "" {
 			conn.IP = ip
+		}
+		if proxyType != "" {
+			conn.ProxyType = proxyType
 		}
 	}
 	h.mu.Unlock()
@@ -999,7 +1235,70 @@ func (h *Hub) Count() int {
 func (h *Hub) GetConnectionByNodeID(nodeID string) *Connection {
 	h.mu.RLock()
 	defer h.mu.RUnlock()
-	return h.connections[nodeID]
+	// Exact match first
+	if c, ok := h.connections[nodeID]; ok {
+		return c
+	}
+	// Prefix match (short IDs like first 8 chars)
+	if len(nodeID) >= 8 {
+		for id, c := range h.connections {
+			if strings.HasPrefix(id, nodeID) {
+				return c
+			}
+		}
+	}
+	return nil
+}
+
+// GetConnectionByIP finds a connected node by its IP address
+func (h *Hub) GetConnectionByIP(ip string) *Connection {
+	h.mu.RLock()
+	defer h.mu.RUnlock()
+	for _, c := range h.connections {
+		if c.IP == ip {
+			return c
+		}
+	}
+	return nil
+}
+
+// parseProxyAuth extracts targeting params from Proxy-Authorization header
+// Format: user:apikey-node-NODEID-ip-ADDRESS-country-XX
+// Returns: nodeID, ip, country (any may be empty)
+func parseProxyAuth(req *http.Request) (targetNode, targetIP, targetCountry string) {
+	auth := req.Header.Get("Proxy-Authorization")
+	if auth == "" {
+		return
+	}
+	// Basic auth: "Basic base64(user:pass)"
+	if !strings.HasPrefix(auth, "Basic ") {
+		return
+	}
+	decoded, err := base64.StdEncoding.DecodeString(auth[6:])
+	if err != nil {
+		return
+	}
+	parts := strings.SplitN(string(decoded), ":", 2)
+	if len(parts) < 2 {
+		return
+	}
+	password := parts[1]
+	// Parse key-value pairs separated by -
+	tokens := strings.Split(password, "-")
+	for i := 0; i < len(tokens)-1; i++ {
+		switch tokens[i] {
+		case "node":
+			targetNode = tokens[i+1]
+			i++
+		case "ip":
+			targetIP = tokens[i+1]
+			i++
+		case "country":
+			targetCountry = strings.ToUpper(tokens[i+1])
+			i++
+		}
+	}
+	return
 }
 
 // GetAllConnections returns a snapshot of all connections
@@ -1040,37 +1339,13 @@ func (h *Hub) GetAlternativeNode(country string, skip map[string]bool) *Connecti
 }
 
 // GetTunnelNode finds a connected node that supports tunnels (SDK 2.0+).
-// Uses random offset to distribute across nodes instead of always picking the first.
+// Uses quality scoring to pick the best available node.
 func (h *Hub) GetTunnelNode(country string, skip map[string]bool) *Connection {
-	h.mu.RLock()
-	defer h.mu.RUnlock()
-
-	// Collect eligible nodes (accept both "2.0" and legacy "stability-test-2.0")
-	eligible := make([]*Connection, 0, 64)
-	for _, c := range h.connections {
-		if skip[c.NodeID] { continue }
-		if c.SendCh == nil { continue }
-		if c.SDKVersion != "2.0" && c.SDKVersion != "stability-test-2.0" { continue }
-		if country != "" && c.Country != country { continue }
-		eligible = append(eligible, c)
-	}
-
-	if len(eligible) == 0 && country != "" {
-		// Fallback: any 2.0 node regardless of country
-		for _, c := range h.connections {
-			if skip[c.NodeID] { continue }
-			if c.SendCh == nil { continue }
-			if c.SDKVersion != "2.0" && c.SDKVersion != "stability-test-2.0" { continue }
-			eligible = append(eligible, c)
-		}
-	}
-
-	if len(eligible) == 0 {
+	nodes := h.GetTopNodes(country, 1, skip)
+	if len(nodes) == 0 {
 		return nil
 	}
-
-	// Pick random node
-	return eligible[time.Now().UnixNano()%int64(len(eligible))]
+	return nodes[0]
 }
 
 func (h *Hub) Stats() map[string]interface{} {
@@ -1300,6 +1575,10 @@ func handleWS(w http.ResponseWriter, r *http.Request) {
 		conn.SetReadDeadline(time.Now().Add(pingInterval + pongWait))
 		for {
 			msgType, rawMsg, err := conn.ReadMessage()
+			if err == nil {
+				// Reset read deadline on any message (not just pong)
+				conn.SetReadDeadline(time.Now().Add(pingInterval + pongWait))
+			}
 			if err != nil {
 				if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseNormalClosure) {
 					hub.Remove(hello.NodeID, fmt.Sprintf("read_error: %v", err))
@@ -1379,6 +1658,44 @@ func handleWS(w http.ResponseWriter, r *http.Request) {
 					var data TunnelDataMessage
 					if json.Unmarshal(dataBytes, &data) == nil {
 						hub.tunnelManager.HandleTunnelData(&data)
+					}
+				}
+
+			case "tunnel_stats":
+				if hub.tunnelManager != nil {
+					tunnelID, _ := m["tunnelId"].(string)
+					if tunnelID != "" {
+						sdkSentToTarget := int64(0)
+						sdkRecvFromTarget := int64(0)
+						if v, ok := m["bytesSentToTarget"].(float64); ok {
+							sdkSentToTarget = int64(v)
+						}
+						if v, ok := m["bytesRecvFromTarget"].(float64); ok {
+							sdkRecvFromTarget = int64(v)
+						}
+						hub.tunnelManager.mu.RLock()
+						tunnel, exists := hub.tunnelManager.tunnels[tunnelID]
+						hub.tunnelManager.mu.RUnlock()
+						short := tunnelID
+						if len(short) > 8 {
+							short = short[:8]
+						}
+						if exists {
+							serverSent := atomic.LoadInt64(&tunnel.BytesSentToNode)
+							serverRecv := atomic.LoadInt64(&tunnel.BytesRecvFromNode)
+							// Server sent to node should == SDK sent to target (node relays to target)
+							// Server recv from node should == SDK recv from target (target replies via node)
+							sentDiff := serverSent - sdkSentToTarget
+							recvDiff := sdkRecvFromTarget - serverRecv
+							if sentDiff != 0 || recvDiff != 0 {
+								log.Printf("[BYTE-MISMATCH] %s server_sent=%d sdk_sentToTarget=%d diff=%d | sdk_recvFromTarget=%d server_recv=%d diff=%d",
+									short, serverSent, sdkSentToTarget, sentDiff, sdkRecvFromTarget, serverRecv, recvDiff)
+							} else {
+								log.Printf("[BYTE-MATCH] %s bytes=%d/%d OK", short, serverSent, serverRecv)
+							}
+						} else {
+							log.Printf("[TUNNEL-STATS] %s tunnel already closed, sdk_sent=%d sdk_recv=%d", short, sdkSentToTarget, sdkRecvFromTarget)
+						}
 					}
 				}
 
@@ -2257,6 +2574,50 @@ func handleAPITunnelStandby(w http.ResponseWriter, r *http.Request) {
 	log.Printf("[TUNNEL_STANDBY] Tunnel %s closed", tunnel.ID[:8])
 }
 
+// ─── API: Node Scores endpoint ─────────────────────────────────────────────────
+
+func handleAPINodeScores(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	hub.scoresMu.RLock()
+	type scoreEntry struct {
+		NodeID      string  `json:"node_id"`
+		Success     int64   `json:"success"`
+		Fail        int64   `json:"fail"`
+		SuccessRate float64 `json:"success_rate"`
+		AvgLatency  float64 `json:"avg_latency_ms"`
+		LastUsed    string  `json:"last_used"`
+		Quarantined bool    `json:"quarantined"`
+		Connected   bool    `json:"connected"`
+	}
+
+	entries := make([]scoreEntry, 0, len(hub.scores))
+	for nodeID, s := range hub.scores {
+		connected := hub.GetConnectionByNodeID(nodeID) != nil
+		entries = append(entries, scoreEntry{
+			NodeID:      nodeID,
+			Success:     s.SuccessCount,
+			Fail:        s.FailCount,
+			SuccessRate: s.SuccessRate(),
+			AvgLatency:  s.AvgLatency(),
+			LastUsed:    s.LastUsed.Format(time.RFC3339),
+			Quarantined: s.IsQuarantined(),
+			Connected:   connected,
+		})
+	}
+	hub.scoresMu.RUnlock()
+
+	// Sort by success rate descending
+	sort.Slice(entries, func(i, j int) bool {
+		return entries[i].SuccessRate > entries[j].SuccessRate
+	})
+
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"total":  len(entries),
+		"scores": entries,
+	})
+}
+
 // ─── Main ──────────────────────────────────────────────────────────────────────
 
 // ─── HTTP CONNECT Proxy (for curl -x) ──────────────────────────────────────
@@ -2308,7 +2669,16 @@ func handleProxyConn(clientConn net.Conn) {
 		port = p
 	}
 
-	alt := hub.GetAlternativeNode("", map[string]bool{})
+	// Parse targeting from auth
+	pTargetNode, pTargetIP, pTargetCountry := parseProxyAuth(req)
+	var alt *Connection
+	if pTargetNode != "" {
+		alt = hub.GetConnectionByNodeID(pTargetNode)
+	} else if pTargetIP != "" {
+		alt = hub.GetConnectionByIP(pTargetIP)
+	} else {
+		alt = hub.GetAlternativeNode(pTargetCountry, map[string]bool{})
+	}
 	if alt == nil {
 		clientConn.Write([]byte("HTTP/1.1 503 No Nodes Available\r\n\r\n"))
 		return
@@ -2361,58 +2731,232 @@ func handleCONNECTRaw(clientConn net.Conn, req *http.Request) {
 		port = "443"
 	}
 
-	// Pick a random SDK 2.0 node with retry on tunnel failure or fast EOF
-	skip := map[string]bool{}
-	var tunnel *Tunnel
-	var conn *Connection
-	maxAttempts := 3
-	stabilityWait := 500 * time.Millisecond // Wait to detect fast EOF before confirming to client
+	target := host + ":" + port
+	connectStart := time.Now()
+	stabilityWait := 300 * time.Millisecond
 
-	for attempt := 0; attempt < maxAttempts; attempt++ {
-		conn = hub.GetTunnelNode("", skip)
-		if conn == nil {
+	// Parse targeting from auth: node-XXX, ip-XXX, country-XX
+	targetNode, targetIP, targetCountry := parseProxyAuth(req)
+
+	// If specific node or IP requested, try direct routing
+	if targetNode != "" || targetIP != "" {
+		var directConn *Connection
+		if targetNode != "" {
+			directConn = hub.GetConnectionByNodeID(targetNode)
+		} else if targetIP != "" {
+			directConn = hub.GetConnectionByIP(targetIP)
+		}
+		if directConn == nil {
+			label := targetNode
+			if label == "" { label = targetIP }
+			log.Printf("[HTTP_PROXY] CONNECT %s targeted node/ip=%s NOT FOUND", target, label)
+			clientConn.Write([]byte("HTTP/1.1 503 Targeted Node Not Found\r\n\r\n"))
+			return
+		}
+		log.Printf("[HTTP_PROXY] CONNECT %s targeted node=%s ip=%s", target, directConn.NodeID, directConn.IP)
+		t, tErr := hub.tunnelManager.OpenTunnel(directConn.NodeID, host, port)
+		if tErr != nil {
+			log.Printf("[HTTP_PROXY] Targeted tunnel failed for %s: %v", target, tErr)
+			clientConn.Write([]byte("HTTP/1.1 502 Targeted Node Tunnel Failed\r\n\r\n"))
+			return
+		}
+		// Wait for stability
+		select {
+		case <-t.CloseCh:
+			hub.tunnelManager.CloseTunnel(t.ID)
+			clientConn.Write([]byte("HTTP/1.1 502 Targeted Tunnel Closed Early\r\n\r\n"))
+			return
+		case <-time.After(stabilityWait):
+		}
+		clientConn.Write([]byte("HTTP/1.1 200 Connection Established\r\n\r\n"))
+		latencyMs := int(time.Since(connectStart).Milliseconds())
+		log.Printf("[HTTP_PROXY] Tunnel %s established for %s via targeted node %s in %dms",
+			t.ID[:8], target, directConn.NodeID[:16], latencyMs)
+		storeRequest("tunnel", directConn.NodeID, target, true, latencyMs, "")
+
+		// Remove deadline for tunnel relay
+		clientConn.SetDeadline(time.Time{})
+
+		var wg sync.WaitGroup
+		wg.Add(2)
+		// Client → Node
+		go func() {
+			defer wg.Done()
+			buf := make([]byte, 32768)
+			for {
+				n, rErr := clientConn.Read(buf)
+				if n > 0 {
+					// Must copy: buf is reused, but Write sends slice to channel asynchronously
+					cpy := make([]byte, n)
+					copy(cpy, buf[:n])
+					if wErr := t.Write(cpy); wErr != nil { break }
+				}
+				if rErr != nil { break }
+			}
+		}()
+		// Node → Client
+		go func() {
+			defer wg.Done()
+			for {
+				data, rErr := t.Read()
+				if len(data) > 0 {
+					if _, wErr := clientConn.Write(data); wErr != nil { break }
+				}
+				if rErr != nil { break }
+			}
+		}()
+		wg.Wait()
+		hub.tunnelManager.CloseTunnel(t.ID)
+		return
+	}
+
+	// Parallel tunnel opening with server-side retry (up to 2 rounds)
+	type tunnelResult struct {
+		tunnel *Tunnel
+		conn   *Connection
+		err    error
+	}
+
+	var winTunnel *Tunnel
+	var winConn *Connection
+	var lastErr string
+	skip := map[string]bool{}
+	maxRetries := 2
+
+	for attempt := 0; attempt < maxRetries; attempt++ {
+		nodes := hub.GetTopNodes(targetCountry, 3, skip)
+
+		if len(nodes) == 0 {
+			if attempt == 0 {
+				clientConn.Write([]byte("HTTP/1.1 502 Bad Gateway\r\n\r\n"))
+				log.Printf("[HTTP_PROXY] No tunnel nodes available for %s", target)
+				storeRequest("tunnel", "", target, false, int(time.Since(connectStart).Milliseconds()), "no nodes available")
+				return
+			}
 			break
 		}
-		skip[conn.NodeID] = true
 
-		log.Printf("[HTTP_PROXY] CONNECT %s:%s via node=%s (attempt %d)", host, port, conn.NodeID, attempt+1)
-
-		var err error
-		tunnel, err = hub.tunnelManager.OpenTunnel(conn.NodeID, host, port)
-		if err != nil {
-			log.Printf("[HTTP_PROXY] Tunnel open failed on node=%s: %v, retrying...", conn.NodeID, err)
-			tunnel = nil
-			continue
+		// Mark these nodes as tried so retry picks different ones
+		for _, n := range nodes {
+			skip[n.NodeID] = true
 		}
 
-		// Wait briefly to detect fast EOF (site rejecting connection)
-		select {
-		case <-tunnel.CloseCh:
-			// Tunnel closed before we even started relaying — fast EOF from target
-			log.Printf("[HTTP_PROXY] Fast EOF on node=%s for %s:%s (attempt %d), retrying...", conn.NodeID, host, port, attempt+1)
-			hub.tunnelManager.CloseTunnel(tunnel.ID)
-			tunnel = nil
-			continue
-		case <-time.After(stabilityWait):
-			// Tunnel still alive after stability window — good to go
+		results := make(chan tunnelResult, len(nodes))
+
+		if attempt == 0 {
+			log.Printf("[HTTP_PROXY] CONNECT %s parallel via %d nodes", target, len(nodes))
+		} else {
+			log.Printf("[HTTP_PROXY] CONNECT %s RETRY #%d via %d new nodes", target, attempt, len(nodes))
 		}
+
+		for _, node := range nodes {
+			go func(n *Connection) {
+				start := time.Now()
+				t, err := hub.tunnelManager.OpenTunnel(n.NodeID, host, port)
+				latency := time.Since(start).Milliseconds()
+				if err != nil {
+					hub.RecordNodeResult(n.NodeID, false, latency)
+					results <- tunnelResult{nil, n, err}
+					return
+				}
+				// Stability check: wait briefly for fast EOF
+				select {
+				case <-t.CloseCh:
+					hub.RecordNodeResult(n.NodeID, false, latency)
+					hub.tunnelManager.CloseTunnel(t.ID)
+					results <- tunnelResult{nil, n, fmt.Errorf("fast EOF")}
+				case <-time.After(stabilityWait):
+					hub.RecordNodeResult(n.NodeID, true, latency)
+					results <- tunnelResult{t, n, nil}
+				}
+			}(node)
+		}
+
+		// Collect results: use first success, close extras
+		collected := 0
+		extras := make([]*Tunnel, 0)
+
+		timeout := time.After(10 * time.Second)
+		for collected < len(nodes) {
+			select {
+			case r := <-results:
+				collected++
+				if r.err != nil {
+					lastErr = r.err.Error()
+					log.Printf("[HTTP_PROXY] Node %s failed for %s: %v", r.conn.NodeID, target, r.err)
+					continue
+				}
+				if winTunnel == nil {
+					winTunnel = r.tunnel
+					winConn = r.conn
+				} else {
+					extras = append(extras, r.tunnel)
+				}
+				if winTunnel != nil && collected >= 1 {
+					goto gotWinner
+				}
+			case <-timeout:
+				goto endRound
+			}
+		}
+
+	endRound:
+		// Close extras from this round
+		go func(ch chan tunnelResult, remaining int, ex []*Tunnel) {
+			for remaining > 0 {
+				select {
+				case r := <-ch:
+					remaining--
+					if r.tunnel != nil {
+						ex = append(ex, r.tunnel)
+					}
+				case <-time.After(12 * time.Second):
+					remaining = 0
+				}
+			}
+			for _, t := range ex {
+				hub.tunnelManager.CloseTunnel(t.ID)
+			}
+		}(results, len(nodes)-collected, extras)
+
+		if winTunnel != nil {
+			break
+		}
+		// All failed — retry with different nodes
+		continue
+
+	gotWinner:
+		// Close extras from this round
+		go func(ch chan tunnelResult, remaining int, ex []*Tunnel) {
+			for remaining > 0 {
+				select {
+				case r := <-ch:
+					remaining--
+					if r.tunnel != nil {
+						ex = append(ex, r.tunnel)
+					}
+				case <-time.After(12 * time.Second):
+					remaining = 0
+				}
+			}
+			for _, t := range ex {
+				hub.tunnelManager.CloseTunnel(t.ID)
+			}
+		}(results, len(nodes)-collected, extras)
 		break
 	}
 
-	target := host + ":" + port
-	connectStart := time.Now()
-
-	if tunnel == nil {
+	if winTunnel == nil {
 		clientConn.Write([]byte("HTTP/1.1 502 Bad Gateway\r\n\r\n"))
-		log.Printf("[HTTP_PROXY] All %d tunnel attempts failed for %s:%s", maxAttempts, host, port)
-		nodeID := ""
-		if conn != nil { nodeID = conn.NodeID }
-		storeRequest("tunnel", nodeID, target, false, int(time.Since(connectStart).Milliseconds()), "all attempts failed")
+		log.Printf("[HTTP_PROXY] All tunnel attempts failed for %s after %d retries", target, maxRetries)
+		storeRequest("tunnel", "", target, false, int(time.Since(connectStart).Milliseconds()), lastErr)
 		return
 	}
+
 	clientConn.Write([]byte("HTTP/1.1 200 Connection Established\r\n\r\n"))
-	log.Printf("[HTTP_PROXY] Tunnel %s established for %s:%s via %s", tunnel.ID[:8], host, port, conn.NodeID)
-	storeRequest("tunnel", conn.NodeID, target, true, int(time.Since(connectStart).Milliseconds()), "")
+	latencyMs := int(time.Since(connectStart).Milliseconds())
+	log.Printf("[HTTP_PROXY] Tunnel %s established for %s via %s in %dms", winTunnel.ID[:8], target, winConn.NodeID, latencyMs)
+	storeRequest("tunnel", winConn.NodeID, target, true, latencyMs, "")
 
 	// Remove deadline for tunnel relay
 	clientConn.SetDeadline(time.Time{})
@@ -2427,7 +2971,10 @@ func handleCONNECTRaw(clientConn net.Conn, req *http.Request) {
 		for {
 			n, err := clientConn.Read(buf)
 			if n > 0 {
-				if writeErr := tunnel.Write(buf[:n]); writeErr != nil {
+				// Must copy: buf is reused, but Write sends slice to channel asynchronously
+				cpy := make([]byte, n)
+				copy(cpy, buf[:n])
+				if writeErr := winTunnel.Write(cpy); writeErr != nil {
 					break
 				}
 			}
@@ -2441,7 +2988,7 @@ func handleCONNECTRaw(clientConn net.Conn, req *http.Request) {
 	go func() {
 		defer wg.Done()
 		for {
-			data, err := tunnel.ReadWithTimeout(30 * time.Second)
+			data, err := winTunnel.ReadWithTimeout(30 * time.Second)
 			if err != nil {
 				break
 			}
@@ -2452,8 +2999,8 @@ func handleCONNECTRaw(clientConn net.Conn, req *http.Request) {
 	}()
 
 	wg.Wait()
-	hub.tunnelManager.CloseTunnel(tunnel.ID)
-	log.Printf("[HTTP_PROXY] Tunnel %s closed for %s:%s", tunnel.ID[:8], host, port)
+	hub.tunnelManager.CloseTunnel(winTunnel.ID)
+	log.Printf("[HTTP_PROXY] Tunnel %s closed for %s", winTunnel.ID[:8], target)
 }
 
 func main() {
@@ -2597,6 +3144,9 @@ func main() {
 	// API: Nodes endpoints
 	http.HandleFunc("/api/nodes", handleAPINodes)
 	http.HandleFunc("/api/nodes/", handleAPINodeByID)
+
+	// API: Node quality scores
+	http.HandleFunc("/api/node-scores", handleAPINodeScores)
 
 	tlsCert := os.Getenv("TLS_CERT")
 	tlsKey := os.Getenv("TLS_KEY")

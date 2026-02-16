@@ -425,6 +425,16 @@ func initDB() {
 		CREATE INDEX IF NOT EXISTS idx_bandwidth_customer ON bandwidth(customer);
 		CREATE INDEX IF NOT EXISTS idx_bandwidth_at ON bandwidth(created_at);
 		CREATE INDEX IF NOT EXISTS idx_bandwidth_customer_at ON bandwidth(customer, created_at);
+
+		CREATE TABLE IF NOT EXISTS customers (
+			api_key TEXT PRIMARY KEY,
+			name TEXT NOT NULL,
+			quota_bytes INTEGER DEFAULT 5368709120,
+			rate_limit INTEGER DEFAULT 10,
+			max_concurrent INTEGER DEFAULT 50,
+			enabled INTEGER DEFAULT 1,
+			created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+		);
 	`)
 	if err != nil {
 		log.Fatal("Failed to create tables:", err)
@@ -444,6 +454,228 @@ func storeBandwidth(customer, routeType, target string, bytesIn, bytesOut int64)
 			log.Printf("[DB_ERROR] store bandwidth: %v", err)
 		}
 	}()
+}
+
+// ─── Customer Auth & Rate Limiting ──────────────────────────────────────────────
+
+type Customer struct {
+	APIKey        string `json:"api_key"`
+	Name          string `json:"name"`
+	QuotaBytes    int64  `json:"quota_bytes"`
+	RateLimit     int    `json:"rate_limit"`      // base requests/sec
+	MaxConcurrent int    `json:"max_concurrent"`
+	Enabled       bool   `json:"enabled"`
+}
+
+var (
+	customerCache   = make(map[string]*Customer)
+	customerCacheMu sync.RWMutex
+	
+	// Per-customer concurrent connection counter
+	customerConns   = make(map[string]*int64)
+	customerConnsMu sync.Mutex
+	
+	// Per-customer sliding window rate limiter
+	customerRequests   = make(map[string]*rateLimiter)
+	customerRequestsMu sync.Mutex
+)
+
+type rateLimiter struct {
+	tokens    float64
+	maxTokens float64
+	refillRate float64 // tokens per second
+	lastRefill time.Time
+	mu         sync.Mutex
+}
+
+func newRateLimiter(rps float64) *rateLimiter {
+	return &rateLimiter{
+		tokens:     rps * 2, // start with 2 seconds of burst
+		maxTokens:  rps * 5, // allow 5 second burst
+		refillRate: rps,
+		lastRefill: time.Now(),
+	}
+}
+
+func (rl *rateLimiter) allow() bool {
+	rl.mu.Lock()
+	defer rl.mu.Unlock()
+	
+	now := time.Now()
+	elapsed := now.Sub(rl.lastRefill).Seconds()
+	rl.tokens = math.Min(rl.maxTokens, rl.tokens + elapsed * rl.refillRate)
+	rl.lastRefill = now
+	
+	if rl.tokens >= 1 {
+		rl.tokens--
+		return true
+	}
+	return false
+}
+
+func (rl *rateLimiter) updateRate(rps float64) {
+	rl.mu.Lock()
+	defer rl.mu.Unlock()
+	rl.refillRate = rps
+	rl.maxTokens = rps * 5
+}
+
+// getCustomer looks up a customer by API key. Auto-creates with 5GB free if not found.
+func getCustomer(apiKey string) (*Customer, error) {
+	if apiKey == "" {
+		return nil, fmt.Errorf("no API key")
+	}
+	
+	// Check cache
+	customerCacheMu.RLock()
+	if c, ok := customerCache[apiKey]; ok {
+		customerCacheMu.RUnlock()
+		return c, nil
+	}
+	customerCacheMu.RUnlock()
+	
+	// Check DB
+	var c Customer
+	var enabled int
+	err := db.QueryRow(`SELECT api_key, name, quota_bytes, rate_limit, max_concurrent, enabled 
+		FROM customers WHERE api_key = ?`, apiKey).Scan(
+		&c.APIKey, &c.Name, &c.QuotaBytes, &c.RateLimit, &c.MaxConcurrent, &enabled)
+	
+	if err != nil {
+		// Auto-create new customer with 5GB free
+		c = Customer{
+			APIKey:        apiKey,
+			Name:          apiKey,
+			QuotaBytes:    5 * 1024 * 1024 * 1024, // 5GB
+			RateLimit:     10,
+			MaxConcurrent: 50,
+			Enabled:       true,
+		}
+		_, dbErr := db.Exec(`INSERT INTO customers (api_key, name, quota_bytes, rate_limit, max_concurrent, enabled)
+			VALUES (?, ?, ?, ?, ?, 1)`, c.APIKey, c.Name, c.QuotaBytes, c.RateLimit, c.MaxConcurrent)
+		if dbErr != nil {
+			log.Printf("[CUSTOMER] Failed to create customer %s: %v", apiKey, dbErr)
+		} else {
+			log.Printf("[CUSTOMER] Auto-created customer %s with 5GB free", apiKey)
+		}
+	} else {
+		c.Enabled = enabled == 1
+	}
+	
+	if !c.Enabled {
+		return nil, fmt.Errorf("account disabled")
+	}
+	
+	// Cache it
+	customerCacheMu.Lock()
+	customerCache[apiKey] = &c
+	customerCacheMu.Unlock()
+	
+	return &c, nil
+}
+
+// getCustomerUsedBytes returns total bytes used this month
+func getCustomerUsedBytes(apiKey string) int64 {
+	var used int64
+	db.QueryRow(`SELECT COALESCE(SUM(bytes_in + bytes_out), 0) FROM bandwidth 
+		WHERE customer = ? AND created_at >= datetime('now', 'start of month')`, apiKey).Scan(&used)
+	return used
+}
+
+// dynamicRateLimit returns effective rate limit based on usage.
+// New accounts (< 100 requests) get 2x rate to help them succeed.
+func dynamicRateLimit(c *Customer) float64 {
+	var reqCount int64
+	db.QueryRow(`SELECT COUNT(*) FROM bandwidth WHERE customer = ? AND created_at >= datetime('now', '-1 hours')`, c.APIKey).Scan(&reqCount)
+	
+	baseRate := float64(c.RateLimit)
+	if reqCount < 100 {
+		return baseRate * 2 // 2x for new/light users
+	}
+	return baseRate
+}
+
+// getConnCounter returns atomic counter for customer concurrent connections
+func getConnCounter(apiKey string) *int64 {
+	customerConnsMu.Lock()
+	defer customerConnsMu.Unlock()
+	if c, ok := customerConns[apiKey]; ok {
+		return c
+	}
+	var counter int64
+	customerConns[apiKey] = &counter
+	return &counter
+}
+
+// getRateLimiter returns rate limiter for customer
+func getRateLimiter(apiKey string, rps float64) *rateLimiter {
+	customerRequestsMu.Lock()
+	defer customerRequestsMu.Unlock()
+	if rl, ok := customerRequests[apiKey]; ok {
+		rl.updateRate(rps)
+		return rl
+	}
+	rl := newRateLimiter(rps)
+	customerRequests[apiKey] = rl
+	return rl
+}
+
+// authorizeProxy validates customer auth, checks quota, rate limit, and concurrency.
+// Auth format: username:apikey-country-XX-node-YY
+// API key = first token of password. Customer = username.
+func authorizeProxy(req *http.Request) (string, *Customer, string) {
+	auth := req.Header.Get("Proxy-Authorization")
+	if auth == "" || !strings.HasPrefix(auth, "Basic ") {
+		return "", nil, "auth required"
+	}
+	decoded, err := base64.StdEncoding.DecodeString(auth[6:])
+	if err != nil {
+		return "", nil, "invalid auth"
+	}
+	parts := strings.SplitN(string(decoded), ":", 2)
+	if len(parts) < 2 {
+		return "", nil, "invalid auth format"
+	}
+	
+	_ = parts[0] // customerName (username)
+	tokens := strings.Split(parts[1], "-")
+	apiKey := tokens[0] // first token before any -params
+	
+	c, err2 := getCustomer(apiKey)
+	if err2 != nil {
+		return apiKey, nil, err2.Error()
+	}
+	
+	// Check bandwidth quota
+	used := getCustomerUsedBytes(apiKey)
+	if used >= c.QuotaBytes {
+		return apiKey, c, fmt.Sprintf("quota exceeded (used %.2f GB / %.2f GB)", 
+			float64(used)/(1024*1024*1024), float64(c.QuotaBytes)/(1024*1024*1024))
+	}
+	
+	// Check rate limit (dynamic — new accounts get 2x)
+	effectiveRate := dynamicRateLimit(c)
+	rl := getRateLimiter(apiKey, effectiveRate)
+	if !rl.allow() {
+		return apiKey, c, "rate limit exceeded"
+	}
+	
+	// Check concurrent connections
+	counter := getConnCounter(apiKey)
+	current := atomic.AddInt64(counter, 1)
+	if current > int64(c.MaxConcurrent) {
+		atomic.AddInt64(counter, -1)
+		return apiKey, c, fmt.Sprintf("max concurrent connections (%d)", c.MaxConcurrent)
+	}
+	
+	return apiKey, c, ""
+}
+
+// releaseConn decrements concurrent connection counter
+func releaseConn(apiKey string) {
+	if apiKey == "" { return }
+	counter := getConnCounter(apiKey)
+	atomic.AddInt64(counter, -1)
 }
 
 func storeRequest(reqType, nodeID, target string, success bool, latencyMs int, errMsg string) {
@@ -2931,8 +3163,18 @@ func handleCONNECTRaw(clientConn net.Conn, req *http.Request) {
 	connectStart := time.Now()
 	stabilityWait := 300 * time.Millisecond
 
+	// Authorize customer
+	customer, cust, rejectReason := authorizeProxy(req)
+	if rejectReason != "" {
+		log.Printf("[AUTH] Rejected %s for %s: %s", customer, target, rejectReason)
+		clientConn.Write([]byte("HTTP/1.1 407 " + rejectReason + "\r\n\r\n"))
+		return
+	}
+	_ = cust
+	defer releaseConn(customer)
+
 	// Parse targeting from auth: node-XXX, ip-XXX, country-XX
-	targetNode, targetIP, targetCountry, customer := parseProxyAuthFull(req)
+	targetNode, targetIP, targetCountry := parseProxyAuth(req)
 
 	// If specific node or IP requested, try direct routing
 	if targetNode != "" || targetIP != "" {
@@ -3293,6 +3535,96 @@ func handleAPIBandwidth(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(result)
 }
 
+func handleAPICustomers(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	if r.Method == "POST" {
+		// Create/update customer
+		var input struct {
+			APIKey        string `json:"api_key"`
+			Name          string `json:"name"`
+			QuotaGB       float64 `json:"quota_gb"`
+			RateLimit     int    `json:"rate_limit"`
+			MaxConcurrent int    `json:"max_concurrent"`
+			Enabled       bool   `json:"enabled"`
+		}
+		if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
+			json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
+			return
+		}
+		quotaBytes := int64(input.QuotaGB * 1024 * 1024 * 1024)
+		if quotaBytes == 0 { quotaBytes = 5 * 1024 * 1024 * 1024 }
+		if input.RateLimit == 0 { input.RateLimit = 10 }
+		if input.MaxConcurrent == 0 { input.MaxConcurrent = 50 }
+		enabled := 1
+		if !input.Enabled { enabled = 0 }
+
+		_, err := db.Exec(`INSERT INTO customers (api_key, name, quota_bytes, rate_limit, max_concurrent, enabled)
+			VALUES (?, ?, ?, ?, ?, ?)
+			ON CONFLICT(api_key) DO UPDATE SET name=?, quota_bytes=?, rate_limit=?, max_concurrent=?, enabled=?`,
+			input.APIKey, input.Name, quotaBytes, input.RateLimit, input.MaxConcurrent, enabled,
+			input.Name, quotaBytes, input.RateLimit, input.MaxConcurrent, enabled)
+		if err != nil {
+			json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
+			return
+		}
+		// Invalidate cache
+		customerCacheMu.Lock()
+		delete(customerCache, input.APIKey)
+		customerCacheMu.Unlock()
+
+		json.NewEncoder(w).Encode(map[string]string{"status": "ok", "api_key": input.APIKey})
+		return
+	}
+
+	// List customers with usage
+	rows, err := db.Query(`SELECT c.api_key, c.name, c.quota_bytes, c.rate_limit, c.max_concurrent, c.enabled,
+		COALESCE(b.used, 0) as used_bytes
+		FROM customers c
+		LEFT JOIN (SELECT customer, SUM(bytes_in + bytes_out) as used 
+			FROM bandwidth WHERE created_at >= datetime('now', 'start of month') GROUP BY customer) b
+		ON c.api_key = b.customer
+		ORDER BY used_bytes DESC`)
+	if err != nil {
+		json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
+		return
+	}
+	defer rows.Close()
+
+	type CustomerInfo struct {
+		APIKey        string  `json:"api_key"`
+		Name          string  `json:"name"`
+		QuotaGB       float64 `json:"quota_gb"`
+		UsedGB        float64 `json:"used_gb"`
+		UsedPct       float64 `json:"used_pct"`
+		RateLimit     int     `json:"rate_limit"`
+		MaxConcurrent int     `json:"max_concurrent"`
+		Enabled       bool    `json:"enabled"`
+	}
+
+	var customers []CustomerInfo
+	for rows.Next() {
+		var apiKey, name string
+		var quotaBytes, usedBytes int64
+		var rateLimit, maxConcurrent, enabled int
+		rows.Scan(&apiKey, &name, &quotaBytes, &rateLimit, &maxConcurrent, &enabled, &usedBytes)
+		ci := CustomerInfo{
+			APIKey:        apiKey,
+			Name:          name,
+			QuotaGB:       float64(quotaBytes) / (1024 * 1024 * 1024),
+			UsedGB:        float64(usedBytes) / (1024 * 1024 * 1024),
+			RateLimit:     rateLimit,
+			MaxConcurrent: maxConcurrent,
+			Enabled:       enabled == 1,
+		}
+		if quotaBytes > 0 {
+			ci.UsedPct = float64(usedBytes) / float64(quotaBytes) * 100
+		}
+		customers = append(customers, ci)
+	}
+	json.NewEncoder(w).Encode(customers)
+}
+
 func main() {
 	port := os.Getenv("PORT")
 	if port == "" {
@@ -3438,6 +3770,7 @@ func main() {
 	// API: Node quality scores
 	http.HandleFunc("/api/node-scores", handleAPINodeScores)
 	http.HandleFunc("/api/bandwidth", handleAPIBandwidth)
+	http.HandleFunc("/api/customers", handleAPICustomers)
 
 	tlsCert := os.Getenv("TLS_CERT")
 	tlsKey := os.Getenv("TLS_KEY")

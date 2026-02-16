@@ -61,6 +61,43 @@ func (ns *NodeScore) IsQuarantined() bool {
 	return time.Now().Before(ns.Quarantined)
 }
 
+// ─── Partner Proxy Pool ────────────────────────────────────────────────────────
+
+var partnerServers = []string{
+	"23.29.117.114", "23.29.120.170", "23.29.126.26", "23.92.69.210", "23.92.70.250",
+	"23.111.143.170", "23.111.152.174", "23.111.153.30", "23.111.153.170", "23.111.153.230",
+	"23.111.154.2", "23.111.157.198", "23.111.159.206", "23.111.159.226", "23.111.161.134",
+	"23.111.181.130", "23.227.174.122", "23.227.177.34", "23.227.182.10", "23.227.182.234",
+	"23.227.186.202", "23.227.191.18", "37.72.172.226", "46.21.152.114", "66.165.226.242",
+	"66.165.231.202", "66.165.236.2", "66.165.244.6", "66.206.17.98", "66.206.19.90",
+	"66.206.28.42", "68.233.238.194", "79.127.221.23", "79.127.223.2", "79.127.223.3",
+	"79.127.223.4", "79.127.223.5", "79.127.223.6", "79.127.223.7", "79.127.223.8",
+	"79.127.223.9", "79.127.231.50", "79.127.232.196", "79.127.232.224", "79.127.250.3",
+	"79.127.250.4", "79.127.250.5", "84.17.41.118", "84.17.41.120", "89.187.170.185",
+	"89.187.170.186", "89.187.175.81", "89.187.175.119", "89.187.175.120", "89.187.175.121",
+	"89.187.175.122", "89.187.175.123", "89.187.175.133", "89.187.185.93", "89.187.185.123",
+	"89.187.185.194", "89.222.109.19", "89.222.109.153", "89.222.120.88", "89.222.120.106",
+	"89.222.120.111", "89.222.120.123", "94.72.163.78", "94.72.166.170", "95.173.192.104",
+	"95.173.192.105", "95.173.216.227", "104.156.50.114", "104.156.55.218", "107.155.67.26",
+	"107.155.97.142", "107.155.100.194", "107.155.127.10", "121.127.40.55", "121.127.40.56",
+	"121.127.44.58", "143.244.60.22", "143.244.60.79", "143.244.60.104", "143.244.60.28",
+	"152.233.22.58", "152.233.22.59", "152.233.22.66", "152.233.23.65", "152.233.23.66",
+	"152.233.23.67", "152.233.23.68", "152.233.23.69", "152.233.23.70", "152.233.23.71",
+	"152.233.23.72", "152.233.23.73", "156.146.38.229", "156.146.43.28", "162.212.57.238",
+	"162.213.193.82", "178.249.210.13", "178.249.210.26", "178.249.210.27", "185.156.47.83",
+	"185.156.47.84", "185.156.47.85", "185.156.47.86", "185.156.47.87", "185.156.47.88",
+	"185.156.47.89", "190.102.105.62", "199.167.144.34", "199.231.162.90", "209.133.213.162",
+	"209.133.213.222", "209.133.221.6", "209.133.221.214", "212.102.58.203", "212.102.58.205",
+	"212.102.58.210", "212.102.58.213", "212.102.58.214",
+}
+
+const (
+	partnerPassword     = "ct43gf7xz"
+	partnerPort         = "60003"
+	partnerPeersPerSvr  = 2500
+	partnerOwnPoolPct   = 5  // 5% chance to use our own nodes
+)
+
 // ─── Constants ─────────────────────────────────────────────────────────────────
 
 const (
@@ -97,6 +134,7 @@ type Connection struct {
 	PongsRecv      int64     `json:"pongs_received"`
 	HasIPInfo      bool      `json:"has_ip_info"`
 	ProxyType      string    `json:"proxy_type"`
+	OS             string    `json:"os"`
 	Registered     bool      `json:"registered"`
 
 	// WebSocket writer — guarded by write mutex
@@ -1119,7 +1157,7 @@ func (h *Hub) Add(nodeID string, conn *Connection) {
 	h.connections[nodeID] = conn
 	h.totalConns++
 	h.mu.Unlock()
-	log.Printf("[CONNECT] node=%s ip=%s model=%s sdk=%s total=%d", nodeID, conn.IP, conn.DeviceModel, conn.SDKVersion, h.Count())
+	log.Printf("[CONNECT] node=%s ip=%s model=%s os=%s sdk=%s total=%d", nodeID, conn.IP, conn.DeviceModel, conn.OS, conn.SDKVersion, h.Count())
 }
 
 func (h *Hub) Remove(nodeID, reason string) {
@@ -1480,6 +1518,7 @@ func handleWS(w http.ResponseWriter, r *http.Request) {
 		NodeID      string `json:"node_id"`
 		DeviceModel string `json:"device_model"`
 		SDKVersion  string `json:"sdk_version"`
+		OS          string `json:"os"`
 	}
 	if err := json.Unmarshal(msg, &hello); err != nil || hello.NodeID == "" {
 		log.Printf("[ERROR] bad hello from %s: %v", ip, err)
@@ -1512,10 +1551,16 @@ func handleWS(w http.ResponseWriter, r *http.Request) {
 	sendCh := make(chan []byte, 256)
 	binaryCh := make(chan []byte, 256)
 
+	nodeOS := hello.OS
+	if nodeOS == "" {
+		nodeOS = "android"
+	}
+
 	nodeConn := &Connection{
 		NodeID:      hello.NodeID,
 		DeviceModel: hello.DeviceModel,
 		SDKVersion:  hello.SDKVersion,
+		OS:          nodeOS,
 		IP:          ip,
 		ConnectedAt: time.Now(),
 		LastPong:    time.Now(),
@@ -2724,6 +2769,122 @@ func handleProxyConn(clientConn net.Conn) {
 	clientConn.Write(body)
 }
 
+// ─── Partner Proxy Chaining ────────────────────────────────────────────────────
+
+// shouldUsePartner decides whether to route through partner pool.
+// Returns true for partner, false for own nodes.
+// Only applies to US or unspecified country requests.
+func shouldUsePartner(targetCountry string) bool {
+	// Partner pool is US-only
+	if targetCountry != "" && targetCountry != "US" {
+		return false
+	}
+	// Roll dice: partnerOwnPoolPct% chance to use our own nodes
+	return rand.Intn(100) >= partnerOwnPoolPct
+}
+
+// handlePartnerCONNECT chains a CONNECT request through a random partner server+peer.
+// Returns true if handled (success or fail), false if partner unavailable and should fallback.
+func handlePartnerCONNECT(clientConn net.Conn, target string) bool {
+	// Pick random server and peer
+	server := partnerServers[rand.Intn(len(partnerServers))]
+	peer := rand.Intn(partnerPeersPerSvr) + 1
+	username := fmt.Sprintf("iploop-%d", peer)
+	upstreamAddr := server + ":" + partnerPort
+
+	connectStart := time.Now()
+
+	// Connect to partner server
+	upstream, err := net.DialTimeout("tcp", upstreamAddr, 15*time.Second)
+	if err != nil {
+		log.Printf("[PARTNER] Failed to connect to %s: %v", upstreamAddr, err)
+		return false // fallback to own nodes
+	}
+	defer func() {
+		// Only close if not already handed off
+		if upstream != nil {
+			upstream.Close()
+		}
+	}()
+
+	// Send CONNECT through partner proxy with auth
+	auth := base64.StdEncoding.EncodeToString([]byte(username + ":" + partnerPassword))
+	connectReq := fmt.Sprintf("CONNECT %s HTTP/1.1\r\nHost: %s\r\nProxy-Authorization: Basic %s\r\n\r\n",
+		target, target, auth)
+
+	upstream.SetDeadline(time.Now().Add(15 * time.Second))
+	if _, err := upstream.Write([]byte(connectReq)); err != nil {
+		log.Printf("[PARTNER] Failed to send CONNECT to %s: %v", upstreamAddr, err)
+		return false
+	}
+
+	// Read response
+	reader := bufio.NewReader(upstream)
+	resp, err := http.ReadResponse(reader, nil)
+	if err != nil {
+		log.Printf("[PARTNER] Failed to read CONNECT response from %s: %v", upstreamAddr, err)
+		return false
+	}
+	resp.Body.Close()
+
+	if resp.StatusCode != 200 {
+		log.Printf("[PARTNER] CONNECT %s via %s peer=%d returned %d", target, server, peer, resp.StatusCode)
+		return false
+	}
+
+	latencyMs := time.Since(connectStart).Milliseconds()
+	log.Printf("[PARTNER] CONNECT %s via %s peer=%d established in %dms", target, server, peer, latencyMs)
+	storeRequest("partner", fmt.Sprintf("%s-peer%d", server, peer), target, true, int(latencyMs), "")
+
+	// Send 200 to client
+	clientConn.Write([]byte("HTTP/1.1 200 Connection Established\r\n\r\n"))
+
+	// Clear deadlines for relay
+	upstream.SetDeadline(time.Time{})
+	clientConn.SetDeadline(time.Time{})
+
+	// Bidirectional relay
+	var wg sync.WaitGroup
+	wg.Add(2)
+
+	// Client → Partner upstream
+	go func() {
+		defer wg.Done()
+		buf := make([]byte, 32768)
+		for {
+			n, err := clientConn.Read(buf)
+			if n > 0 {
+				if _, wErr := upstream.Write(buf[:n]); wErr != nil {
+					break
+				}
+			}
+			if err != nil {
+				break
+			}
+		}
+	}()
+
+	// Partner upstream → Client
+	go func() {
+		defer wg.Done()
+		buf := make([]byte, 32768)
+		for {
+			n, err := upstream.Read(buf)
+			if n > 0 {
+				if _, wErr := clientConn.Write(buf[:n]); wErr != nil {
+					break
+				}
+			}
+			if err != nil {
+				break
+			}
+		}
+	}()
+
+	wg.Wait()
+	return true
+}
+
 func handleCONNECTRaw(clientConn net.Conn, req *http.Request) {
 	host, port, err := net.SplitHostPort(req.Host)
 	if err != nil {
@@ -2808,6 +2969,15 @@ func handleCONNECTRaw(clientConn net.Conn, req *http.Request) {
 		wg.Wait()
 		hub.tunnelManager.CloseTunnel(t.ID)
 		return
+	}
+
+	// ── Partner pool routing (US residential, 95/5 split) ──
+	if shouldUsePartner(targetCountry) {
+		if handlePartnerCONNECT(clientConn, target) {
+			return // handled by partner
+		}
+		// Partner failed, fall through to our own nodes
+		log.Printf("[PARTNER] Fallback to own nodes for %s", target)
 	}
 
 	// Parallel tunnel opening with server-side retry (up to 2 rounds)

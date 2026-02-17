@@ -472,6 +472,50 @@ func creditNodeDisconnected(nodeID string) {
 	}()
 }
 
+// creditPeriodicUpdate runs every hour and updates credits for all active sessions
+// without closing them — so users see real-time balance.
+func creditPeriodicUpdate() {
+	for {
+		time.Sleep(1 * time.Hour)
+		rows, err := db.Query(`SELECT id, node_id, user_id, connected_at FROM credit_sessions WHERE disconnected_at IS NULL`)
+		if err != nil {
+			log.Printf("[CREDITS] periodic update query error: %v", err)
+			continue
+		}
+		updated := 0
+		for rows.Next() {
+			var sessionID int64
+			var nodeID, userID, connectedAt string
+			rows.Scan(&sessionID, &nodeID, &userID, &connectedAt)
+
+			var hours float64
+			db.QueryRow(`SELECT EXTRACT(EPOCH FROM (CURRENT_TIMESTAMP - $1::timestamp)) / 3600`, connectedAt).Scan(&hours)
+			if hours < 0.001 {
+				continue
+			}
+
+			credits := hours * creditsPerHour
+
+			// Get previous earned for this session to calculate delta
+			var prevEarned float64
+			db.QueryRow(`SELECT COALESCE(credits_earned, 0) FROM credit_sessions WHERE id = $1`, sessionID).Scan(&prevEarned)
+			delta := credits - prevEarned
+			if delta <= 0 {
+				continue
+			}
+
+			// Update session and user balance
+			db.Exec(`UPDATE credit_sessions SET uptime_hours = $1, credits_earned = $2 WHERE id = $3`, hours, credits, sessionID)
+			db.Exec(`UPDATE credit_users SET credits = credits + $1, total_earned = total_earned + $2 WHERE user_id = $3`, delta, delta, userID)
+			updated++
+		}
+		rows.Close()
+		if updated > 0 {
+			log.Printf("[CREDITS] periodic update: %d active sessions updated", updated)
+		}
+	}
+}
+
 // ─── Customer Auth & Rate Limiting ──────────────────────────────────────────────
 
 type Customer struct {
@@ -4094,6 +4138,150 @@ func handleUserDashboard(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+// ─── Stripe Integration ────────────────────────────────────────────────────────
+
+const stripeSecretKey = "sk_test_51Sx6WYCqi59cXfGOVmWwgjliKRgchLOzn665bzSOIdea6QDSRsAeXMihDBp2aZdE9ahsh7tV1SclApxqskIuVtzl00kYBHyTyE"
+
+var stripePlans = map[string]struct {
+	PriceID string
+	GB      int64
+	Name    string
+}{
+	"starter":  {PriceID: "price_1T1ll8Cqi59cXfGOsPHCfQQ3", GB: 10, Name: "Starter - 10GB"},
+	"growth":   {PriceID: "price_1T1ll8Cqi59cXfGOTu9HMKsM", GB: 50, Name: "Growth - 50GB"},
+	"business": {PriceID: "price_1T1ll9Cqi59cXfGO1GbApLoe", GB: 200, Name: "Business - 200GB"},
+}
+
+func stripeAPI(method, endpoint string, params map[string]string) (map[string]interface{}, error) {
+	data := ""
+	for k, v := range params {
+		if data != "" {
+			data += "&"
+		}
+		data += k + "=" + v
+	}
+	req, err := http.NewRequest(method, "https://api.stripe.com/v1/"+endpoint, strings.NewReader(data))
+	if err != nil {
+		return nil, err
+	}
+	req.SetBasicAuth(stripeSecretKey, "")
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+	var result map[string]interface{}
+	json.NewDecoder(resp.Body).Decode(&result)
+	if resp.StatusCode >= 400 {
+		return result, fmt.Errorf("stripe error %d: %v", resp.StatusCode, result)
+	}
+	return result, nil
+}
+
+func handleStripeCheckout(w http.ResponseWriter, r *http.Request) {
+	corsHeaders(w)
+	if r.Method == "OPTIONS" {
+		w.WriteHeader(200)
+		return
+	}
+	if r.Method != "POST" {
+		w.WriteHeader(405)
+		return
+	}
+	var body struct {
+		APIKey string `json:"api_key"`
+		Plan   string `json:"plan"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		w.WriteHeader(400)
+		json.NewEncoder(w).Encode(map[string]string{"error": "invalid json"})
+		return
+	}
+	plan, ok := stripePlans[body.Plan]
+	if !ok {
+		w.WriteHeader(400)
+		json.NewEncoder(w).Encode(map[string]string{"error": "invalid plan: starter, growth, or business"})
+		return
+	}
+	// Verify api_key exists
+	var name string
+	err := db.QueryRow("SELECT name FROM customers WHERE api_key=$1", body.APIKey).Scan(&name)
+	if err != nil {
+		w.WriteHeader(401)
+		json.NewEncoder(w).Encode(map[string]string{"error": "invalid api_key"})
+		return
+	}
+	result, err := stripeAPI("POST", "checkout/sessions", map[string]string{
+		"mode":                 "payment",
+		"line_items[0][price]": plan.PriceID,
+		"line_items[0][quantity]": "1",
+		"client_reference_id":  body.APIKey,
+		"success_url":          "https://gateway.iploop.io:9443/api/stripe/success?session_id={CHECKOUT_SESSION_ID}",
+		"cancel_url":           "https://gateway.iploop.io:9443/dashboard.html",
+		"metadata[plan]":       body.Plan,
+	})
+	if err != nil {
+		log.Printf("[STRIPE] checkout error: %v", err)
+		w.WriteHeader(500)
+		json.NewEncoder(w).Encode(map[string]string{"error": "stripe error"})
+		return
+	}
+	url, _ := result["url"].(string)
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]string{"checkout_url": url})
+}
+
+func handleStripeSuccess(w http.ResponseWriter, r *http.Request) {
+	sessionID := r.URL.Query().Get("session_id")
+	if sessionID == "" {
+		http.Redirect(w, r, "/dashboard.html?error=missing_session", http.StatusFound)
+		return
+	}
+	result, err := stripeAPI("GET", "checkout/sessions/"+sessionID, nil)
+	if err != nil {
+		log.Printf("[STRIPE] session retrieve error: %v", err)
+		http.Redirect(w, r, "/dashboard.html?error=stripe_error", http.StatusFound)
+		return
+	}
+	paymentStatus, _ := result["payment_status"].(string)
+	if paymentStatus != "paid" {
+		http.Redirect(w, r, "/dashboard.html?error=not_paid", http.StatusFound)
+		return
+	}
+	apiKey, _ := result["client_reference_id"].(string)
+	metadata, _ := result["metadata"].(map[string]interface{})
+	planName, _ := metadata["plan"].(string)
+	plan, ok := stripePlans[planName]
+	if !ok || apiKey == "" {
+		http.Redirect(w, r, "/dashboard.html?error=invalid_plan", http.StatusFound)
+		return
+	}
+	addBytes := plan.GB * 1024 * 1024 * 1024
+	_, err = db.Exec("UPDATE customers SET quota_bytes = quota_bytes + $1 WHERE api_key = $2", addBytes, apiKey)
+	if err != nil {
+		log.Printf("[STRIPE] DB update error: %v", err)
+		http.Redirect(w, r, "/dashboard.html?error=db_error", http.StatusFound)
+		return
+	}
+	log.Printf("[STRIPE] ✅ Added %dGB to customer %s (plan: %s)", plan.GB, apiKey, planName)
+	http.Redirect(w, r, "/dashboard.html?payment=success&plan="+planName, http.StatusFound)
+}
+
+func handleStripeWebhook(w http.ResponseWriter, r *http.Request) {
+	body, _ := io.ReadAll(r.Body)
+	log.Printf("[STRIPE] webhook received: %s", string(body[:min(len(body), 200)]))
+	w.WriteHeader(200)
+	json.NewEncoder(w).Encode(map[string]string{"status": "ok"})
+}
+
+func min(a, b int) int {
+	if a < b {
+		return a
+	}
+	return b
+}
+
 func main() {
 	port := os.Getenv("PORT")
 	if port == "" {
@@ -4106,6 +4294,9 @@ func main() {
 	// Initialize tunnel and proxy managers
 	hub.tunnelManager = NewTunnelManager(hub)
 	hub.proxyManager = NewProxyManager(hub)
+
+	// Periodic credit update — real-time balance for active sessions
+	go creditPeriodicUpdate()
 
 	// Hourly snapshot — saves active node count + stats for graphing
 	go func() {
@@ -4247,6 +4438,16 @@ func main() {
 	http.HandleFunc("/api/auth/login", handleAuthLogin)
 	http.HandleFunc("/api/auth/me", handleAuthMe)
 	http.HandleFunc("/api/user/dashboard", handleUserDashboard)
+
+	// Stripe endpoints
+	http.HandleFunc("/api/stripe/checkout", handleStripeCheckout)
+	http.HandleFunc("/api/stripe/success", handleStripeSuccess)
+	http.HandleFunc("/api/stripe/webhook", handleStripeWebhook)
+
+	// Serve dashboard.html
+	http.HandleFunc("/dashboard.html", func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, "/root/dashboard.html")
+	})
 
 	tlsCert := os.Getenv("TLS_CERT")
 	tlsKey := os.Getenv("TLS_KEY")

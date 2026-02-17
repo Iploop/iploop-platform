@@ -20,10 +20,10 @@ Proxy: localhost:8080
 📈 Progress Report
 ============================================================
 Duration: 5.0s
-Total Requests: 54
+Total Requests: 53
 Successful: 0 (0.00%)
 Failed: 53
-Throughput: 10.80 req/s
+Throughput: 10.59 req/s
 Data Transferred: 0.00 MB
 
 🌐 Unique IPs Observed: 0
@@ -31,100 +31,101 @@ Data Transferred: 0.00 MB
 ❌ Errors:
   HTTP_404: 53
 
-🔗 Session Stickiness Tests: 0 passed, 3 failed
+🔗 Session Stickiness Tests: 0 passed, 0 failed
 ============================================================
 📈 Progress Report
 ============================================================
 Duration: 10.0s
-Total Requests: 171
+Total Requests: 175
 Successful: 0 (0.00%)
-Failed: 171
-Throughput: 17.09 req/s
+Failed: 175
+Throughput: 17.49 req/s
 Data Transferred: 0.00 MB
 
 🌐 Unique IPs Observed: 0
 
 ❌ Errors:
-  HTTP_404: 171
+  HTTP_404: 175
 
-🔗 Session Stickiness Tests: 0 passed, 7 failed
+🔗 Session Stickiness Tests: 0 passed, 4 failed
 ============================================================
 📈 Progress Report
 ============================================================
 Duration: 15.0s
-Total Requests: 293
+Total Requests: 302
 Successful: 0 (0.00%)
-Failed: 293
-Throughput: 19.53 req/s
+Failed: 302
+Throughput: 20.13 req/s
 Data Transferred: 0.00 MB
 
 🌐 Unique IPs Observed: 0
 
 ❌ Errors:
-  HTTP_404: 293
+  HTTP_404: 302
 
-🔗 Session Stickiness Tests: 0 passed, 13 failed
+🔗 Session Stickiness Tests: 0 passed, 11 failed
 ============================================================
 📈 Progress Report
 ============================================================
 Duration: 20.0s
-Total Requests: 422
+Total Requests: 430
 Successful: 0 (0.00%)
-Failed: 422
-Throughput: 21.09 req/s
+Failed: 430
+Throughput: 21.50 req/s
 Data Transferred: 0.00 MB
 
 🌐 Unique IPs Observed: 0
 
 ❌ Errors:
-  HTTP_404: 422
+HTTP_404: 430
 
-🔗 Session Stickiness Tests: 0 passed, 22 failed
+🔗 Session Stickiness Tests: 0 passed, 17 failed
 ============================================================
 📈 Progress Report
 ============================================================
 Duration: 25.0s
-Total Requests: 551
+Total Requests: 558
 Successful: 0 (0.00%)
-Failed: 551
-Throughput: 22.04 req/s
+Failed: 558
+Throughput: 22.32 req/s
 Data Transferred: 0.00 MB
+
 🌐 Unique IPs Observed: 0
 
 ❌ Errors:
-  HTTP_404: 551
+  HTTP_404: 558
 
-🔗 Session Stickiness Tests: 0 passed, 26 failed
+🔗 Session Stickiness Tests: 0 passed, 25 failed
 ============================================================
 📈 Progress Report
 ============================================================
 Duration: 30.0s
-Total Requests: 676
+Total Requests: 683
 Successful: 0 (0.00%)
-Failed: 676
-Throughput: 22.53 req/s
+Failed: 683
+Throughput: 22.76 req/s
 Data Transferred: 0.00 MB
 
 🌐 Unique IPs Observed: 0
 
 ❌ Errors:
-  HTTP_404: 676
+  HTTP_404: 683
 
 🔗 Session Stickiness Tests: 0 passed, 30 failed
 ============================================================
 📊 FINAL REPORT
 ============================================================
 Duration: 31.0s
-Total Requests: 676
+Total Requests: 683
 Successful: 0 (0.00%)
-Failed: 676
-Throughput: 21.80 req/s
+Failed: 683
+Throughput: 22.03 req/s
 Data Transferred: 0.00 MB
 
 🌐 Unique IPs Observed: 0
 
 ❌ Errors:
-  HTTP_404: 676
+  HTTP_404: 683
 
 🔗 Session Stickiness Tests: 0 passed, 30 failed
 
@@ -134,10 +135,10 @@ Data Transferred: 0.00 MB
 ⚠️  Success rate below 95%: 0.00%
 ⚠️  Low IP diversity: only 0 unique IPs
 ⚠️  Session stickiness failing: 30/30
-📁 Full report saved to: /root/clawd-secure/iploop-platform/tests/pilot/report_1771325085213.json
-📊 Results saved to: stress-test-2026-02-17T10-44-45-226Z.json
+📁 Full report saved to: /root/clawd-secure/iploop-platform/tests/pilot/report_1771326925839.json
+📊 Results saved to: stress-test-2026-02-17T11-15-25-852Z.json
 ──────────────────────────────────────────────────
-❌ Test stress-test FAILED in 31062ms
+❌ Test stress-test FAILED in 31058ms
 ❌ stress-test.js - 31.1s
 
 ──────────────────────────────────────────────────
@@ -150,18 +151,14 @@ Data Transferred: 0.00 MB
 
 Detecting server real IP...
 Server real IP: 178.128.172.81
-
 --- Test 1: Proxy IP Check ---
 ❌ Error: Unexpected token '<', "<!DOCTYPE "... is not valid JSON
-
 --- Test 2: Header Leak Check ---
 ❌ Error: Unexpected token '<', "<!DOCTYPE "... is not valid JSON
-
 --- Test 3: Consistency Check ---
 api.ipify.org?format=json: Error - Unexpected token '<', "<!DOCTYPE "... is not valid JSON
 ip-api.com: Error - Unexpected token '<', "<!DOCTYPE "... is not valid JSON
 httpbin.org: Error - Unexpected token '<', "<!DOCTYPE "... is not valid JSON
-
 --- Test 4: Fingerprint Check ---
 Error: Unexpected token '<', "<!DOCTYPE "... is not valid JSON
 
@@ -170,9 +167,9 @@ LEAK TEST SUMMARY
 ==================================================
 Issues found:
   🔴 IP check failed: Unexpected token '<', "<!DOCTYPE "... is not valid JSON
-📊 Results saved to: leak-test-2026-02-17T10-44-46-552Z.json
+📊 Results saved to: leak-test-2026-02-17T11-15-27-144Z.json
 ──────────────────────────────────────────────────
-❌ Test leak-test FAILED in 268ms
+❌ Test leak-test FAILED in 243ms
 ❌ leak-test.js - 0.3s
 
 ──────────────────────────────────────────────────
@@ -262,9 +259,9 @@ Failed tests:
   ❌ Status 201 Created
   ❌ Status 204 No Content
   ❌ Status 418 Teapot
-📊 Results saved to: protocol-test-2026-02-17T10-44-52-380Z.json
+📊 Results saved to: protocol-test-2026-02-17T11-15-32-960Z.json
 ──────────────────────────────────────────────────
-❌ Test protocol-test FAILED in 4770ms
+❌ Test protocol-test FAILED in 4765ms
 ❌ protocol-test.js - 4.8s
 
 ══════════════════════════════════════════════════

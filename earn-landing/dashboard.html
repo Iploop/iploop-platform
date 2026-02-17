@@ -181,6 +181,37 @@ select.country-sel{padding:8px 12px;background:var(--bg);border:1px solid var(--
     </div>
   </div>
 
+  <!-- Buy Bandwidth -->
+  <div class="section">
+    <h2><span class="icon">🛒</span> Buy Bandwidth</h2>
+    <p style="color:var(--muted);font-size:14px;margin-bottom:16px">Instantly add proxy bandwidth to your account.</p>
+    <div id="payment-msg" style="display:none;padding:12px;border-radius:8px;margin-bottom:16px;font-size:14px"></div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px">
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:24px;text-align:center">
+        <div style="font-size:18px;font-weight:700;color:var(--text)">Starter</div>
+        <div style="font-size:32px;font-weight:800;color:var(--accent);margin:8px 0">$10</div>
+        <div style="color:var(--muted);font-size:14px;margin-bottom:16px">10 GB bandwidth</div>
+        <div style="color:var(--muted);font-size:13px;margin-bottom:16px">$1.00 / GB</div>
+        <button onclick="buyPlan('starter')" style="width:100%;padding:10px;background:var(--accent);color:#000;border:none;border-radius:8px;font-weight:700;cursor:pointer;font-size:14px">Buy Now</button>
+      </div>
+      <div style="background:var(--card);border:2px solid var(--accent);border-radius:12px;padding:24px;text-align:center;position:relative">
+        <div style="position:absolute;top:-10px;left:50%;transform:translateX(-50%);background:var(--accent);color:#000;font-size:11px;font-weight:700;padding:2px 12px;border-radius:10px">POPULAR</div>
+        <div style="font-size:18px;font-weight:700;color:var(--text)">Growth</div>
+        <div style="font-size:32px;font-weight:800;color:var(--accent);margin:8px 0">$40</div>
+        <div style="color:var(--muted);font-size:14px;margin-bottom:16px">50 GB bandwidth</div>
+        <div style="color:var(--muted);font-size:13px;margin-bottom:16px">$0.80 / GB</div>
+        <button onclick="buyPlan('growth')" style="width:100%;padding:10px;background:var(--accent);color:#000;border:none;border-radius:8px;font-weight:700;cursor:pointer;font-size:14px">Buy Now</button>
+      </div>
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:24px;text-align:center">
+        <div style="font-size:18px;font-weight:700;color:var(--text)">Business</div>
+        <div style="font-size:32px;font-weight:800;color:var(--accent);margin:8px 0">$120</div>
+        <div style="color:var(--muted);font-size:14px;margin-bottom:16px">200 GB bandwidth</div>
+        <div style="color:var(--muted);font-size:13px;margin-bottom:16px">$0.60 / GB</div>
+        <button onclick="buyPlan('business')" style="width:100%;padding:10px;background:var(--accent);color:#000;border:none;border-radius:8px;font-weight:700;cursor:pointer;font-size:14px">Buy Now</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Earn Credits -->
   <div class="section">
     <h2><span class="icon">💰</span> Earn Credits</h2>
@@ -350,6 +381,36 @@ function copyText(btn, text) {
     setTimeout(() => { btn.classList.remove('copied'); btn.textContent = 'Copy'; }, 1500);
   });
 }
+
+async function buyPlan(plan) {
+  const apiKey = localStorage.getItem('api_key');
+  if (!apiKey) { alert('Please log in first'); return; }
+  try {
+    const r = await fetch('/api/stripe/checkout', {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({api_key: apiKey, plan: plan})
+    });
+    const d = await r.json();
+    if (d.checkout_url) { window.location.href = d.checkout_url; }
+    else { alert(d.error || 'Error creating checkout'); }
+  } catch(e) { alert('Network error'); }
+}
+
+// Show payment success message
+(function() {
+  const p = new URLSearchParams(window.location.search);
+  if (p.get('payment') === 'success') {
+    const msg = document.getElementById('payment-msg');
+    if (msg) {
+      msg.style.display = 'block';
+      msg.style.background = '#0a3d1a';
+      msg.style.color = '#4ade80';
+      msg.style.border = '1px solid #22c55e';
+      msg.textContent = '✅ Payment successful! ' + (p.get('plan') || '').charAt(0).toUpperCase() + (p.get('plan') || '').slice(1) + ' plan bandwidth added to your account.';
+      window.history.replaceState({}, '', '/dashboard.html');
+    }
+  }
+})();
 </script>
 </body>
 </html>

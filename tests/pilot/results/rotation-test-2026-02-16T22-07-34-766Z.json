@@ -1,0 +1,13 @@
+{
+  "testName": "rotation-test",
+  "timestamp": "2026-02-16T22:07:34.766Z",
+  "duration": 10270,
+  "passed": false,
+  "exitCode": 0,
+  "summary": {
+    "totalRequests": 0,
+    "errors": 50,
+    "uniqueIps": 0
+  },
+  "output": "🔄 IPLoop IP Rotation Test\n============================================================\nProxy: localhost:8080\nRequests: 50\n============================================================\n\nMaking requests with rotating session type...\n\n\n============================================================\n📊 ROTATION RESULTS\n============================================================\nTotal requests: 0\nErrors: 50\nUnique IPs: 0\nRotation rate: 0.0% (IP changed between requests)\nIP diversity ratio: NaN%\n\n📍 IP Distribution:\nTypeError: Cannot read properties of undefined (reading '0')\n    at runRotationTest (/root/clawd-secure/iploop-platform/tests/pilot/rotation-test.js:117:40)\n"
+}

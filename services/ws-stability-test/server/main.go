@@ -22,9 +22,14 @@ import (
 	"sync/atomic"
 	"time"
 
+	crand "crypto/rand"
+	"encoding/hex"
+	"regexp"
+
 	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
-	_ "modernc.org/sqlite"
+	_ "github.com/lib/pq"
+	"golang.org/x/crypto/bcrypt"
 	_ "net/http/pprof"
 )
 
@@ -346,133 +351,37 @@ var db *sql.DB
 
 func initDB() {
 	var err error
-	db, err = sql.Open("sqlite", "/root/iploop-node-server.db")
+	db, err = sql.Open("postgres", "postgres://iploop:xK9mP2vL7nQ4wR8s@localhost/iploop?sslmode=disable")
 	if err != nil {
 		log.Fatal("Failed to open DB:", err)
 	}
-	db.SetMaxOpenConns(1)
+	db.SetMaxOpenConns(25)
+	db.SetMaxIdleConns(10)
 
-	_, err = db.Exec(`
-		CREATE TABLE IF NOT EXISTS ip_info (
-			node_id TEXT PRIMARY KEY,
-			device_id TEXT,
-			device_model TEXT,
-			ip TEXT,
-			ip_fetch_ms INTEGER DEFAULT 0,
-			info_fetch_ms INTEGER DEFAULT 0,
-			country_code TEXT,
-			city TEXT,
-			isp TEXT,
-			asn TEXT,
-			proxy_type TEXT,
-			ip_info_json TEXT,
-			updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
-		);
-		CREATE TABLE IF NOT EXISTS disconnects (
-			id INTEGER PRIMARY KEY AUTOINCREMENT,
-			node_id TEXT,
-			ip TEXT,
-			reason TEXT,
-			duration_sec REAL,
-			pings_sent INTEGER,
-			pongs_recv INTEGER,
-			proxy_type TEXT,
-			country TEXT,
-			disconnected_at DATETIME DEFAULT CURRENT_TIMESTAMP
-		);
-		CREATE INDEX IF NOT EXISTS idx_disconnects_node ON disconnects(node_id);
-		CREATE INDEX IF NOT EXISTS idx_disconnects_at ON disconnects(disconnected_at);
-		CREATE INDEX IF NOT EXISTS idx_ip_info_proxy ON ip_info(proxy_type);
-		CREATE INDEX IF NOT EXISTS idx_ip_info_country ON ip_info(country_code);
-
-		CREATE TABLE IF NOT EXISTS requests (
-			id INTEGER PRIMARY KEY AUTOINCREMENT,
-			type TEXT,
-			node_id TEXT,
-			target TEXT,
-			success INTEGER,
-			latency_ms INTEGER,
-			error TEXT,
-			created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-		);
-		CREATE INDEX IF NOT EXISTS idx_requests_at ON requests(created_at);
-		CREATE INDEX IF NOT EXISTS idx_requests_success ON requests(success);
-
-		CREATE TABLE IF NOT EXISTS snapshots (
-			id INTEGER PRIMARY KEY AUTOINCREMENT,
-			active_nodes INTEGER,
-			unique_nodes_1h INTEGER,
-			total_countries INTEGER,
-			top_country TEXT,
-			top_country_nodes INTEGER,
-			tunnel_requests_1h INTEGER,
-			tunnel_success_1h INTEGER,
-			proxy_requests_1h INTEGER,
-			proxy_success_1h INTEGER,
-			sdk_versions TEXT,
-			created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-		);
-		CREATE INDEX IF NOT EXISTS idx_snapshots_at ON snapshots(created_at);
-
-		CREATE TABLE IF NOT EXISTS bandwidth (
-			id INTEGER PRIMARY KEY AUTOINCREMENT,
-			customer TEXT NOT NULL,
-			route_type TEXT NOT NULL,
-			target TEXT,
-			bytes_in INTEGER DEFAULT 0,
-			bytes_out INTEGER DEFAULT 0,
-			created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-		);
-		CREATE INDEX IF NOT EXISTS idx_bandwidth_customer ON bandwidth(customer);
-		CREATE INDEX IF NOT EXISTS idx_bandwidth_at ON bandwidth(created_at);
-		CREATE INDEX IF NOT EXISTS idx_bandwidth_customer_at ON bandwidth(customer, created_at);
-
-		CREATE TABLE IF NOT EXISTS customers (
-			api_key TEXT PRIMARY KEY,
-			name TEXT NOT NULL,
-			quota_bytes INTEGER DEFAULT 5368709120,
-			rate_limit INTEGER DEFAULT 10,
-			max_concurrent INTEGER DEFAULT 50,
-			enabled INTEGER DEFAULT 1,
-			created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-		);
-
-		CREATE TABLE IF NOT EXISTS credit_users (
-			user_id TEXT PRIMARY KEY,
-			token TEXT UNIQUE NOT NULL,
-			credits REAL DEFAULT 0,
-			total_earned REAL DEFAULT 0,
-			total_spent REAL DEFAULT 0,
-			proxy_gb_used REAL DEFAULT 0,
-			created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-		);
-
-		CREATE TABLE IF NOT EXISTS credit_sessions (
-			id INTEGER PRIMARY KEY AUTOINCREMENT,
-			node_id TEXT NOT NULL,
-			user_id TEXT NOT NULL,
-			connected_at DATETIME NOT NULL,
-			disconnected_at DATETIME,
-			uptime_hours REAL DEFAULT 0,
-			credits_earned REAL DEFAULT 0
-		);
-		CREATE INDEX IF NOT EXISTS idx_credit_sessions_user ON credit_sessions(user_id);
-		CREATE INDEX IF NOT EXISTS idx_credit_sessions_node ON credit_sessions(node_id);
-		CREATE INDEX IF NOT EXISTS idx_credit_sessions_active ON credit_sessions(disconnected_at) WHERE disconnected_at IS NULL;
-
-		CREATE TABLE IF NOT EXISTS credit_log (
-			id INTEGER PRIMARY KEY AUTOINCREMENT,
-			user_id TEXT NOT NULL,
-			amount REAL NOT NULL,
-			reason TEXT NOT NULL,
-			created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-		);
-		CREATE INDEX IF NOT EXISTS idx_credit_log_user ON credit_log(user_id);
-	`)
-	if err != nil {
-		log.Fatal("Failed to create tables:", err)
+	if err = db.Ping(); err != nil {
+		log.Fatal("Failed to ping DB:", err)
 	}
-	log.Println("SQLite DB initialized at /root/iploop-node-server.db")
+	log.Println("PostgreSQL DB connected (iploop@localhost)")
+
+	// Create users table for auth system
+	db.Exec(`CREATE TABLE IF NOT EXISTS users (
+		id SERIAL PRIMARY KEY,
+		email TEXT UNIQUE NOT NULL,
+		password_hash TEXT NOT NULL,
+		api_key TEXT UNIQUE NOT NULL,
+		token TEXT UNIQUE NOT NULL,
+		plan TEXT DEFAULT 'free',
+		free_gb_remaining REAL DEFAULT 0.5,
+		created_at TIMESTAMP DEFAULT NOW(),
+		last_login TIMESTAMP,
+		ip_address TEXT,
+		signup_ip TEXT,
+		email_verified BOOLEAN DEFAULT FALSE
+	)`)
+	db.Exec(`CREATE INDEX IF NOT EXISTS idx_users_email ON users(email)`)
+	db.Exec(`CREATE INDEX IF NOT EXISTS idx_users_api_key ON users(api_key)`)
+	db.Exec(`CREATE INDEX IF NOT EXISTS idx_users_token ON users(token)`)
+	db.Exec(`CREATE INDEX IF NOT EXISTS idx_users_signup_ip ON users(signup_ip)`)
 }
 
 func storeBandwidth(customer, routeType, target string, bytesIn, bytesOut int64) {
@@ -481,7 +390,7 @@ func storeBandwidth(customer, routeType, target string, bytesIn, bytesOut int64)
 	}
 	go func() {
 		_, err := db.Exec(`INSERT INTO bandwidth (customer, route_type, target, bytes_in, bytes_out, created_at)
-			VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)`,
+			VALUES ($1, $2, $3, $4, $5, CURRENT_TIMESTAMP)`,
 			customer, routeType, target, bytesIn, bytesOut)
 		if err != nil {
 			log.Printf("[DB_ERROR] store bandwidth: %v", err)
@@ -505,9 +414,9 @@ func creditNodeConnected(nodeID, token string) {
 	}
 	go func() {
 		// Ensure user exists
-		db.Exec(`INSERT OR IGNORE INTO credit_users (user_id, token) VALUES (?, ?)`, token, token)
+		db.Exec(`INSERT INTO credit_users (user_id, token) VALUES ($1, $2) ON CONFLICT (user_id) DO NOTHING`, token, token)
 		// Open session
-		db.Exec(`INSERT INTO credit_sessions (node_id, user_id, connected_at) VALUES (?, ?, CURRENT_TIMESTAMP)`,
+		db.Exec(`INSERT INTO credit_sessions (node_id, user_id, connected_at) VALUES ($1, $2, CURRENT_TIMESTAMP)`,
 			nodeID, token)
 		log.Printf("[CREDITS] session opened: node=%s user=%s", nodeID, token)
 	}()
@@ -520,7 +429,7 @@ func creditNodeDisconnected(nodeID string) {
 		var connectedAt string
 		err := db.QueryRow(
 			`SELECT id, user_id, connected_at FROM credit_sessions
-			 WHERE node_id = ? AND disconnected_at IS NULL
+			 WHERE node_id = $1 AND disconnected_at IS NULL
 			 ORDER BY connected_at DESC LIMIT 1`, nodeID,
 		).Scan(&sessionID, &userID, &connectedAt)
 		if err != nil {
@@ -529,7 +438,7 @@ func creditNodeDisconnected(nodeID string) {
 
 		// Calculate hours from connected_at
 		var hours float64
-		db.QueryRow(`SELECT (julianday(CURRENT_TIMESTAMP) - julianday(?)) * 24`, connectedAt).Scan(&hours)
+		db.QueryRow(`SELECT EXTRACT(EPOCH FROM (CURRENT_TIMESTAMP - $1::timestamp)) / 3600`, connectedAt).Scan(&hours)
 		if hours < 0.001 {
 			hours = 0.001
 		}
@@ -538,7 +447,7 @@ func creditNodeDisconnected(nodeID string) {
 
 		// Uptime streak bonus
 		var totalUptime float64
-		db.QueryRow(`SELECT COALESCE(SUM(uptime_hours), 0) FROM credit_sessions WHERE user_id = ? AND disconnected_at IS NOT NULL`, userID).Scan(&totalUptime)
+		db.QueryRow(`SELECT COALESCE(SUM(uptime_hours), 0) FROM credit_sessions WHERE user_id = $1 AND disconnected_at IS NOT NULL`, userID).Scan(&totalUptime)
 		if totalUptime+hours >= 72 {
 			credits *= uptimeBonus72h
 		} else if totalUptime+hours >= 24 {
@@ -547,17 +456,17 @@ func creditNodeDisconnected(nodeID string) {
 
 		// Multi-device bonus
 		var activeDevices int
-		db.QueryRow(`SELECT COUNT(*) FROM credit_sessions WHERE user_id = ? AND disconnected_at IS NULL`, userID).Scan(&activeDevices)
+		db.QueryRow(`SELECT COUNT(*) FROM credit_sessions WHERE user_id = $1 AND disconnected_at IS NULL`, userID).Scan(&activeDevices)
 		if activeDevices > 1 {
 			credits *= 1.0 + float64(activeDevices-1)*multiDeviceBonus
 		}
 
 		// Close session + add credits
-		db.Exec(`UPDATE credit_sessions SET disconnected_at = CURRENT_TIMESTAMP, uptime_hours = ?, credits_earned = ? WHERE id = ?`,
+		db.Exec(`UPDATE credit_sessions SET disconnected_at = CURRENT_TIMESTAMP, uptime_hours = $1, credits_earned = $2 WHERE id = $3`,
 			hours, credits, sessionID)
-		db.Exec(`UPDATE credit_users SET credits = credits + ?, total_earned = total_earned + ? WHERE user_id = ?`,
+		db.Exec(`UPDATE credit_users SET credits = credits + $1, total_earned = total_earned + $2 WHERE user_id = $3`,
 			credits, credits, userID)
-		db.Exec(`INSERT INTO credit_log (user_id, amount, reason) VALUES (?, ?, ?)`,
+		db.Exec(`INSERT INTO credit_log (user_id, amount, reason) VALUES ($1, $2, $3)`,
 			userID, credits, fmt.Sprintf("uptime %.2fh node=%s", hours, nodeID))
 		log.Printf("[CREDITS] session closed: node=%s user=%s hours=%.2f credits=%.2f", nodeID, userID, hours, credits)
 	}()
@@ -645,7 +554,7 @@ func getCustomer(apiKey string) (*Customer, error) {
 	var c Customer
 	var enabled int
 	err := db.QueryRow(`SELECT api_key, name, quota_bytes, rate_limit, max_concurrent, enabled 
-		FROM customers WHERE api_key = ?`, apiKey).Scan(
+		FROM customers WHERE api_key = $1`, apiKey).Scan(
 		&c.APIKey, &c.Name, &c.QuotaBytes, &c.RateLimit, &c.MaxConcurrent, &enabled)
 	
 	if err != nil {
@@ -659,7 +568,7 @@ func getCustomer(apiKey string) (*Customer, error) {
 			Enabled:       true,
 		}
 		_, dbErr := db.Exec(`INSERT INTO customers (api_key, name, quota_bytes, rate_limit, max_concurrent, enabled)
-			VALUES (?, ?, ?, ?, ?, 1)`, c.APIKey, c.Name, c.QuotaBytes, c.RateLimit, c.MaxConcurrent)
+			VALUES ($1, $2, $3, $4, $5, 1)`, c.APIKey, c.Name, c.QuotaBytes, c.RateLimit, c.MaxConcurrent)
 		if dbErr != nil {
 			log.Printf("[CUSTOMER] Failed to create customer %s: %v", apiKey, dbErr)
 		} else {
@@ -685,7 +594,7 @@ func getCustomer(apiKey string) (*Customer, error) {
 func getCustomerUsedBytes(apiKey string) int64 {
 	var used int64
 	db.QueryRow(`SELECT COALESCE(SUM(bytes_in + bytes_out), 0) FROM bandwidth 
-		WHERE customer = ? AND created_at >= datetime('now', 'start of month')`, apiKey).Scan(&used)
+		WHERE customer = $1 AND created_at >= date_trunc('month', CURRENT_TIMESTAMP)`, apiKey).Scan(&used)
 	return used
 }
 
@@ -693,7 +602,7 @@ func getCustomerUsedBytes(apiKey string) int64 {
 // New accounts (< 100 requests) get 2x rate to help them succeed.
 func dynamicRateLimit(c *Customer) float64 {
 	var reqCount int64
-	db.QueryRow(`SELECT COUNT(*) FROM bandwidth WHERE customer = ? AND created_at >= datetime('now', '-1 hours')`, c.APIKey).Scan(&reqCount)
+	db.QueryRow(`SELECT COUNT(*) FROM bandwidth WHERE customer = $1 AND created_at >= NOW() - INTERVAL '1 hour'`, c.APIKey).Scan(&reqCount)
 	
 	baseRate := float64(c.RateLimit)
 	if reqCount < 100 {
@@ -792,7 +701,7 @@ func storeRequest(reqType, nodeID, target string, success bool, latencyMs int, e
 	}
 	go func() {
 		_, err := db.Exec(`INSERT INTO requests (type, node_id, target, success, latency_ms, error, created_at)
-			VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)`,
+			VALUES ($1, $2, $3, $4, $5, $6, CURRENT_TIMESTAMP)`,
 			reqType, nodeID, target, successInt, latencyMs, errMsg)
 		if err != nil {
 			log.Printf("[DB_ERROR] store request: %v", err)
@@ -800,7 +709,10 @@ func storeRequest(reqType, nodeID, target string, success bool, latencyMs int, e
 	}()
 }
 
-func storeIPInfo(nodeID string, msg map[string]interface{}) {
+func storeIPInfo(nodeID string, msg map[string]interface{}, nodeOS string) {
+	if nodeOS == "" {
+		nodeOS = "android"
+	}
 	ipInfo, _ := msg["ip_info"].(map[string]interface{})
 	if ipInfo == nil {
 		return
@@ -828,15 +740,16 @@ func storeIPInfo(nodeID string, msg map[string]interface{}) {
 
 	_, err := db.Exec(`
 		INSERT INTO ip_info (node_id, device_id, device_model, ip, ip_fetch_ms, info_fetch_ms, 
-			country_code, city, isp, asn, proxy_type, ip_info_json, updated_at)
-		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+			country_code, city, isp, asn, proxy_type, ip_info_json, os, updated_at)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, CURRENT_TIMESTAMP)
 		ON CONFLICT(node_id) DO UPDATE SET
-			device_id=?, device_model=?, ip=?, ip_fetch_ms=?, info_fetch_ms=?,
-			country_code=?, city=?, isp=?, asn=?, proxy_type=?, ip_info_json=?, updated_at=CURRENT_TIMESTAMP
+			device_id=EXCLUDED.device_id, device_model=EXCLUDED.device_model, ip=EXCLUDED.ip,
+			ip_fetch_ms=EXCLUDED.ip_fetch_ms, info_fetch_ms=EXCLUDED.info_fetch_ms,
+			country_code=EXCLUDED.country_code, city=EXCLUDED.city, isp=EXCLUDED.isp,
+			asn=EXCLUDED.asn, proxy_type=EXCLUDED.proxy_type, ip_info_json=EXCLUDED.ip_info_json,
+			os=EXCLUDED.os, updated_at=CURRENT_TIMESTAMP
 	`, nodeID, deviceID, deviceModel, ip, int(ipFetchMs), int(infoFetchMs),
-		countryCode, city, isp, asn, proxyType, string(ipInfoJSON),
-		deviceID, deviceModel, ip, int(ipFetchMs), int(infoFetchMs),
-		countryCode, city, isp, asn, proxyType, string(ipInfoJSON))
+		countryCode, city, isp, asn, proxyType, string(ipInfoJSON), nodeOS)
 
 	if err != nil {
 		log.Printf("[DB_ERROR] store ip_info: %v", err)
@@ -849,7 +762,7 @@ func storeIPInfo(nodeID string, msg map[string]interface{}) {
 func storeDisconnect(event DisconnectEvent) {
 	_, err := db.Exec(`
 		INSERT INTO disconnects (node_id, ip, reason, duration_sec, pings_sent, pongs_recv, proxy_type, country)
-		VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
 	`, event.NodeID, event.IP, event.Reason, event.DurationSec, event.PingsSent, event.PongsRecv, event.ProxyType, event.Country)
 	if err != nil {
 		log.Printf("[DB_ERROR] store disconnect: %v", err)
@@ -1538,10 +1451,10 @@ func (h *Hub) Remove(nodeID, reason string) {
 		proxyType := ""
 		country := conn.Country
 		// Look up proxy type from DB
-		row := db.QueryRow("SELECT proxy_type FROM ip_info WHERE node_id = ?", nodeID)
+		row := db.QueryRow("SELECT proxy_type FROM ip_info WHERE node_id = $1", nodeID)
 		row.Scan(&proxyType)
 		if country == "" {
-			row2 := db.QueryRow("SELECT country_code FROM ip_info WHERE node_id = ?", nodeID)
+			row2 := db.QueryRow("SELECT country_code FROM ip_info WHERE node_id = $1", nodeID)
 			row2.Scan(&country)
 		}
 		event := DisconnectEvent{
@@ -1603,6 +1516,7 @@ func (h *Hub) SetIPInfo(nodeID string, msg map[string]interface{}) {
 		}
 	}
 
+	nodeOS := "android"
 	h.mu.Lock()
 	if conn, ok := h.connections[nodeID]; ok {
 		conn.HasIPInfo = true
@@ -1624,9 +1538,10 @@ func (h *Hub) SetIPInfo(nodeID string, msg map[string]interface{}) {
 		if proxyType != "" {
 			conn.ProxyType = proxyType
 		}
+		nodeOS = conn.OS
 	}
 	h.mu.Unlock()
-	go storeIPInfo(nodeID, msg)
+	go storeIPInfo(nodeID, msg, nodeOS)
 }
 
 func (h *Hub) IncrPing(nodeID string) {
@@ -2333,12 +2248,18 @@ func handleDashboard(w http.ResponseWriter, r *http.Request) {
 	// Top 5 countries from in-memory connections
 	hub.mu.RLock()
 	countryCount := make(map[string]int)
+	osCount := make(map[string]int)
 	for _, c := range hub.connections {
 		cc := c.Country
 		if cc == "" {
 			cc = "unknown"
 		}
 		countryCount[cc]++
+		osName := c.OS
+		if osName == "" {
+			osName = "android"
+		}
+		osCount[osName]++
 	}
 	hub.mu.RUnlock()
 
@@ -2365,16 +2286,32 @@ func handleDashboard(w http.ResponseWriter, r *http.Request) {
 
 	// Unique nodes last 24h and 1h from ip_info table (updated_at tracks last seen)
 	var uniqueNodes24h, uniqueNodes1h int
-	db.QueryRow(`SELECT COUNT(*) FROM ip_info WHERE updated_at >= datetime('now', '-24 hours')`).Scan(&uniqueNodes24h)
-	db.QueryRow(`SELECT COUNT(*) FROM ip_info WHERE updated_at >= datetime('now', '-1 hours')`).Scan(&uniqueNodes1h)
+	db.QueryRow(`SELECT COUNT(*) FROM ip_info WHERE updated_at >= NOW() - INTERVAL '24 hours'`).Scan(&uniqueNodes24h)
+	db.QueryRow(`SELECT COUNT(*) FROM ip_info WHERE updated_at >= NOW() - INTERVAL '1 hour'`).Scan(&uniqueNodes1h)
+
+	// Unique nodes OS breakdown (24h)
+	uniqueOSCount := make(map[string]int)
+	osRows, err := db.Query(`SELECT COALESCE(os, 'android') as os, COUNT(*) FROM ip_info WHERE updated_at >= NOW() - INTERVAL '24 hours' GROUP BY os`)
+	if err == nil {
+		for osRows.Next() {
+			var osName string
+			var cnt int
+			osRows.Scan(&osName, &cnt)
+			if osName == "" {
+				osName = "android"
+			}
+			uniqueOSCount[osName] += cnt
+		}
+		osRows.Close()
+	}
 
 	// Request stats from requests table — split by type
 	queryStats := func(reqType string) map[string]interface{} {
 		var total24h, total1h, success24h, success1h int
-		db.QueryRow(`SELECT COUNT(*) FROM requests WHERE type = ? AND created_at >= datetime('now', '-24 hours')`, reqType).Scan(&total24h)
-		db.QueryRow(`SELECT COUNT(*) FROM requests WHERE type = ? AND created_at >= datetime('now', '-1 hours')`, reqType).Scan(&total1h)
-		db.QueryRow(`SELECT COUNT(*) FROM requests WHERE type = ? AND created_at >= datetime('now', '-24 hours') AND success = 1`, reqType).Scan(&success24h)
-		db.QueryRow(`SELECT COUNT(*) FROM requests WHERE type = ? AND created_at >= datetime('now', '-1 hours') AND success = 1`, reqType).Scan(&success1h)
+		db.QueryRow(`SELECT COUNT(*) FROM requests WHERE type = $1 AND created_at >= NOW() - INTERVAL '24 hours'`, reqType).Scan(&total24h)
+		db.QueryRow(`SELECT COUNT(*) FROM requests WHERE type = $1 AND created_at >= NOW() - INTERVAL '1 hour'`, reqType).Scan(&total1h)
+		db.QueryRow(`SELECT COUNT(*) FROM requests WHERE type = $1 AND created_at >= NOW() - INTERVAL '24 hours' AND success = 1`, reqType).Scan(&success24h)
+		db.QueryRow(`SELECT COUNT(*) FROM requests WHERE type = $1 AND created_at >= NOW() - INTERVAL '1 hour' AND success = 1`, reqType).Scan(&success1h)
 
 		pct24h := float64(0)
 		if total24h > 0 {
@@ -2400,6 +2337,8 @@ func handleDashboard(w http.ResponseWriter, r *http.Request) {
 		"unique_nodes_24h": uniqueNodes24h,
 		"unique_nodes_1h":  uniqueNodes1h,
 		"top_countries":    top5,
+		"os_active":        osCount,
+		"os_unique_24h":    uniqueOSCount,
 		"tunnel":           tunnelStats,
 		"proxy":            proxyStats,
 		"timestamp":        time.Now().UTC().Format(time.RFC3339),
@@ -2422,8 +2361,8 @@ func handleSnapshots(w http.ResponseWriter, r *http.Request) {
 	rows, err := db.Query(`SELECT active_nodes, unique_nodes_1h, total_countries,
 		top_country, top_country_nodes, tunnel_requests_1h, tunnel_success_1h,
 		proxy_requests_1h, proxy_success_1h, sdk_versions, created_at
-		FROM snapshots WHERE created_at >= datetime('now', ? || ' days')
-		ORDER BY created_at ASC`, fmt.Sprintf("-%d", days))
+		FROM snapshots WHERE created_at >= NOW() - ($1 || ' days')::interval
+		ORDER BY created_at ASC`, fmt.Sprintf("%d", days))
 	if err != nil {
 		json.NewEncoder(w).Encode(map[string]interface{}{"error": err.Error()})
 		return
@@ -3163,11 +3102,32 @@ func shouldUsePartner(targetCountry string) bool {
 	return rand.Intn(100) >= partnerOwnPoolPct
 }
 
+// handlePartnerCONNECTExcluding tries a partner server not in the exclude set.
+// Adds the tried server to exclude. Returns true only on SUCCESS (relay started).
+func handlePartnerCONNECTExcluding(clientConn net.Conn, target, customer string, exclude map[string]bool) bool {
+	// Pick random server not in exclude set (max 10 attempts to find one)
+	var server string
+	for i := 0; i < 10; i++ {
+		s := partnerServers[rand.Intn(len(partnerServers))]
+		if !exclude[s] {
+			server = s
+			break
+		}
+	}
+	if server == "" {
+		return false // all servers tried
+	}
+	exclude[server] = true
+	return handlePartnerCONNECTWithServer(clientConn, target, customer, server)
+}
+
 // handlePartnerCONNECT chains a CONNECT request through a random partner server+peer.
 // Returns true if handled (success or fail), false if partner unavailable and should fallback.
 func handlePartnerCONNECT(clientConn net.Conn, target, customer string) bool {
-	// Pick random server and peer
-	server := partnerServers[rand.Intn(len(partnerServers))]
+	return handlePartnerCONNECTWithServer(clientConn, target, customer, partnerServers[rand.Intn(len(partnerServers))])
+}
+
+func handlePartnerCONNECTWithServer(clientConn net.Conn, target, customer, server string) bool {
 	peer := rand.Intn(partnerPeersPerSvr) + 1
 	username := fmt.Sprintf("iploop-%d", peer)
 	upstreamAddr := server + ":" + partnerPort
@@ -3370,11 +3330,15 @@ func handleCONNECTRaw(clientConn net.Conn, req *http.Request) {
 
 	// ── Partner pool routing (US residential, 95/5 split) ──
 	if shouldUsePartner(targetCountry) {
-		if handlePartnerCONNECT(clientConn, target, customer) {
-			return // handled by partner
+		// Retry up to 3 different partner servers before fallback
+		triedServers := map[string]bool{}
+		for attempt := 0; attempt < 3; attempt++ {
+			if handlePartnerCONNECTExcluding(clientConn, target, customer, triedServers) {
+				return // handled by partner
+			}
 		}
-		// Partner failed, fall through to our own nodes
-		log.Printf("[PARTNER] Fallback to own nodes for %s", target)
+		// All partner attempts failed, fall through to our own nodes
+		log.Printf("[PARTNER] All 3 retries failed, fallback to own nodes for %s", target)
 	}
 
 	// Parallel tunnel opening with server-side retry (up to 2 rounds)
@@ -3587,17 +3551,17 @@ func handleAPIBandwidth(w http.ResponseWriter, r *http.Request) {
 	var since string
 	switch period {
 	case "1h":
-		since = "datetime('now', '-1 hours')"
+		since = "NOW() - INTERVAL '1 hour'"
 	case "24h":
-		since = "datetime('now', '-24 hours')"
+		since = "NOW() - INTERVAL '24 hours'"
 	case "7d":
-		since = "datetime('now', '-7 days')"
+		since = "NOW() - INTERVAL '7 days'"
 	case "30d":
-		since = "datetime('now', '-30 days')"
+		since = "NOW() - INTERVAL '30 days'"
 	case "all":
-		since = "datetime('2000-01-01')"
+		since = "'2000-01-01'::timestamp"
 	default:
-		since = "datetime('now', '-24 hours')"
+		since = "NOW() - INTERVAL '24 hours'"
 	}
 
 	// Per-customer summary
@@ -3660,16 +3624,16 @@ func handleAPICredits(w http.ResponseWriter, r *http.Request) {
 	if userID != "" {
 		// Single user balance
 		var credits, totalEarned, totalSpent, proxyGBUsed float64
-		err := db.QueryRow(`SELECT credits, total_earned, total_spent, proxy_gb_used FROM credit_users WHERE user_id = ?`, userID).
+		err := db.QueryRow(`SELECT credits, total_earned, total_spent, proxy_gb_used FROM credit_users WHERE user_id = $1`, userID).
 			Scan(&credits, &totalEarned, &totalSpent, &proxyGBUsed)
 		if err != nil {
 			json.NewEncoder(w).Encode(map[string]string{"error": "user not found"})
 			return
 		}
 		var activeDevices int
-		db.QueryRow(`SELECT COUNT(*) FROM credit_sessions WHERE user_id = ? AND disconnected_at IS NULL`, userID).Scan(&activeDevices)
+		db.QueryRow(`SELECT COUNT(*) FROM credit_sessions WHERE user_id = $1 AND disconnected_at IS NULL`, userID).Scan(&activeDevices)
 		var totalUptime float64
-		db.QueryRow(`SELECT COALESCE(SUM(uptime_hours), 0) FROM credit_sessions WHERE user_id = ?`, userID).Scan(&totalUptime)
+		db.QueryRow(`SELECT COALESCE(SUM(uptime_hours), 0) FROM credit_sessions WHERE user_id = $1`, userID).Scan(&totalUptime)
 
 		json.NewEncoder(w).Encode(map[string]interface{}{
 			"user_id":          userID,
@@ -3737,10 +3701,9 @@ func handleAPICustomers(w http.ResponseWriter, r *http.Request) {
 		if !input.Enabled { enabled = 0 }
 
 		_, err := db.Exec(`INSERT INTO customers (api_key, name, quota_bytes, rate_limit, max_concurrent, enabled)
-			VALUES (?, ?, ?, ?, ?, ?)
-			ON CONFLICT(api_key) DO UPDATE SET name=?, quota_bytes=?, rate_limit=?, max_concurrent=?, enabled=?`,
-			input.APIKey, input.Name, quotaBytes, input.RateLimit, input.MaxConcurrent, enabled,
-			input.Name, quotaBytes, input.RateLimit, input.MaxConcurrent, enabled)
+			VALUES ($1, $2, $3, $4, $5, $6)
+			ON CONFLICT(api_key) DO UPDATE SET name=EXCLUDED.name, quota_bytes=EXCLUDED.quota_bytes, rate_limit=EXCLUDED.rate_limit, max_concurrent=EXCLUDED.max_concurrent, enabled=EXCLUDED.enabled`,
+			input.APIKey, input.Name, quotaBytes, input.RateLimit, input.MaxConcurrent, enabled)
 		if err != nil {
 			json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
 			return
@@ -3759,7 +3722,7 @@ func handleAPICustomers(w http.ResponseWriter, r *http.Request) {
 		COALESCE(b.used, 0) as used_bytes
 		FROM customers c
 		LEFT JOIN (SELECT customer, SUM(bytes_in + bytes_out) as used 
-			FROM bandwidth WHERE created_at >= datetime('now', 'start of month') GROUP BY customer) b
+			FROM bandwidth WHERE created_at >= date_trunc('month', CURRENT_TIMESTAMP) GROUP BY customer) b
 		ON c.api_key = b.customer
 		ORDER BY used_bytes DESC`)
 	if err != nil {
@@ -3802,6 +3765,335 @@ func handleAPICustomers(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(customers)
 }
 
+// ─── CORS helper ───────────────────────────────────────────────────────────────
+
+func corsHeaders(w http.ResponseWriter) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
+}
+
+func generateHexToken(n int) string {
+	b := make([]byte, n)
+	crand.Read(b)
+	return hex.EncodeToString(b)
+}
+
+var emailRegex = regexp.MustCompile(`^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$`)
+
+func getAPIKeyFromRequest(r *http.Request) string {
+	if k := r.URL.Query().Get("api_key"); k != "" {
+		return k
+	}
+	auth := r.Header.Get("Authorization")
+	if strings.HasPrefix(auth, "Bearer ") {
+		return auth[7:]
+	}
+	return ""
+}
+
+func handleAuthSignup(w http.ResponseWriter, r *http.Request) {
+	corsHeaders(w)
+	if r.Method == "OPTIONS" {
+		w.WriteHeader(200)
+		return
+	}
+	if r.Method != "POST" {
+		http.Error(w, "method not allowed", 405)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+
+	var req struct {
+		Email    string `json:"email"`
+		Password string `json:"password"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		json.NewEncoder(w).Encode(map[string]string{"error": "invalid JSON"})
+		return
+	}
+
+	req.Email = strings.TrimSpace(strings.ToLower(req.Email))
+	if !emailRegex.MatchString(req.Email) {
+		w.WriteHeader(400)
+		json.NewEncoder(w).Encode(map[string]string{"error": "invalid email format"})
+		return
+	}
+	if len(req.Password) < 8 {
+		w.WriteHeader(400)
+		json.NewEncoder(w).Encode(map[string]string{"error": "password must be at least 8 characters"})
+		return
+	}
+
+	// Anti-abuse: max 3 signups per IP per day
+	clientIP := strings.Split(r.RemoteAddr, ":")[0]
+	if xff := r.Header.Get("X-Forwarded-For"); xff != "" {
+		clientIP = strings.TrimSpace(strings.Split(xff, ",")[0])
+	}
+	var ipCount int
+	db.QueryRow(`SELECT COUNT(*) FROM users WHERE signup_ip = $1 AND created_at >= NOW() - INTERVAL '1 day'`, clientIP).Scan(&ipCount)
+	if ipCount >= 3 {
+		w.WriteHeader(429)
+		json.NewEncoder(w).Encode(map[string]string{"error": "too many signups from this IP"})
+		return
+	}
+
+	hash, err := bcrypt.GenerateFromPassword([]byte(req.Password), 10)
+	if err != nil {
+		w.WriteHeader(500)
+		json.NewEncoder(w).Encode(map[string]string{"error": "internal error"})
+		return
+	}
+
+	apiKey := generateHexToken(16) // 32 hex chars
+	token := generateHexToken(16)
+
+	var userID int
+	err = db.QueryRow(`INSERT INTO users (email, password_hash, api_key, token, signup_ip, ip_address)
+		VALUES ($1, $2, $3, $4, $5, $5) RETURNING id`,
+		req.Email, string(hash), apiKey, token, clientIP).Scan(&userID)
+	if err != nil {
+		if strings.Contains(err.Error(), "unique") || strings.Contains(err.Error(), "duplicate") {
+			w.WriteHeader(409)
+			json.NewEncoder(w).Encode(map[string]string{"error": "email already registered"})
+		} else {
+			log.Printf("[AUTH] signup error: %v", err)
+			w.WriteHeader(500)
+			json.NewEncoder(w).Encode(map[string]string{"error": "internal error"})
+		}
+		return
+	}
+
+	// Auto-create credit_users entry
+	db.Exec(`INSERT INTO credit_users (user_id, token) VALUES ($1, $2) ON CONFLICT (user_id) DO NOTHING`, token, token)
+
+	// Auto-create customers entry with 0.5GB free
+	db.Exec(`INSERT INTO customers (api_key, name, quota_bytes, rate_limit, max_concurrent, enabled)
+		VALUES ($1, $2, $3, $4, $5, 1) ON CONFLICT (api_key) DO NOTHING`,
+		apiKey, req.Email, int64(0.5*1024*1024*1024), 10, 50)
+
+	log.Printf("[AUTH] signup: user=%d email=%s ip=%s", userID, req.Email, clientIP)
+
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"user_id": userID,
+		"email":   req.Email,
+		"api_key": apiKey,
+		"token":   token,
+		"free_gb": 0.5,
+	})
+}
+
+func handleAuthLogin(w http.ResponseWriter, r *http.Request) {
+	corsHeaders(w)
+	if r.Method == "OPTIONS" {
+		w.WriteHeader(200)
+		return
+	}
+	if r.Method != "POST" {
+		http.Error(w, "method not allowed", 405)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+
+	var req struct {
+		Email    string `json:"email"`
+		Password string `json:"password"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		json.NewEncoder(w).Encode(map[string]string{"error": "invalid JSON"})
+		return
+	}
+
+	req.Email = strings.TrimSpace(strings.ToLower(req.Email))
+
+	var userID int
+	var passwordHash, apiKey, token, plan string
+	var freeGB float32
+	err := db.QueryRow(`SELECT id, password_hash, api_key, token, plan, free_gb_remaining FROM users WHERE email = $1`,
+		req.Email).Scan(&userID, &passwordHash, &apiKey, &token, &plan, &freeGB)
+	if err != nil {
+		w.WriteHeader(401)
+		json.NewEncoder(w).Encode(map[string]string{"error": "invalid email or password"})
+		return
+	}
+
+	if err := bcrypt.CompareHashAndPassword([]byte(passwordHash), []byte(req.Password)); err != nil {
+		w.WriteHeader(401)
+		json.NewEncoder(w).Encode(map[string]string{"error": "invalid email or password"})
+		return
+	}
+
+	clientIP := strings.Split(r.RemoteAddr, ":")[0]
+	if xff := r.Header.Get("X-Forwarded-For"); xff != "" {
+		clientIP = strings.TrimSpace(strings.Split(xff, ",")[0])
+	}
+	db.Exec(`UPDATE users SET last_login = NOW(), ip_address = $1 WHERE id = $2`, clientIP, userID)
+
+	log.Printf("[AUTH] login: user=%d email=%s", userID, req.Email)
+
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"user_id":          userID,
+		"email":            req.Email,
+		"api_key":          apiKey,
+		"token":            token,
+		"plan":             plan,
+		"free_gb_remaining": freeGB,
+	})
+}
+
+func handleAuthMe(w http.ResponseWriter, r *http.Request) {
+	corsHeaders(w)
+	if r.Method == "OPTIONS" {
+		w.WriteHeader(200)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+
+	apiKey := getAPIKeyFromRequest(r)
+	if apiKey == "" {
+		w.WriteHeader(401)
+		json.NewEncoder(w).Encode(map[string]string{"error": "api_key required"})
+		return
+	}
+
+	var userID int
+	var email, token, plan string
+	var freeGB float32
+	err := db.QueryRow(`SELECT id, email, token, plan, free_gb_remaining FROM users WHERE api_key = $1`, apiKey).
+		Scan(&userID, &email, &token, &plan, &freeGB)
+	if err != nil {
+		w.WriteHeader(401)
+		json.NewEncoder(w).Encode(map[string]string{"error": "invalid api_key"})
+		return
+	}
+
+	// Credit balance
+	var credits, totalEarned, totalSpent, proxyGBUsed float64
+	db.QueryRow(`SELECT COALESCE(credits,0), COALESCE(total_earned,0), COALESCE(total_spent,0), COALESCE(proxy_gb_used,0) FROM credit_users WHERE token = $1`, token).
+		Scan(&credits, &totalEarned, &totalSpent, &proxyGBUsed)
+
+	// Active nodes
+	var activeNodes int
+	hub.mu.RLock()
+	for _, c := range hub.connections {
+		if c.Token == token {
+			activeNodes++
+		}
+	}
+	hub.mu.RUnlock()
+
+	// Bandwidth used this month
+	var bytesUsed int64
+	db.QueryRow(`SELECT COALESCE(SUM(bytes_in + bytes_out), 0) FROM bandwidth WHERE customer = $1 AND created_at >= date_trunc('month', CURRENT_TIMESTAMP)`, apiKey).Scan(&bytesUsed)
+
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"user_id":          userID,
+		"email":            email,
+		"plan":             plan,
+		"free_gb_remaining": freeGB,
+		"credits":          credits,
+		"total_earned":     totalEarned,
+		"total_spent":      totalSpent,
+		"proxy_gb_used":    proxyGBUsed,
+		"active_nodes":     activeNodes,
+		"bandwidth_bytes":  bytesUsed,
+		"bandwidth_gb":     float64(bytesUsed) / (1024 * 1024 * 1024),
+	})
+}
+
+func handleUserDashboard(w http.ResponseWriter, r *http.Request) {
+	corsHeaders(w)
+	if r.Method == "OPTIONS" {
+		w.WriteHeader(200)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+
+	apiKey := getAPIKeyFromRequest(r)
+	if apiKey == "" {
+		w.WriteHeader(401)
+		json.NewEncoder(w).Encode(map[string]string{"error": "api_key required"})
+		return
+	}
+
+	var userID int
+	var email, token, plan string
+	var freeGB float32
+	var createdAt time.Time
+	err := db.QueryRow(`SELECT id, email, token, plan, free_gb_remaining, created_at FROM users WHERE api_key = $1`, apiKey).
+		Scan(&userID, &email, &token, &plan, &freeGB, &createdAt)
+	if err != nil {
+		w.WriteHeader(401)
+		json.NewEncoder(w).Encode(map[string]string{"error": "invalid api_key"})
+		return
+	}
+
+	// Credit balance
+	var credits, totalEarned, totalSpent, proxyGBUsed float64
+	db.QueryRow(`SELECT COALESCE(credits,0), COALESCE(total_earned,0), COALESCE(total_spent,0), COALESCE(proxy_gb_used,0) FROM credit_users WHERE token = $1`, token).
+		Scan(&credits, &totalEarned, &totalSpent, &proxyGBUsed)
+
+	// Active nodes
+	var activeNodes int
+	hub.mu.RLock()
+	for _, c := range hub.connections {
+		if c.Token == token {
+			activeNodes++
+		}
+	}
+	hub.mu.RUnlock()
+
+	// Bandwidth
+	var bytesUsed int64
+	db.QueryRow(`SELECT COALESCE(SUM(bytes_in + bytes_out), 0) FROM bandwidth WHERE customer = $1 AND created_at >= date_trunc('month', CURRENT_TIMESTAMP)`, apiKey).Scan(&bytesUsed)
+
+	// Recent activity (last 10 credit_log entries)
+	var activity []map[string]interface{}
+	rows, err := db.Query(`SELECT amount, reason, created_at FROM credit_log WHERE user_id = $1 ORDER BY created_at DESC LIMIT 10`, token)
+	if err == nil {
+		defer rows.Close()
+		for rows.Next() {
+			var amount float64
+			var reason string
+			var at time.Time
+			if rows.Scan(&amount, &reason, &at) == nil {
+				activity = append(activity, map[string]interface{}{
+					"amount":     amount,
+					"reason":     reason,
+					"created_at": at,
+				})
+			}
+		}
+	}
+	if activity == nil {
+		activity = []map[string]interface{}{}
+	}
+
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"user": map[string]interface{}{
+			"id":               userID,
+			"email":            email,
+			"plan":             plan,
+			"free_gb_remaining": freeGB,
+			"created_at":       createdAt,
+		},
+		"credits": map[string]interface{}{
+			"balance":       credits,
+			"total_earned":  totalEarned,
+			"total_spent":   totalSpent,
+			"proxy_gb_used": proxyGBUsed,
+		},
+		"nodes": map[string]interface{}{
+			"active": activeNodes,
+		},
+		"bandwidth": map[string]interface{}{
+			"bytes_used": bytesUsed,
+			"gb_used":    float64(bytesUsed) / (1024 * 1024 * 1024),
+		},
+		"recent_activity": activity,
+	})
+}
+
 func main() {
 	port := os.Getenv("PORT")
 	if port == "" {
@@ -3827,7 +4119,7 @@ func main() {
 
 			// Unique nodes last hour
 			var unique1h int
-			db.QueryRow(`SELECT COUNT(*) FROM ip_info WHERE updated_at >= datetime('now', '-1 hours')`).Scan(&unique1h)
+			db.QueryRow(`SELECT COUNT(*) FROM ip_info WHERE updated_at >= NOW() - INTERVAL '1 hour'`).Scan(&unique1h)
 
 			// Country count
 			hub.mu.RLock()
@@ -3855,15 +4147,15 @@ func main() {
 
 			// Request stats last hour
 			var tunnelReqs1h, tunnelSuccess1h, proxyReqs1h, proxySuccess1h int
-			db.QueryRow(`SELECT COUNT(*) FROM requests WHERE type='tunnel' AND created_at >= datetime('now', '-1 hours')`).Scan(&tunnelReqs1h)
-			db.QueryRow(`SELECT COUNT(*) FROM requests WHERE type='tunnel' AND created_at >= datetime('now', '-1 hours') AND success=1`).Scan(&tunnelSuccess1h)
-			db.QueryRow(`SELECT COUNT(*) FROM requests WHERE type='proxy' AND created_at >= datetime('now', '-1 hours')`).Scan(&proxyReqs1h)
-			db.QueryRow(`SELECT COUNT(*) FROM requests WHERE type='proxy' AND created_at >= datetime('now', '-1 hours') AND success=1`).Scan(&proxySuccess1h)
+			db.QueryRow(`SELECT COUNT(*) FROM requests WHERE type='tunnel' AND created_at >= NOW() - INTERVAL '1 hour'`).Scan(&tunnelReqs1h)
+			db.QueryRow(`SELECT COUNT(*) FROM requests WHERE type='tunnel' AND created_at >= NOW() - INTERVAL '1 hour' AND success=1`).Scan(&tunnelSuccess1h)
+			db.QueryRow(`SELECT COUNT(*) FROM requests WHERE type='proxy' AND created_at >= NOW() - INTERVAL '1 hour'`).Scan(&proxyReqs1h)
+			db.QueryRow(`SELECT COUNT(*) FROM requests WHERE type='proxy' AND created_at >= NOW() - INTERVAL '1 hour' AND success=1`).Scan(&proxySuccess1h)
 
 			_, err := db.Exec(`INSERT INTO snapshots (active_nodes, unique_nodes_1h, total_countries,
 				top_country, top_country_nodes, tunnel_requests_1h, tunnel_success_1h,
 				proxy_requests_1h, proxy_success_1h, sdk_versions)
-				VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+				VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
 				active, unique1h, len(countrySet), topCC, topN,
 				tunnelReqs1h, tunnelSuccess1h, proxyReqs1h, proxySuccess1h, string(sdkJSON))
 			if err != nil {
@@ -3949,6 +4241,12 @@ func main() {
 	http.HandleFunc("/api/bandwidth", handleAPIBandwidth)
 	http.HandleFunc("/api/credits", handleAPICredits)
 	http.HandleFunc("/api/customers", handleAPICustomers)
+
+	// Auth endpoints
+	http.HandleFunc("/api/auth/signup", handleAuthSignup)
+	http.HandleFunc("/api/auth/login", handleAuthLogin)
+	http.HandleFunc("/api/auth/me", handleAuthMe)
+	http.HandleFunc("/api/user/dashboard", handleUserDashboard)
 
 	tlsCert := os.Getenv("TLS_CERT")
 	tlsKey := os.Getenv("TLS_KEY")

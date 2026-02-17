@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IPLoop — Dashboard</title>
+<style>
+:root{--bg:#0a0a1a;--bg2:#12122a;--bg3:#1a1a3a;--accent:#00d4ff;--green:#00ff88;--text:#fff;--muted:#a0a0c0;--border:rgba(0,212,255,.15);--purple:#6c5ce7}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+a{color:var(--accent);text-decoration:none}
+
+/* Auth View */
+#auth-view{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:20px}
+.auth-box{background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:40px;width:100%;max-width:420px}
+.auth-box h1{font-size:28px;margin-bottom:6px;background:linear-gradient(135deg,var(--purple),var(--accent));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.auth-box p.sub{color:var(--muted);margin-bottom:28px;font-size:14px}
+.auth-tabs{display:flex;gap:0;margin-bottom:24px;background:var(--bg);border-radius:8px;padding:4px}
+.auth-tabs button{flex:1;padding:10px;border:none;background:transparent;color:var(--muted);font-size:14px;font-weight:600;border-radius:6px;cursor:pointer;transition:.2s}
+.auth-tabs button.active{background:var(--bg3);color:var(--text)}
+.field{margin-bottom:16px}
+.field label{display:block;font-size:12px;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px}
+.field input{width:100%;padding:12px 14px;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:14px;outline:none;transition:.2s}
+.field input:focus{border-color:var(--accent)}
+.auth-btn{width:100%;padding:14px;border:none;border-radius:8px;background:linear-gradient(135deg,var(--purple),var(--accent));color:#fff;font-size:15px;font-weight:700;cursor:pointer;margin-top:8px;transition:.2s}
+.auth-btn:hover{transform:translateY(-1px);box-shadow:0 6px 24px rgba(0,212,255,.3)}
+.auth-btn:disabled{opacity:.5;transform:none}
+.error-msg{color:#ff6b6b;font-size:13px;margin-top:12px;display:none}
+.success-msg{color:var(--green);font-size:13px;margin-top:12px;display:none}
+
+/* Dashboard View */
+#dash-view{display:none}
+header{display:flex;justify-content:space-between;align-items:center;padding:16px 32px;background:rgba(10,10,26,.95);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:100}
+.logo{font-size:22px;font-weight:800;background:linear-gradient(135deg,var(--purple),var(--accent));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.header-right{display:flex;align-items:center;gap:16px}
+.user-email{color:var(--muted);font-size:13px}
+.logout-btn{padding:8px 16px;border:1px solid var(--border);background:transparent;color:var(--muted);border-radius:6px;cursor:pointer;font-size:13px;transition:.2s}
+.logout-btn:hover{border-color:#ff6b6b;color:#ff6b6b}
+
+.container{max-width:1200px;margin:0 auto;padding:32px 24px}
+
+/* Stats Cards */
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px;margin-bottom:32px}
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:24px}
+.card-label{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px}
+.card-value{font-size:32px;font-weight:700}
+.card-value.accent{color:var(--accent)}
+.card-value.green{color:var(--green)}
+.progress-bar{height:6px;background:var(--bg);border-radius:3px;margin-top:10px;overflow:hidden}
+.progress-fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--green));border-radius:3px;transition:width .5s}
+
+/* Sections */
+.section{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:24px;margin-bottom:24px}
+.section h2{font-size:18px;margin-bottom:16px;display:flex;align-items:center;gap:8px}
+.section h2 span.icon{font-size:20px}
+
+/* Proxy Access */
+.proxy-row{display:flex;align-items:center;gap:8px;background:var(--bg);border-radius:8px;padding:12px 16px;margin-bottom:12px;font-family:'SF Mono',Monaco,Consolas,monospace;font-size:13px;word-break:break-all}
+.proxy-row .label{color:var(--muted);min-width:80px;font-size:11px;text-transform:uppercase;flex-shrink:0}
+.proxy-row code{flex:1;color:var(--green)}
+.copy-btn{padding:6px 12px;border:1px solid var(--border);background:var(--bg3);color:var(--muted);border-radius:6px;cursor:pointer;font-size:12px;white-space:nowrap;transition:.2s}
+.copy-btn:hover{border-color:var(--accent);color:var(--accent)}
+.copy-btn.copied{border-color:var(--green);color:var(--green)}
+select.country-sel{padding:8px 12px;background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:6px;font-size:13px;margin-bottom:12px;outline:none}
+
+/* Earn */
+.code-block{background:var(--bg);border-radius:8px;padding:16px;font-family:'SF Mono',Monaco,Consolas,monospace;font-size:13px;color:var(--green);margin-bottom:12px;position:relative;word-break:break-all;line-height:1.5}
+.code-block .copy-btn{position:absolute;top:8px;right:8px}
+.rates-table{width:100%;border-collapse:collapse;margin-top:12px}
+.rates-table th,.rates-table td{padding:10px 14px;text-align:left;border-bottom:1px solid var(--border);font-size:13px}
+.rates-table th{color:var(--muted);font-size:11px;text-transform:uppercase}
+.rates-table td{color:var(--text)}
+
+/* Activity */
+.activity-item{display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.04);font-size:13px}
+.activity-item:last-child{border:none}
+.activity-type{color:var(--muted)}
+.activity-credits{color:var(--green);font-weight:600}
+.activity-time{color:var(--muted);font-size:12px}
+
+/* Network */
+.net-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px}
+.net-card{background:var(--bg);border-radius:8px;padding:16px;text-align:center}
+.net-card .val{font-size:28px;font-weight:700;color:var(--accent)}
+.net-card .lbl{font-size:12px;color:var(--muted);margin-top:4px}
+.country-list{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.country-tag{background:var(--bg);padding:6px 12px;border-radius:6px;font-size:12px;color:var(--muted)}
+
+/* Loading */
+.skeleton{background:linear-gradient(90deg,var(--bg3) 25%,var(--bg) 50%,var(--bg3) 75%);background-size:200%;animation:shimmer 1.5s infinite;border-radius:4px;height:32px}
+@keyframes shimmer{0%{background-position:200%}100%{background-position:-200%}}
+
+/* Responsive */
+@media(max-width:600px){
+  header{padding:12px 16px}
+  .container{padding:16px 12px}
+  .stats{grid-template-columns:1fr 1fr}
+  .proxy-row{flex-wrap:wrap}
+  .proxy-row .label{min-width:100%;margin-bottom:4px}
+}
+</style>
+</head>
+<body>
+
+<!-- AUTH VIEW -->
+<div id="auth-view">
+<div class="auth-box">
+  <h1>⚡ IPLoop</h1>
+  <p class="sub">Share bandwidth. Earn credits. Use proxy free.</p>
+  <div class="auth-tabs">
+    <button class="active" onclick="switchTab('login')">Log In</button>
+    <button onclick="switchTab('signup')">Sign Up</button>
+  </div>
+  <form id="auth-form" onsubmit="handleAuth(event)">
+    <div class="field"><label>Email</label><input type="email" id="email" required autocomplete="email"></div>
+    <div class="field"><label>Password</label><input type="password" id="password" required minlength="6" autocomplete="current-password"></div>
+    <button type="submit" class="auth-btn" id="auth-submit">Log In</button>
+  </form>
+  <div class="error-msg" id="auth-error"></div>
+  <div class="success-msg" id="auth-success"></div>
+  <p style="text-align:center;margin-top:20px;font-size:13px;color:var(--muted)"><a href="index.html">← Back to IPLoop</a></p>
+</div>
+</div>
+
+<!-- DASHBOARD VIEW -->
+<div id="dash-view">
+<header>
+  <div class="logo">⚡ IPLoop</div>
+  <div class="header-right">
+    <span class="user-email" id="user-email"></span>
+    <button class="logout-btn" onclick="logout()">Logout</button>
+  </div>
+</header>
+
+<div class="container">
+  <!-- Stats -->
+  <div class="stats">
+    <div class="card">
+      <div class="card-label">Free Data Remaining</div>
+      <div class="card-value accent" id="stat-gb">-</div>
+      <div class="progress-bar"><div class="progress-fill" id="gb-progress" style="width:0%"></div></div>
+    </div>
+    <div class="card">
+      <div class="card-label">Credits Balance</div>
+      <div class="card-value green" id="stat-credits">-</div>
+    </div>
+    <div class="card">
+      <div class="card-label">Active Nodes</div>
+      <div class="card-value" id="stat-nodes">-</div>
+    </div>
+    <div class="card">
+      <div class="card-label">Bandwidth Used</div>
+      <div class="card-value" id="stat-bw">-</div>
+    </div>
+  </div>
+
+  <!-- Proxy Access -->
+  <div class="section">
+    <h2><span class="icon">🌐</span> Proxy Access</h2>
+    <select class="country-sel" id="country-sel" onchange="updateProxy()">
+      <option value="US">🇺🇸 United States</option>
+      <option value="GB">🇬🇧 United Kingdom</option>
+      <option value="CA">🇨🇦 Canada</option>
+      <option value="DE">🇩🇪 Germany</option>
+      <option value="FR">🇫🇷 France</option>
+      <option value="AU">🇦🇺 Australia</option>
+    </select>
+    <div class="proxy-row">
+      <span class="label">Endpoint</span>
+      <code>gateway.iploop.io:8880</code>
+    </div>
+    <div class="proxy-row">
+      <span class="label">Auth</span>
+      <code id="proxy-auth">-</code>
+      <button class="copy-btn" onclick="copyText(this, document.getElementById('proxy-auth').textContent)">Copy</button>
+    </div>
+    <div class="proxy-row">
+      <span class="label">cURL</span>
+      <code id="curl-cmd">-</code>
+      <button class="copy-btn" onclick="copyText(this, document.getElementById('curl-cmd').textContent)">Copy</button>
+    </div>
+  </div>
+
+  <!-- Earn Credits -->
+  <div class="section">
+    <h2><span class="icon">💰</span> Earn Credits</h2>
+    <p style="color:var(--muted);font-size:14px;margin-bottom:16px">Run a node to earn credits. Each device earns ~1 credit per hour online.</p>
+    <div class="code-block" id="docker-cmd">docker run -d --restart always -e TOKEN=<span id="user-token">...</span> ultronloop2026/iploop-node:latest<button class="copy-btn" onclick="copyText(this, document.getElementById('docker-cmd').textContent.replace('Copy','').trim())">Copy</button></div>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:16px">Or download the binary from <a href="https://github.com/iploop/node/releases" target="_blank">GitHub Releases</a></p>
+    <table class="rates-table">
+      <tr><th>Activity</th><th>Credits</th><th>Value</th></tr>
+      <tr><td>1 device × 1 hour</td><td>1 credit</td><td>—</td></tr>
+      <tr><td>10 credits</td><td>→</td><td>1 GB proxy data</td></tr>
+      <tr><td>24/7 device (1 month)</td><td>~720 credits</td><td>~72 GB free proxy</td></tr>
+    </table>
+  </div>
+
+  <!-- Recent Activity -->
+  <div class="section">
+    <h2><span class="icon">📋</span> Recent Activity</h2>
+    <div id="activity-list"><p style="color:var(--muted);font-size:13px">No recent activity</p></div>
+  </div>
+
+  <!-- Network Stats -->
+  <div class="section">
+    <h2><span class="icon">🌍</span> Network Stats</h2>
+    <div class="net-grid">
+      <div class="net-card"><div class="val" id="net-nodes">-</div><div class="lbl">Active Nodes</div></div>
+      <div class="net-card"><div class="val" id="net-os-active">-</div><div class="lbl">OS Active</div></div>
+      <div class="net-card"><div class="val" id="net-unique">-</div><div class="lbl">Unique (24h)</div></div>
+    </div>
+    <div id="top-countries" class="country-list" style="margin-top:16px"></div>
+  </div>
+
+  <p style="text-align:center;padding:24px 0;font-size:12px;color:var(--muted)">
+    <a href="index.html">Home</a> · <a href="privacy.html">Privacy</a> · <a href="terms.html">Terms</a> · © 2026 IPLoop
+  </p>
+</div>
+</div>
+
+<script>
+const API = 'https://gateway.iploop.io:9443';
+let currentTab = 'login';
+let apiKey = localStorage.getItem('iploop_api_key');
+let userToken = localStorage.getItem('iploop_token');
+let userEmail = localStorage.getItem('iploop_email');
+
+// Init
+if (apiKey) showDashboard();
+
+function switchTab(tab) {
+  currentTab = tab;
+  document.querySelectorAll('.auth-tabs button').forEach((b,i) => b.classList.toggle('active', (i===0&&tab==='login')||(i===1&&tab==='signup')));
+  document.getElementById('auth-submit').textContent = tab === 'login' ? 'Log In' : 'Sign Up';
+  document.getElementById('auth-error').style.display = 'none';
+  document.getElementById('auth-success').style.display = 'none';
+}
+
+async function handleAuth(e) {
+  e.preventDefault();
+  const btn = document.getElementById('auth-submit');
+  const errEl = document.getElementById('auth-error');
+  const sucEl = document.getElementById('auth-success');
+  errEl.style.display = 'none';
+  sucEl.style.display = 'none';
+  btn.disabled = true;
+  btn.textContent = 'Please wait...';
+  const email = document.getElementById('email').value;
+  const password = document.getElementById('password').value;
+  const endpoint = currentTab === 'login' ? '/api/auth/login' : '/api/auth/signup';
+  try {
+    const r = await fetch(API + endpoint, {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({email, password})
+    });
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.error || d.message || 'Request failed');
+    localStorage.setItem('iploop_api_key', d.api_key);
+    localStorage.setItem('iploop_token', d.token || '');
+    localStorage.setItem('iploop_email', d.email);
+    apiKey = d.api_key; userToken = d.token || ''; userEmail = d.email;
+    if (currentTab === 'signup') {
+      sucEl.textContent = '✅ Account created! You got ' + (d.free_gb||0.5) + ' GB free. Loading dashboard...';
+      sucEl.style.display = 'block';
+      setTimeout(showDashboard, 1200);
+    } else {
+      showDashboard();
+    }
+  } catch(err) {
+    errEl.textContent = err.message;
+    errEl.style.display = 'block';
+  }
+  btn.disabled = false;
+  btn.textContent = currentTab === 'login' ? 'Log In' : 'Sign Up';
+}
+
+function showDashboard() {
+  document.getElementById('auth-view').style.display = 'none';
+  document.getElementById('dash-view').style.display = 'block';
+  document.getElementById('user-email').textContent = userEmail || '';
+  document.getElementById('user-token').textContent = userToken || apiKey || '...';
+  updateProxy();
+  loadDashboardData();
+  loadNetworkStats();
+}
+
+function logout() {
+  localStorage.removeItem('iploop_api_key');
+  localStorage.removeItem('iploop_token');
+  localStorage.removeItem('iploop_email');
+  apiKey = null; userToken = null; userEmail = null;
+  document.getElementById('auth-view').style.display = 'flex';
+  document.getElementById('dash-view').style.display = 'none';
+}
+
+function updateProxy() {
+  const cc = document.getElementById('country-sel').value;
+  const auth = 'user:' + apiKey + '-country-' + cc;
+  document.getElementById('proxy-auth').textContent = auth;
+  document.getElementById('curl-cmd').textContent = 'curl -x http://' + auth + '@gateway.iploop.io:8880 https://httpbin.org/ip';
+}
+
+async function loadDashboardData() {
+  try {
+    const r = await fetch(API + '/api/user/dashboard?api_key=' + apiKey);
+    if (r.status === 401) { logout(); return; }
+    const d = await r.json();
+    const u = d.user || d;
+    document.getElementById('stat-gb').textContent = fmt(u.free_gb_remaining ?? u.free_gb ?? 0) + ' GB';
+    const totalGb = u.free_gb_total || u.free_gb || 0.5;
+    const remaining = u.free_gb_remaining ?? u.free_gb ?? 0;
+    document.getElementById('gb-progress').style.width = Math.min(100, (remaining/totalGb)*100) + '%';
+    document.getElementById('stat-credits').textContent = fmt(u.credits ?? u.credits_balance ?? 0);
+    document.getElementById('stat-nodes').textContent = u.active_nodes ?? u.nodes ?? 0;
+    const bw = u.bandwidth_used ?? u.total_bandwidth ?? 0;
+    document.getElementById('stat-bw').textContent = bw >= 1073741824 ? fmt(bw/1073741824) + ' GB' : bw >= 1048576 ? fmt(bw/1048576) + ' MB' : fmt(bw/1024) + ' KB';
+    if (u.email) { userEmail = u.email; document.getElementById('user-email').textContent = u.email; }
+    if (u.token) { document.getElementById('user-token').textContent = u.token; }
+
+    // Recent activity
+    const activity = d.recent_activity || d.credit_log || [];
+    const al = document.getElementById('activity-list');
+    if (activity.length) {
+      al.innerHTML = activity.slice(0,10).map(a => 
+        '<div class="activity-item"><span class="activity-type">' + (a.type||a.action||'credit') + '</span><span class="activity-credits">+' + (a.credits||a.amount||0) + '</span><span class="activity-time">' + (a.time||a.created_at||'') + '</span></div>'
+      ).join('');
+    }
+  } catch(e) { console.error('Dashboard load error:', e); }
+}
+
+async function loadNetworkStats() {
+  try {
+    const r = await fetch(API + '/dashboard');
+    const d = await r.json();
+    document.getElementById('net-nodes').textContent = d.active_nodes ?? '-';
+    document.getElementById('net-os-active').textContent = d.os_active ?? '-';
+    document.getElementById('net-unique').textContent = d.os_unique_24h ?? '-';
+    const tc = d.top_countries || {};
+    const el = document.getElementById('top-countries');
+    const entries = Array.isArray(tc) ? tc : Object.entries(tc).map(([k,v])=>({country:k,count:v}));
+    el.innerHTML = entries.map(c => '<span class="country-tag">' + (c.country||c[0]) + ': ' + (c.count||c[1]) + '</span>').join('');
+  } catch(e) { console.error('Network stats error:', e); }
+}
+
+function fmt(n) { return typeof n === 'number' ? (n % 1 === 0 ? n.toLocaleString() : n.toFixed(2)) : n; }
+
+function copyText(btn, text) {
+  navigator.clipboard.writeText(text).then(() => {
+    btn.classList.add('copied'); btn.textContent = 'Copied!';
+    setTimeout(() => { btn.classList.remove('copied'); btn.textContent = 'Copy'; }, 1500);
+  });
+}
+</script>
+</body>
+</html>

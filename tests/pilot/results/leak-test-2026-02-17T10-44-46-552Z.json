@@ -1,0 +1,9 @@
+{
+  "testName": "leak-test",
+  "timestamp": "2026-02-17T10:44:46.552Z",
+  "duration": 268,
+  "passed": false,
+  "exitCode": 0,
+  "summary": {},
+  "output": "🔍 IPLoop IP Leak Detection Test\n==================================================\n\nDetecting server real IP...\nServer real IP: 178.128.172.81\n\n--- Test 1: Proxy IP Check ---\n❌ Error: Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON\n\n--- Test 2: Header Leak Check ---\n❌ Error: Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON\n\n--- Test 3: Consistency Check ---\napi.ipify.org?format=json: Error - Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON\nip-api.com: Error - Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON\nhttpbin.org: Error - Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON\n\n--- Test 4: Fingerprint Check ---\nError: Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON\n\n==================================================\nLEAK TEST SUMMARY\n==================================================\nIssues found:\n  🔴 IP check failed: Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON\n"
+}

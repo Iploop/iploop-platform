@@ -149,5 +149,7 @@ export declare class IPLoopClient {
     /** List available proxy countries. */
     getCountries(): Promise<any>;
 }
+declare const SDK_VERSION = "1.0.1";
+export { SDK_VERSION };
 export default IPLoopClient;
 //# sourceMappingURL=index.d.ts.map

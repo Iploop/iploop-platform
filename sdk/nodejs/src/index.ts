@@ -411,4 +411,29 @@ export class IPLoopClient {
   }
 }
 
+// ── Version Check ────────────────────────────────────────────
+
+const SDK_VERSION = '1.0.1';
+
+function checkVersion(): void {
+  try {
+    const https = require('https');
+    https.get('https://registry.npmjs.org/iploop/latest', { timeout: 3000 }, (res: any) => {
+      let data = '';
+      res.on('data', (chunk: string) => { data += chunk; });
+      res.on('end', () => {
+        try {
+          const latest = JSON.parse(data).version;
+          if (latest && latest !== SDK_VERSION) {
+            console.warn(`\n⚠️  IPLoop v${latest} available (you have ${SDK_VERSION}). Run: npm update iploop\n`);
+          }
+        } catch {}
+      });
+    }).on('error', () => {});
+  } catch {}
+}
+
+checkVersion();
+
+export { SDK_VERSION };
 export default IPLoopClient;

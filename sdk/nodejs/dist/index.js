@@ -8,7 +8,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.IPLoopClient = exports.StickySession = exports.ProxyError = exports.QuotaExceededError = exports.RateLimitError = exports.AuthenticationError = exports.IPLoopError = void 0;
+exports.SDK_VERSION = exports.IPLoopClient = exports.StickySession = exports.ProxyError = exports.QuotaExceededError = exports.RateLimitError = exports.AuthenticationError = exports.IPLoopError = void 0;
 const axios_1 = __importDefault(require("axios"));
 const socks_proxy_agent_1 = require("socks-proxy-agent");
 const https_proxy_agent_1 = require("https-proxy-agent");
@@ -293,5 +293,28 @@ class IPLoopClient {
     }
 }
 exports.IPLoopClient = IPLoopClient;
+// ── Version Check ────────────────────────────────────────────
+const SDK_VERSION = '1.0.1';
+exports.SDK_VERSION = SDK_VERSION;
+function checkVersion() {
+    try {
+        const https = require('https');
+        https.get('https://registry.npmjs.org/iploop/latest', { timeout: 3000 }, (res) => {
+            let data = '';
+            res.on('data', (chunk) => { data += chunk; });
+            res.on('end', () => {
+                try {
+                    const latest = JSON.parse(data).version;
+                    if (latest && latest !== SDK_VERSION) {
+                        console.warn(`\n⚠️  IPLoop v${latest} available (you have ${SDK_VERSION}). Run: npm update iploop\n`);
+                    }
+                }
+                catch { }
+            });
+        }).on('error', () => { });
+    }
+    catch { }
+}
+checkVersion();
 exports.default = IPLoopClient;
 //# sourceMappingURL=index.js.map

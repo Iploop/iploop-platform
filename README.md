@@ -1,12 +1,26 @@
 # IPLoop — Two-Sided Residential Proxy Network
 
-Enterprise-grade residential proxy platform with two sides:
+Enterprise-grade residential proxy platform with two distinct sides:
 
-| Side | What | For Who | SDK | Install |
-|------|------|---------|-----|---------|
-| 🖥️ **Demand** | Proxy & unblocking | Developers, scrapers, data teams | [Python](https://github.com/Iploop/iploop-python) \| [Node.js](https://github.com/Iploop/iploop-node-sdk) | `pip install iploop` / `npm install iploop` |
-| 📱 **Supply** | Earn rewards | App developers, device owners | [Android](https://github.com/Iploop/iploop-node) \| [Docker](https://hub.docker.com/r/ultronloop2026/iploop-node) | Android SDK / `docker run` |
+### 🖥️ Demand Side — Use Proxies (Python & Node.js SDKs)
+For developers, scrapers, and data teams who need residential proxy access.
 
+| SDK | Repo | Package | Install |
+|-----|------|---------|---------|
+| 🐍 **Python** | [`Iploop/iploop-python`](https://github.com/Iploop/iploop-python) | [PyPI](https://pypi.org/project/iploop/) | `pip install iploop` |
+| 📦 **Node.js** | [`Iploop/iploop-node-sdk`](https://github.com/Iploop/iploop-node-sdk) | [npm](https://www.npmjs.com/package/iploop) | `npm install iploop` |
+
+### 📱 Supply Side — Earn Rewards (Android SDK & Docker)
+For app developers and device owners who share bandwidth and earn rewards.
+
+| SDK | Repo | Package | Install |
+|-----|------|---------|---------|
+| 📱 **Android** | [`Iploop/iploop-node`](https://github.com/Iploop/iploop-node) | JAR | See docs |
+| 🐳 **Docker** | [Docker Hub](https://hub.docker.com/r/ultronloop2026/iploop-node) | Docker | `docker run ultronloop2026/iploop-node` |
+
+---
+
+<!-- DEMAND SIDE: Python SDK + Node.js SDK — proxy/unblocking for customers -->
 ## 🖥️ DEMAND SIDE — Proxy & Unblocking SDK
 
 ### Python
@@ -99,7 +113,10 @@ const proxyUrl = client.getProxyUrl({ country: 'US' });
 // SOCKS5: socks5://your-api-key:country-us@gateway.iploop.io:1080
 ```
 
+<!-- SUPPLY SIDE: Android SDK + Docker — bandwidth sharing, earn rewards -->
 ## 📱 SUPPLY SIDE — Earn Rewards SDK
+
+> ⚠️ **Not a proxy SDK.** The supply-side SDK shares idle bandwidth in exchange for rewards. For proxy/unblocking, see the **Demand Side** above.
 
 Monetize unused bandwidth by integrating the IPLoop SDK into your Android app, or run a Docker node.
 
@@ -161,22 +178,13 @@ docker run -d --name iploop-node --restart=always ultronloop2026/iploop-node:lat
 
 ## 📁 Repository Structure
 
-### Standalone SDKs (public, for customers)
-
-| SDK | Repo | Package | Install |
-|-----|------|---------|---------|
-| 🐍 Python (Demand) | [`Iploop/iploop-python`](https://github.com/Iploop/iploop-python) | [PyPI](https://pypi.org/project/iploop/) | `pip install iploop` |
-| 📦 Node.js (Demand) | [`Iploop/iploop-node-sdk`](https://github.com/Iploop/iploop-node-sdk) | [npm](https://www.npmjs.com/package/iploop) | `npm install iploop` |
-| 📱 Android (Supply) | [`Iploop/iploop-node`](https://github.com/Iploop/iploop-node) | JAR | See docs |
-| 🐳 Docker (Supply) | [Docker Hub](https://hub.docker.com/r/ultronloop2026/iploop-node) | Docker | `docker run ultronloop2026/iploop-node` |
-
-### Platform (this repo)
+### This Repo (Platform)
 
 ```
 sdk/
-  python/              # Python demand SDK (mirrors Iploop/iploop-python)
-  nodejs/              # Node.js demand SDK (mirrors Iploop/iploop-node-sdk)
-  android-java/        # Android supply SDK
+  python/              # 🖥️ DEMAND — Python SDK (mirrors Iploop/iploop-python)
+  nodejs/              # 🖥️ DEMAND — Node.js SDK (mirrors Iploop/iploop-node-sdk)
+  android-java/        # 📱 SUPPLY — Android SDK (bandwidth sharing)
 services/
   node-registration/   # WebSocket hub + node management
   proxy-gateway/       # HTTP/SOCKS5 proxy server (Go)

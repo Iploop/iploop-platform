@@ -228,7 +228,7 @@ export class IPLoopClient {
     if (city) parts.push(`city-${city.toLowerCase()}`);
     if (options.session) parts.push(`session-${options.session}`);
     if (options.render) parts.push('render-1');
-    return parts.join(':');
+    return parts.join('-');
   }
 
   /**
@@ -237,9 +237,9 @@ export class IPLoopClient {
   getProxyUrl(options: ProxyOptions = {}): string {
     const auth = this.buildAuth(options);
     if (options.protocol === 'socks5') {
-      return `socks5://${auth}@${this.proxyHost}:${this.socksPort}`;
+      return `socks5://user:${auth}@${this.proxyHost}:${this.socksPort}`;
     }
-    return `http://${auth}@${this.proxyHost}:${this.httpPort}`;
+    return `http://user:${auth}@${this.proxyHost}:${this.httpPort}`;
   }
 
   /**

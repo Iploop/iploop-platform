@@ -77,13 +77,13 @@ class IPLoop:
             parts.append(f"session-{session}")
         if render:
             parts.append("render-1")
-        return ":".join(parts)
+        return "-".join(parts)
 
     def _proxy_url(self, **kwargs):
         auth = self._build_proxy_auth(**kwargs)
         return {
-            "http": f"http://{auth}@{self.base_proxy}",
-            "https": f"http://{auth}@{self.base_proxy}",
+            "http": f"http://user:{auth}@{self.base_proxy}",
+            "https": f"http://user:{auth}@{self.base_proxy}",
         }
 
     def fetch(self, url, country=None, city=None, session=None, render=False,

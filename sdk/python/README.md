@@ -1,150 +1,188 @@
 # IPLoop Python SDK
 
-Official Python SDK for [IPLoop](https://iploop.io) residential proxy service.
-
-## Installation
+Residential proxy SDK — one-liner web fetching through millions of real IPs.
 
 ```bash
 pip install iploop
 ```
 
-For async support:
-```bash
-pip install iploop[async]
-```
-
 ## Quick Start
 
 ```python
-from iploop import IPLoopClient
+from iploop import IPLoop
 
-# Initialize client
-client = IPLoopClient(api_key="your_api_key")
+ip = IPLoop("your-api-key")
 
-# Make a simple request
-response = client.get("https://httpbin.org/ip")
-print(response.json())
+# Fetch any URL through a residential proxy
+response = ip.get("https://httpbin.org/ip")
+print(response.text)
+
+# Target a specific country
+response = ip.get("https://example.com", country="DE")
+
+# POST request
+response = ip.post("https://api.example.com/data", json={"key": "value"})
 ```
 
-## Features
+## Smart Headers
 
-### Country Targeting
+Headers are automatically matched to the target country — correct language, timezone, and User-Agent:
 
 ```python
-# Request from specific country
-response = client.get("https://example.com", country="US")
-
-# City-level targeting
-response = client.get("https://example.com", country="US", city="new york")
+ip = IPLoop("key", country="JP")  # Japanese Chrome headers automatically
 ```
 
-### Sticky Sessions
+## Sticky Sessions
+
+Keep the same IP across multiple requests:
 
 ```python
-# Use same IP for multiple requests
-response1 = client.get("https://example.com", session="my_session")
-response2 = client.get("https://example.com/page2", session="my_session")
-# Both requests use the same IP
+s = ip.session(country="US", city="newyork")
+page1 = s.fetch("https://site.com/page1")  # same IP
+page2 = s.fetch("https://site.com/page2")  # same IP
 ```
 
-### Using with requests library
+## Auto-Retry
+
+Failed requests (403, 502, 503, timeouts) automatically retry with a fresh IP:
 
 ```python
-import requests
-from iploop import IPLoopClient
-
-client = IPLoopClient(api_key="your_api_key")
-
-# Get proxy configuration
-proxies = client.get_proxy(country="DE")
-
-# Use with any requests call
-response = requests.get("https://example.com", proxies=proxies)
+# Retries up to 3 times with different IPs
+response = ip.get("https://tough-site.com", retries=5)
 ```
 
-### SOCKS5 Protocol
-
-```python
-proxies = client.get_proxy(country="US", protocol="socks5")
-```
-
-### Async Support
+## Async Support
 
 ```python
 import asyncio
-from iploop import AsyncIPLoopClient
+from iploop import AsyncIPLoop
 
 async def main():
-    async with AsyncIPLoopClient(api_key="your_api_key") as client:
-        response = await client.get("https://example.com", country="US")
-        print(await response.text())
+    async with AsyncIPLoop("key") as ip:
+        results = await asyncio.gather(
+            ip.get("https://site1.com"),
+            ip.get("https://site2.com"),
+            ip.get("https://site3.com"),
+        )
+        for r in results:
+            print(r.status_code)
 
 asyncio.run(main())
 ```
 
-## API Methods
-
-### Usage Statistics
+## Support API
 
 ```python
-# Get current usage
-usage = client.get_usage()
-print(f"Used: {usage['total_bytes']} bytes")
-
-# Get daily breakdown
-daily = client.get_usage_daily(days=7)
+ip.usage()     # Check bandwidth quota
+ip.status()    # Service status
+ip.ask("how do I handle captchas?")  # Ask support
+ip.countries() # List available countries
 ```
 
-### API Key Management
+## Data Extraction (v1.2.0)
+
+Auto-extract structured data from popular sites:
 
 ```python
-# List all keys
-keys = client.list_api_keys()
+# eBay — extract product listings
+products = ip.ebay.search("laptop", extract=True)["products"]
+# [{"title": "MacBook Pro 16", "price": "$1,299.00"}, ...]
 
-# Create new key
-new_key = client.create_api_key(name="scraper-key")
+# Nasdaq — extract stock quotes
+quote = ip.nasdaq.quote("AAPL", extract=True)
+# {"price": "$185.50", "change": "+2.30", "pct_change": "+1.25%"}
 
-# Delete key
-client.delete_api_key(key_id="key_123")
+# Google — extract search results
+results = ip.google.search("best proxy service", extract=True)["results"]
+# [{"title": "...", "url": "..."}, ...]
+
+# Twitter — extract profile info
+profile = ip.twitter.profile("elonmusk", extract=True)
+# {"name": "Elon Musk", "handle": "elonmusk", ...}
+
+# YouTube — extract video metadata
+video = ip.youtube.video("dQw4w9WgXcQ", extract=True)
+# {"title": "...", "channel": "...", "views": 1234567}
 ```
 
-### Subscription
+## Smart Rate Limiting
+
+Built-in per-site rate limiting prevents blocks automatically:
 
 ```python
-subscription = client.get_subscription()
-print(f"Plan: {subscription['plan']}")
-print(f"Status: {subscription['status']}")
+# These calls auto-delay to respect site limits
+for q in ["laptop", "phone", "tablet"]:
+    ip.ebay.search(q)  # 15s delay between requests
 ```
 
-## Error Handling
+## LinkedIn (New)
 
 ```python
-from iploop import IPLoopClient, AuthenticationError, RateLimitError, QuotaExceededError
+ip.linkedin.profile("satyanadella")
+ip.linkedin.company("microsoft")
+```
 
-client = IPLoopClient(api_key="your_api_key")
+## Concurrent Fetching (v1.3.0)
+
+Batch fetch up to 25 URLs in parallel:
+
+```python
+# Concurrent fetching (safe up to 25)
+batch = ip.batch(max_workers=10)
+results = batch.fetch_all([
+    "https://ebay.com/sch/i.html?_nkw=laptop",
+    "https://ebay.com/sch/i.html?_nkw=phone",
+    "https://ebay.com/sch/i.html?_nkw=tablet"
+], country="US")
+
+# Multi-country comparison
+prices = batch.fetch_multi_country("https://ebay.com/sch/i.html?_nkw=iphone", ["US", "GB", "DE"])
+```
+
+## Chrome Fingerprinting (v1.3.0)
+
+Every request auto-applies a 14-header Chrome desktop fingerprint — the universal recipe from Phase 9 testing:
+
+```python
+# Auto fingerprinting — no setup needed
+html = ip.fetch("https://ebay.com", country="US")  # fingerprinted automatically
+
+# Get fingerprint headers directly
+headers = ip.fingerprint("DE")  # 14 headers for German Chrome
+```
+
+## Stats Tracking (v1.3.0)
+
+```python
+# After making requests...
+print(ip.stats)
+# {"requests": 10, "success": 9, "errors": 1, "total_time": 23.5, "avg_time": 2.35, "success_rate": 90.0}
+```
+
+## Debug Mode
+
+```python
+ip = IPLoop("key", debug=True)
+# Logs: GET https://example.com → 200 (0.45s) country=US session=abc123
+```
+
+## Exceptions
+
+```python
+from iploop import AuthError, QuotaExceeded, ProxyError, TimeoutError
 
 try:
-    response = client.get("https://example.com")
-except AuthenticationError:
-    print("Invalid API key")
-except RateLimitError as e:
-    print(f"Rate limited. Retry after {e.retry_after} seconds")
-except QuotaExceededError as e:
-    print(f"Quota exceeded: {e.quota_type}")
+    response = ip.get("https://example.com")
+except QuotaExceeded:
+    print("Upgrade at https://iploop.io/pricing")
+except ProxyError:
+    print("Proxy connection failed")
+except TimeoutError:
+    print("Request timed out")
 ```
 
-## Configuration
+## Links
 
-```python
-client = IPLoopClient(
-    api_key="your_api_key",
-    proxy_host="proxy.iploop.io",  # Custom proxy host
-    http_port=7777,                 # HTTP proxy port
-    socks_port=1080,                # SOCKS5 proxy port
-    timeout=30,                     # Request timeout
-)
-```
-
-## License
-
-MIT License - see LICENSE file for details.
+- **Website**: https://iploop.io
+- **Docs**: https://docs.iploop.io
+- **Dashboard**: https://iploop.io/dashboard

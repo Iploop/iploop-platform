@@ -1,44 +1,26 @@
-"""
-IPLoop SDK Exceptions
-"""
+"""IPLoop SDK exceptions."""
 
 
 class IPLoopError(Exception):
-    """Base exception for IPLoop SDK"""
-    
-    def __init__(self, message: str, status_code: int = None, response: dict = None):
-        self.message = message
-        self.status_code = status_code
-        self.response = response
-        super().__init__(self.message)
+    """Base exception for IPLoop SDK."""
 
 
-class AuthenticationError(IPLoopError):
-    """Raised when API key is invalid or missing"""
-    pass
+class AuthError(IPLoopError):
+    """Invalid or missing API key."""
 
 
-class RateLimitError(IPLoopError):
-    """Raised when rate limit is exceeded"""
-    
-    def __init__(self, message: str, retry_after: int = None, **kwargs):
-        super().__init__(message, **kwargs)
-        self.retry_after = retry_after
+class QuotaExceeded(IPLoopError):
+    """Bandwidth quota exceeded."""
 
-
-class QuotaExceededError(IPLoopError):
-    """Raised when bandwidth or request quota is exceeded"""
-    
-    def __init__(self, message: str, quota_type: str = None, **kwargs):
-        super().__init__(message, **kwargs)
-        self.quota_type = quota_type  # "bandwidth" or "requests"
+    def __init__(self, message=None):
+        super().__init__(
+            message or "Quota exceeded. Upgrade at https://iploop.io/pricing"
+        )
 
 
 class ProxyError(IPLoopError):
-    """Raised when proxy connection fails"""
-    pass
+    """Proxy connection failed after all retries."""
 
 
-class NodeUnavailableError(IPLoopError):
-    """Raised when no nodes are available for the requested criteria"""
-    pass
+class TimeoutError(IPLoopError):
+    """All retries timed out."""

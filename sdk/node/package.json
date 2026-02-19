@@ -1,0 +1,18 @@
+{
+  "name": "iploop",
+  "version": "1.0.0",
+  "description": "Residential proxy SDK — one-liner web fetching through millions of real IPs",
+  "main": "src/index.js",
+  "scripts": {
+    "test": "node -e \"const {IPLoop} = require('.'); console.log('OK');\""
+  },
+  "keywords": ["proxy", "residential", "scraping", "web", "fetch", "rotating", "ip"],
+  "author": "IPLoop <partners@iploop.io>",
+  "license": "MIT",
+  "homepage": "https://iploop.io",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/iploop/iploop-node-sdk"
+  },
+  "engines": { "node": ">=14.0.0" }
+}

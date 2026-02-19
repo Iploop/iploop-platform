@@ -1,47 +1,23 @@
 from setuptools import setup, find_packages
 
-with open("README.md", "r", encoding="utf-8") as fh:
-    long_description = fh.read()
-
 setup(
     name="iploop",
-    version="1.0.0",
+    version="1.3.0",
+    packages=find_packages(),
+    install_requires=["requests>=2.28"],
+    extras_require={"async": ["aiohttp>=3.8"]},
     author="IPLoop",
-    author_email="support@iploop.io",
-    description="Official Python SDK for IPLoop residential proxy service",
-    long_description=long_description,
+    author_email="partners@iploop.io",
+    description="Residential proxy SDK — one-liner web fetching through millions of real IPs",
+    long_description=open("README.md").read(),
     long_description_content_type="text/markdown",
-    url="https://github.com/iploop/python-sdk",
-    project_urls={
-        "Documentation": "https://docs.iploop.io",
-        "Bug Tracker": "https://github.com/iploop/python-sdk/issues",
-    },
+    url="https://iploop.io",
+    python_requires=">=3.7",
+    license="MIT",
     classifiers=[
         "Development Status :: 5 - Production/Stable",
         "Intended Audience :: Developers",
         "License :: OSI Approved :: MIT License",
-        "Operating System :: OS Independent",
         "Programming Language :: Python :: 3",
-        "Programming Language :: Python :: 3.8",
-        "Programming Language :: Python :: 3.9",
-        "Programming Language :: Python :: 3.10",
-        "Programming Language :: Python :: 3.11",
-        "Programming Language :: Python :: 3.12",
-        "Topic :: Internet :: Proxy Servers",
-        "Topic :: Software Development :: Libraries :: Python Modules",
     ],
-    packages=find_packages(),
-    python_requires=">=3.8",
-    install_requires=[
-        "requests>=2.25.0",
-    ],
-    extras_require={
-        "async": ["aiohttp>=3.8.0"],
-        "dev": [
-            "pytest>=7.0.0",
-            "pytest-asyncio>=0.20.0",
-            "black>=23.0.0",
-            "mypy>=1.0.0",
-        ],
-    },
 )

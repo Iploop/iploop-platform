@@ -1,316 +1,218 @@
-"""
-IPLoop Python Client
-"""
+"""Main IPLoop client."""
 
+import time
+import logging
 import requests
-from typing import Optional, Dict, Any, Union
-from urllib.parse import urljoin
-import base64
+
+from .fingerprint import chrome_fingerprint
+from .retry import retry_request, new_session_id
+from .support import SupportClient
+from .exceptions import AuthError, ProxyError, TimeoutError
+
+logger = logging.getLogger("iploop")
 
 
-class IPLoopClient:
-    """
-    IPLoop Proxy Client
-    
-    Usage:
-        from iploop import IPLoopClient
-        
-        client = IPLoopClient(api_key="your_api_key")
-        
-        # Simple request
-        response = client.get("https://example.com")
-        
-        # With country targeting
-        response = client.get("https://example.com", country="US")
-        
-        # With session (sticky IP)
-        response = client.get("https://example.com", session="my_session")
-        
-        # Using as requests proxy
-        proxies = client.get_proxy(country="DE")
-        response = requests.get("https://example.com", proxies=proxies)
-    """
-    
-    DEFAULT_PROXY_HOST = "proxy.iploop.io"
-    DEFAULT_HTTP_PORT = 7777
-    DEFAULT_SOCKS_PORT = 1080
-    DEFAULT_API_URL = "https://api.iploop.io"
-    
-    def __init__(
-        self,
-        api_key: str,
-        proxy_host: Optional[str] = None,
-        http_port: Optional[int] = None,
-        socks_port: Optional[int] = None,
-        api_url: Optional[str] = None,
-        timeout: int = 30,
-    ):
-        """
-        Initialize IPLoop client.
-        
-        Args:
-            api_key: Your IPLoop API key
-            proxy_host: Proxy server hostname (default: proxy.iploop.io)
-            http_port: HTTP proxy port (default: 7777)
-            socks_port: SOCKS5 proxy port (default: 1080)
-            api_url: API base URL (default: https://api.iploop.io)
-            timeout: Default request timeout in seconds
-        """
+class StickySession:
+    """A session that reuses the same proxy IP."""
+
+    def __init__(self, client, session_id, country=None, city=None):
+        self._client = client
+        self.session_id = session_id
+        self.country = country or client._country
+        self.city = city or client._city
+
+    def fetch(self, url, **kwargs):
+        kwargs.setdefault("country", self.country)
+        kwargs.setdefault("city", self.city)
+        kwargs["session"] = self.session_id
+        kwargs["_no_rotate"] = True
+        return self._client.fetch(url, **kwargs)
+
+    def get(self, url, **kwargs):
+        return self.fetch(url, method="GET", **kwargs)
+
+    def post(self, url, data=None, json=None, **kwargs):
+        kwargs["method"] = "POST"
+        kwargs["data"] = data or json
+        return self.fetch(url, **kwargs)
+
+
+class IPLoop:
+    """Residential proxy SDK — one-liner web fetching through millions of real IPs."""
+
+    def __init__(self, api_key, country=None, city=None, debug=False):
+        if not api_key:
+            raise AuthError("API key is required")
         self.api_key = api_key
-        self.proxy_host = proxy_host or self.DEFAULT_PROXY_HOST
-        self.http_port = http_port or self.DEFAULT_HTTP_PORT
-        self.socks_port = socks_port or self.DEFAULT_SOCKS_PORT
-        self.api_url = api_url or self.DEFAULT_API_URL
-        self.timeout = timeout
-        
-        self._session = requests.Session()
-    
-    def get_proxy(
-        self,
-        country: Optional[str] = None,
-        city: Optional[str] = None,
-        session: Optional[str] = None,
-        protocol: str = "http",
-    ) -> Dict[str, str]:
-        """
-        Get proxy configuration for use with requests library.
-        
-        Args:
-            country: Target country code (e.g., "US", "DE")
-            city: Target city name
-            session: Session ID for sticky IP
-            protocol: "http" or "socks5"
-            
-        Returns:
-            Dict with http and https proxy URLs
-        """
-        username = self._build_username(country, city, session)
-        
-        if protocol == "socks5":
-            proxy_url = f"socks5://{username}:{self.api_key}@{self.proxy_host}:{self.socks_port}"
-        else:
-            proxy_url = f"http://{username}:{self.api_key}@{self.proxy_host}:{self.http_port}"
-        
+        self.base_proxy = "gateway.iploop.io:8880"
+        self.api_base = "https://gateway.iploop.io:9443"
+        self._country = country
+        self._city = city
+        self._support = SupportClient(api_key, self.api_base)
+        self._stats = {"requests": 0, "success": 0, "errors": 0, "total_time": 0}
+
+        if debug:
+            logging.basicConfig(level=logging.DEBUG)
+            logger.setLevel(logging.DEBUG)
+
+    @property
+    def stats(self):
+        """Get request statistics."""
+        avg = self._stats["total_time"] / max(self._stats["requests"], 1)
         return {
-            "http": proxy_url,
-            "https": proxy_url,
+            **self._stats,
+            "avg_time": round(avg, 2),
+            "success_rate": round(self._stats["success"] / max(self._stats["requests"], 1) * 100, 1)
         }
-    
-    def get(
-        self,
-        url: str,
-        country: Optional[str] = None,
-        city: Optional[str] = None,
-        session: Optional[str] = None,
-        **kwargs
-    ) -> requests.Response:
-        """
-        Make a GET request through the proxy.
-        
-        Args:
-            url: Target URL
-            country: Target country code
-            city: Target city
-            session: Session ID for sticky IP
-            **kwargs: Additional arguments passed to requests
-            
-        Returns:
-            requests.Response object
-        """
-        return self._request("GET", url, country, city, session, **kwargs)
-    
-    def post(
-        self,
-        url: str,
-        country: Optional[str] = None,
-        city: Optional[str] = None,
-        session: Optional[str] = None,
-        **kwargs
-    ) -> requests.Response:
-        """Make a POST request through the proxy."""
-        return self._request("POST", url, country, city, session, **kwargs)
-    
-    def put(
-        self,
-        url: str,
-        country: Optional[str] = None,
-        city: Optional[str] = None,
-        session: Optional[str] = None,
-        **kwargs
-    ) -> requests.Response:
-        """Make a PUT request through the proxy."""
-        return self._request("PUT", url, country, city, session, **kwargs)
-    
-    def delete(
-        self,
-        url: str,
-        country: Optional[str] = None,
-        city: Optional[str] = None,
-        session: Optional[str] = None,
-        **kwargs
-    ) -> requests.Response:
-        """Make a DELETE request through the proxy."""
-        return self._request("DELETE", url, country, city, session, **kwargs)
-    
-    def _request(
-        self,
-        method: str,
-        url: str,
-        country: Optional[str] = None,
-        city: Optional[str] = None,
-        session: Optional[str] = None,
-        **kwargs
-    ) -> requests.Response:
-        """Internal method to make requests through proxy."""
-        proxies = self.get_proxy(country, city, session)
-        kwargs.setdefault("timeout", self.timeout)
-        kwargs.setdefault("proxies", proxies)
-        
-        return self._session.request(method, url, **kwargs)
-    
-    def _build_username(
-        self,
-        country: Optional[str] = None,
-        city: Optional[str] = None,
-        session: Optional[str] = None,
-    ) -> str:
-        """Build proxy username with targeting options."""
-        parts = ["user"]
-        
-        if country:
-            parts.append(f"country-{country.upper()}")
-        if city:
-            parts.append(f"city-{city.lower()}")
+
+    def _build_proxy_auth(self, country=None, city=None, session=None, render=False):
+        parts = [self.api_key]
+        c = country or self._country
+        if c:
+            parts.append(f"country-{c.lower()}")
+        ci = city or self._city
+        if ci:
+            parts.append(f"city-{ci.lower()}")
         if session:
             parts.append(f"session-{session}")
-        
-        return "-".join(parts)
-    
-    # API Methods
-    
-    def get_usage(self) -> Dict[str, Any]:
-        """Get current usage statistics."""
-        return self._api_request("GET", "/usage/summary")
-    
-    def get_usage_daily(self, days: int = 30) -> Dict[str, Any]:
-        """Get daily usage breakdown."""
-        return self._api_request("GET", f"/usage/daily?days={days}")
-    
-    def list_api_keys(self) -> Dict[str, Any]:
-        """List all API keys."""
-        return self._api_request("GET", "/keys")
-    
-    def create_api_key(self, name: str) -> Dict[str, Any]:
-        """Create a new API key."""
-        return self._api_request("POST", "/keys", json={"name": name})
-    
-    def delete_api_key(self, key_id: str) -> Dict[str, Any]:
-        """Delete an API key."""
-        return self._api_request("DELETE", f"/keys/{key_id}")
-    
-    def get_subscription(self) -> Dict[str, Any]:
-        """Get current subscription details."""
-        return self._api_request("GET", "/subscription")
-    
-    def _api_request(
-        self,
-        method: str,
-        endpoint: str,
-        **kwargs
-    ) -> Dict[str, Any]:
-        """Make an API request."""
-        url = urljoin(self.api_url, endpoint)
-        headers = kwargs.pop("headers", {})
-        headers["Authorization"] = f"Bearer {self.api_key}"
-        headers["Content-Type"] = "application/json"
-        
-        response = requests.request(
-            method,
-            url,
-            headers=headers,
-            timeout=self.timeout,
-            **kwargs
-        )
-        
-        response.raise_for_status()
-        return response.json()
+        if render:
+            parts.append("render-1")
+        return ":".join(parts)
 
+    def _proxy_url(self, **kwargs):
+        auth = self._build_proxy_auth(**kwargs)
+        return {
+            "http": f"http://{auth}@{self.base_proxy}",
+            "https": f"http://{auth}@{self.base_proxy}",
+        }
 
-class AsyncIPLoopClient:
-    """
-    Async IPLoop Proxy Client using aiohttp
-    
-    Usage:
-        import asyncio
-        from iploop import AsyncIPLoopClient
-        
-        async def main():
-            client = AsyncIPLoopClient(api_key="your_api_key")
-            response = await client.get("https://example.com", country="US")
-            print(await response.text())
-            
-        asyncio.run(main())
-    """
-    
-    def __init__(
-        self,
-        api_key: str,
-        proxy_host: Optional[str] = None,
-        http_port: Optional[int] = None,
-        timeout: int = 30,
-    ):
-        self.api_key = api_key
-        self.proxy_host = proxy_host or IPLoopClient.DEFAULT_PROXY_HOST
-        self.http_port = http_port or IPLoopClient.DEFAULT_HTTP_PORT
-        self.timeout = timeout
-        self._session = None
-    
-    async def __aenter__(self):
-        import aiohttp
-        self._session = aiohttp.ClientSession()
-        return self
-    
-    async def __aexit__(self, *args):
-        if self._session:
-            await self._session.close()
-    
-    def _get_proxy_url(
-        self,
-        country: Optional[str] = None,
-        city: Optional[str] = None,
-        session: Optional[str] = None,
-    ) -> str:
-        parts = ["user"]
-        if country:
-            parts.append(f"country-{country.upper()}")
-        if city:
-            parts.append(f"city-{city.lower()}")
-        if session:
-            parts.append(f"session-{session}")
-        
-        username = "-".join(parts)
-        return f"http://{username}:{self.api_key}@{self.proxy_host}:{self.http_port}"
-    
-    async def get(
-        self,
-        url: str,
-        country: Optional[str] = None,
-        city: Optional[str] = None,
-        session: Optional[str] = None,
-        **kwargs
-    ):
-        """Make async GET request through proxy."""
-        proxy = self._get_proxy_url(country, city, session)
-        return await self._session.get(url, proxy=proxy, timeout=self.timeout, **kwargs)
-    
-    async def post(
-        self,
-        url: str,
-        country: Optional[str] = None,
-        city: Optional[str] = None,
-        session: Optional[str] = None,
-        **kwargs
-    ):
-        """Make async POST request through proxy."""
-        proxy = self._get_proxy_url(country, city, session)
-        return await self._session.post(url, proxy=proxy, timeout=self.timeout, **kwargs)
+    def fetch(self, url, country=None, city=None, session=None, render=False,
+              headers=None, method="GET", data=None, timeout=30, retries=3,
+              _no_rotate=False):
+        """Fetch a URL through residential proxy with auto-retry and smart headers."""
+        c = country or self._country or "US"
+        # Phase 9: auto-apply 14-header Chrome fingerprint
+        h = chrome_fingerprint(c)
+        if headers:
+            h.update(headers)
+
+        def do_request(attempt):
+            sid = session if _no_rotate else (session or new_session_id())
+            proxies = self._proxy_url(country=country, city=city, session=sid, render=render)
+            req_start = time.time()
+            resp = requests.request(method, url, headers=h, proxies=proxies,
+                                    data=data, timeout=timeout, verify=True)
+            elapsed = time.time() - req_start
+            logger.debug("%-3s %s → %d (%.2fs) country=%s session=%s",
+                         method, url, resp.status_code, elapsed, c, sid)
+            return resp
+
+        self._stats["requests"] += 1
+        start = time.time()
+        try:
+            resp = retry_request(do_request, retries=retries)
+            self._stats["success"] += 1
+            self._stats["total_time"] += time.time() - start
+            return resp
+        except requests.exceptions.Timeout:
+            self._stats["errors"] += 1
+            raise TimeoutError(f"All {retries} retries timed out for {url}")
+        except (requests.exceptions.ConnectionError, requests.exceptions.ProxyError) as e:
+            self._stats["errors"] += 1
+            raise ProxyError(f"Proxy connection failed after {retries} retries: {e}")
+        except Exception:
+            self._stats["errors"] += 1
+            raise
+
+    def get(self, url, **kwargs):
+        """GET request through proxy."""
+        return self.fetch(url, method="GET", **kwargs)
+
+    def post(self, url, data=None, json=None, **kwargs):
+        """POST request through proxy."""
+        import json as json_mod
+        if json is not None:
+            kwargs.setdefault("headers", {})["Content-Type"] = "application/json"
+            data = json_mod.dumps(json)
+        return self.fetch(url, method="POST", data=data, **kwargs)
+
+    def session(self, session_id=None, country=None, city=None):
+        """Create a sticky session that reuses the same proxy IP."""
+        return StickySession(self, session_id or new_session_id(), country, city)
+
+    def batch(self, max_workers=10):
+        """Create a batch fetcher for concurrent requests. Safe up to 25 workers."""
+        from .concurrent import BatchFetcher
+        return BatchFetcher(self, max_workers)
+
+    def fingerprint(self, country="US"):
+        """Get Chrome desktop fingerprint headers for a country."""
+        return chrome_fingerprint(country)
+
+    def usage(self):
+        """Check bandwidth usage and quota."""
+        return self._support.usage()
+
+    def status(self):
+        """Check service status."""
+        return self._support.status()
+
+    def ask(self, question):
+        """Ask the support API a question."""
+        return self._support.ask(question)
+
+    def countries(self):
+        """List available proxy countries."""
+        return self._support.countries()
+
+    # ── Site-specific presets ──────────────────────────────────
+
+    @property
+    def twitter(self):
+        from .sites.twitter import Twitter
+        return Twitter(self)
+
+    @property
+    def google(self):
+        from .sites.google import Google
+        return Google(self)
+
+    @property
+    def amazon(self):
+        from .sites.amazon import Amazon
+        return Amazon(self)
+
+    @property
+    def instagram(self):
+        from .sites.instagram import Instagram
+        return Instagram(self)
+
+    @property
+    def tiktok(self):
+        from .sites.tiktok import TikTok
+        return TikTok(self)
+
+    @property
+    def youtube(self):
+        from .sites.youtube import YouTube
+        return YouTube(self)
+
+    @property
+    def reddit(self):
+        from .sites.reddit import Reddit
+        return Reddit(self)
+
+    @property
+    def ebay(self):
+        from .sites.ebay import eBay
+        return eBay(self)
+
+    @property
+    def nasdaq(self):
+        from .sites.nasdaq import Nasdaq
+        return Nasdaq(self)
+
+    @property
+    def linkedin(self):
+        from .sites.linkedin import LinkedIn
+        return LinkedIn(self)

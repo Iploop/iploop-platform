@@ -185,8 +185,19 @@ func (p *HTTPProxy) raceConnectTunnel(w http.ResponseWriter, r *http.Request, pr
 	seen := make(map[string]bool) // de-duplicate by node ID
 	warmFlags := make([]bool, 0, racers)
 
-	// Pull from warm pool
-	if p.warmPool != nil && (proxyAuth.SessionType == "rotating" || proxyAuth.SessionType == "per-request" || selection.SessionID == "") {
+	// For sticky sessions, use the assigned node directly — no racing
+	if selection.SessionID != "" && proxyAuth.SessionType == "sticky" {
+		stickyNode, err := p.nodePool.SelectNode(selection)
+		if err == nil && stickyNode != nil {
+			seen[stickyNode.ID] = true
+			candidates = append(candidates, stickyNode)
+			warmFlags = append(warmFlags, false)
+			p.logger.Debugf("Sticky session %s — using assigned node %s (no race)", selection.SessionID, stickyNode.ID)
+		}
+	}
+
+	// Pull from warm pool (only for non-sticky sessions)
+	if len(candidates) == 0 && p.warmPool != nil && (proxyAuth.SessionType == "rotating" || proxyAuth.SessionType == "per-request" || selection.SessionID == "") {
 		for len(candidates) < racers {
 			fastID := p.warmPool.GetFastNode(proxyAuth.Country)
 			if fastID == "" {
@@ -205,19 +216,21 @@ func (p *HTTPProxy) raceConnectTunnel(w http.ResponseWriter, r *http.Request, pr
 		}
 	}
 
-	// Fill remaining slots from normal pool
-	for len(candidates) < racers {
-		n, err := p.nodePool.SelectNode(selection)
-		if err != nil {
-			break
+	// Fill remaining slots from normal pool (only for non-sticky sessions)
+	if selection.SessionID == "" || proxyAuth.SessionType != "sticky" {
+		for len(candidates) < racers {
+			n, err := p.nodePool.SelectNode(selection)
+			if err != nil {
+				break
+			}
+			if seen[n.ID] {
+				p.nodePool.ReleaseNode(n.ID)
+				continue
+			}
+			seen[n.ID] = true
+			candidates = append(candidates, n)
+			warmFlags = append(warmFlags, false)
 		}
-		if seen[n.ID] {
-			p.nodePool.ReleaseNode(n.ID)
-			continue
-		}
-		seen[n.ID] = true
-		candidates = append(candidates, n)
-		warmFlags = append(warmFlags, false)
 	}
 
 	if len(candidates) == 0 {
@@ -319,7 +332,19 @@ func (p *HTTPProxy) raceHTTPTunnel(w http.ResponseWriter, r *http.Request, proxy
 	seen := make(map[string]bool)
 	warmFlags := make([]bool, 0, racers)
 
-	if p.warmPool != nil && (proxyAuth.SessionType == "rotating" || proxyAuth.SessionType == "per-request" || selection.SessionID == "") {
+	// For sticky sessions, use the assigned node directly — no racing
+	if selection.SessionID != "" && proxyAuth.SessionType == "sticky" {
+		stickyNode, err := p.nodePool.SelectNode(selection)
+		if err == nil && stickyNode != nil {
+			seen[stickyNode.ID] = true
+			candidates = append(candidates, stickyNode)
+			warmFlags = append(warmFlags, false)
+			p.logger.Debugf("Sticky session %s — using assigned node %s (no race)", selection.SessionID, stickyNode.ID)
+		}
+	}
+
+	// Pull from warm pool (only for non-sticky sessions)
+	if len(candidates) == 0 && p.warmPool != nil && (proxyAuth.SessionType == "rotating" || proxyAuth.SessionType == "per-request" || selection.SessionID == "") {
 		for len(candidates) < racers {
 			fastID := p.warmPool.GetFastNode(proxyAuth.Country)
 			if fastID == "" {
@@ -338,18 +363,21 @@ func (p *HTTPProxy) raceHTTPTunnel(w http.ResponseWriter, r *http.Request, proxy
 		}
 	}
 
-	for len(candidates) < racers {
-		n, err := p.nodePool.SelectNode(selection)
-		if err != nil {
-			break
+	// Fill remaining slots from normal pool (only for non-sticky sessions)
+	if selection.SessionID == "" || proxyAuth.SessionType != "sticky" {
+		for len(candidates) < racers {
+			n, err := p.nodePool.SelectNode(selection)
+			if err != nil {
+				break
+			}
+			if seen[n.ID] {
+				p.nodePool.ReleaseNode(n.ID)
+				continue
+			}
+			seen[n.ID] = true
+			candidates = append(candidates, n)
+			warmFlags = append(warmFlags, false)
 		}
-		if seen[n.ID] {
-			p.nodePool.ReleaseNode(n.ID)
-			continue
-		}
-		seen[n.ID] = true
-		candidates = append(candidates, n)
-		warmFlags = append(warmFlags, false)
 	}
 
 	if len(candidates) == 0 {

@@ -2,10 +2,10 @@
 
 Enterprise-grade residential proxy platform with two sides:
 
-| Side | What | For Who | Install |
-|------|------|---------|---------|
-| 🖥️ **Demand** | Proxy & unblocking SDK | Developers, scrapers, data teams | `pip install iploop` / `npm install iploop` |
-| 📱 **Supply** | Earn rewards SDK | App developers, device owners | Android SDK / Docker node |
+| Side | What | For Who | SDK | Install |
+|------|------|---------|-----|---------|
+| 🖥️ **Demand** | Proxy & unblocking | Developers, scrapers, data teams | [Python](https://github.com/Iploop/iploop-python) \| [Node.js](https://github.com/Iploop/iploop-node-sdk) | `pip install iploop` / `npm install iploop` |
+| 📱 **Supply** | Earn rewards | App developers, device owners | [Android](https://github.com/Iploop/iploop-node) \| [Docker](https://hub.docker.com/r/ultronloop2026/iploop-node) | Android SDK / `docker run` |
 
 ## 🖥️ DEMAND SIDE — Proxy & Unblocking SDK
 

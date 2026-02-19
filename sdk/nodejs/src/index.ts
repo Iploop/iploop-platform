@@ -14,7 +14,7 @@ import { randomUUID } from 'crypto';
 export interface IPLoopConfig {
   /** Your IPLoop API key */
   apiKey: string;
-  /** Proxy gateway hostname (default: gateway.iploop.io) */
+  /** Proxy gateway hostname (default: proxy.iploop.io) */
   proxyHost?: string;
   /** HTTP proxy port (default: 8880) */
   httpPort?: number;
@@ -199,7 +199,7 @@ export class IPLoopClient {
   constructor(config: IPLoopConfig) {
     if (!config.apiKey) throw new AuthenticationError('API key is required');
     this.apiKey = config.apiKey;
-    this.proxyHost = config.proxyHost || 'gateway.iploop.io';
+    this.proxyHost = config.proxyHost || 'proxy.iploop.io';
     this.httpPort = config.httpPort || 8880;
     this.socksPort = config.socksPort || 1080;
     this.apiUrl = config.apiUrl || 'https://gateway.iploop.io:9443';

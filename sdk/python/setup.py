@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="iploop",
-    version="1.3.2",
+    version="1.3.3",
     packages=find_packages(),
     install_requires=["requests>=2.28"],
     extras_require={"async": ["aiohttp>=3.8"]},

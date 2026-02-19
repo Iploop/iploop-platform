@@ -1,6 +1,6 @@
 """IPLoop — Residential proxy SDK."""
 
-__version__ = "1.3.2"
+__version__ = "1.3.3"
 
 from .client import IPLoop, StickySession
 from .exceptions import IPLoopError, AuthError, QuotaExceeded, ProxyError, TimeoutError

@@ -5,12 +5,12 @@
   "total": 3,
   "progress": 3,
   "currentTest": null,
-  "startTime": 1771518391322,
-  "suiteStartTime": 1771518357892,
+  "startTime": 1771522106858,
+  "suiteStartTime": 1771522073442,
   "queue": [],
   "lastTest": {
     "name": "protocol-test.js",
     "passed": false,
-    "duration": 4837
+    "duration": 4827
   }
 }

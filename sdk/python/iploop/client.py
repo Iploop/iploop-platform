@@ -44,7 +44,7 @@ class IPLoop:
         if not api_key:
             raise AuthError("API key is required")
         self.api_key = api_key
-        self.base_proxy = "gateway.iploop.io:8880"
+        self.base_proxy = "proxy.iploop.io:8880"
         self.api_base = "https://gateway.iploop.io:9443"
         self._country = country
         self._city = city

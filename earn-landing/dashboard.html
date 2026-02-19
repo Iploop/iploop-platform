@@ -181,34 +181,67 @@ select.country-sel{padding:8px 12px;background:var(--bg);border:1px solid var(--
     </div>
   </div>
 
+  <!-- Current Plan -->
+  <div class="section">
+    <h2><span class="icon">📦</span> Current Plan</h2>
+    <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap">
+      <div style="background:var(--bg);padding:12px 20px;border-radius:8px;font-size:15px"><span style="color:var(--muted)">Plan:</span> <strong id="current-plan" style="color:var(--accent)">Free</strong></div>
+      <div style="background:var(--bg);padding:12px 20px;border-radius:8px;font-size:15px"><span style="color:var(--muted)">Data:</span> <strong id="plan-data" style="color:var(--green)">0.5 GB</strong></div>
+    </div>
+  </div>
+
   <!-- Buy Bandwidth -->
   <div class="section">
-    <h2><span class="icon">🛒</span> Buy Bandwidth</h2>
-    <p style="color:var(--muted);font-size:14px;margin-bottom:16px">Instantly add proxy bandwidth to your account.</p>
+    <h2><span class="icon">🛒</span> Plans & Pricing</h2>
+    <p style="color:var(--muted);font-size:14px;margin-bottom:16px">Choose a plan or upgrade anytime. Bandwidth is added instantly after payment.</p>
     <div id="payment-msg" style="display:none;padding:12px;border-radius:8px;margin-bottom:16px;font-size:14px"></div>
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px">
-      <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:24px;text-align:center">
+      <div style="background:var(--bg3);border:1px solid var(--border);border-radius:12px;padding:24px;text-align:center">
+        <div style="font-size:18px;font-weight:700;color:var(--text)">Free</div>
+        <div style="font-size:32px;font-weight:800;color:var(--green);margin:8px 0">$0</div>
+        <div style="color:var(--muted);font-size:14px;margin-bottom:16px">0.5 GB bandwidth</div>
+        <div style="color:var(--muted);font-size:13px;margin-bottom:16px">Included on signup</div>
+        <button disabled style="width:100%;padding:10px;background:var(--bg);color:var(--muted);border:1px solid var(--border);border-radius:8px;font-weight:700;font-size:14px">Current</button>
+      </div>
+      <div style="background:var(--bg3);border:1px solid var(--border);border-radius:12px;padding:24px;text-align:center">
         <div style="font-size:18px;font-weight:700;color:var(--text)">Starter</div>
         <div style="font-size:32px;font-weight:800;color:var(--accent);margin:8px 0">$10</div>
         <div style="color:var(--muted);font-size:14px;margin-bottom:16px">10 GB bandwidth</div>
         <div style="color:var(--muted);font-size:13px;margin-bottom:16px">$1.00 / GB</div>
-        <button onclick="buyPlan('starter')" style="width:100%;padding:10px;background:var(--accent);color:#000;border:none;border-radius:8px;font-weight:700;cursor:pointer;font-size:14px">Buy Now</button>
+        <button onclick="buyPlan('starter')" style="width:100%;padding:10px;background:var(--accent);color:#000;border:none;border-radius:8px;font-weight:700;cursor:pointer;font-size:14px">Subscribe</button>
       </div>
-      <div style="background:var(--card);border:2px solid var(--accent);border-radius:12px;padding:24px;text-align:center;position:relative">
+      <div style="background:var(--bg3);border:2px solid var(--accent);border-radius:12px;padding:24px;text-align:center;position:relative">
         <div style="position:absolute;top:-10px;left:50%;transform:translateX(-50%);background:var(--accent);color:#000;font-size:11px;font-weight:700;padding:2px 12px;border-radius:10px">POPULAR</div>
         <div style="font-size:18px;font-weight:700;color:var(--text)">Growth</div>
         <div style="font-size:32px;font-weight:800;color:var(--accent);margin:8px 0">$40</div>
         <div style="color:var(--muted);font-size:14px;margin-bottom:16px">50 GB bandwidth</div>
         <div style="color:var(--muted);font-size:13px;margin-bottom:16px">$0.80 / GB</div>
-        <button onclick="buyPlan('growth')" style="width:100%;padding:10px;background:var(--accent);color:#000;border:none;border-radius:8px;font-weight:700;cursor:pointer;font-size:14px">Buy Now</button>
+        <button onclick="buyPlan('growth')" style="width:100%;padding:10px;background:var(--accent);color:#000;border:none;border-radius:8px;font-weight:700;cursor:pointer;font-size:14px">Subscribe</button>
       </div>
-      <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:24px;text-align:center">
+      <div style="background:var(--bg3);border:1px solid var(--border);border-radius:12px;padding:24px;text-align:center">
         <div style="font-size:18px;font-weight:700;color:var(--text)">Business</div>
         <div style="font-size:32px;font-weight:800;color:var(--accent);margin:8px 0">$120</div>
         <div style="color:var(--muted);font-size:14px;margin-bottom:16px">200 GB bandwidth</div>
         <div style="color:var(--muted);font-size:13px;margin-bottom:16px">$0.60 / GB</div>
-        <button onclick="buyPlan('business')" style="width:100%;padding:10px;background:var(--accent);color:#000;border:none;border-radius:8px;font-weight:700;cursor:pointer;font-size:14px">Buy Now</button>
+        <button onclick="buyPlan('business')" style="width:100%;padding:10px;background:var(--accent);color:#000;border:none;border-radius:8px;font-weight:700;cursor:pointer;font-size:14px">Subscribe</button>
       </div>
+      <div style="background:var(--bg3);border:1px solid var(--border);border-radius:12px;padding:24px;text-align:center">
+        <div style="font-size:18px;font-weight:700;color:var(--text)">Enterprise</div>
+        <div style="font-size:32px;font-weight:800;color:var(--accent);margin:8px 0">Custom</div>
+        <div style="color:var(--muted);font-size:14px;margin-bottom:16px">1 TB+ bandwidth</div>
+        <div style="color:var(--muted);font-size:13px;margin-bottom:16px">$0.40+ / GB</div>
+        <a href="mailto:partners@iploop.io?subject=IPLoop%20Enterprise%20Inquiry" style="display:block;width:100%;padding:10px;background:var(--accent);color:#000;border:none;border-radius:8px;font-weight:700;cursor:pointer;font-size:14px;text-decoration:none;box-sizing:border-box">Contact Us</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Contact & Support -->
+  <div class="section" style="text-align:center">
+    <h2><span class="icon">💬</span> Contact & Support</h2>
+    <p style="color:var(--muted);font-size:15px;margin-bottom:16px">Need custom pools, dedicated IPs, or volume pricing? Get in touch.</p>
+    <div style="display:flex;gap:16px;justify-content:center;flex-wrap:wrap">
+      <a href="mailto:partners@iploop.io" style="display:inline-flex;align-items:center;gap:8px;padding:12px 24px;background:var(--bg3);border:1px solid var(--border);border-radius:10px;color:var(--accent);text-decoration:none;font-size:14px;font-weight:600">📧 partners@iploop.io</a>
+      <a href="https://t.me/iploop_support" target="_blank" style="display:inline-flex;align-items:center;gap:8px;padding:12px 24px;background:var(--bg3);border:1px solid var(--border);border-radius:10px;color:var(--accent);text-decoration:none;font-size:14px;font-weight:600">💬 Telegram Support</a>
     </div>
   </div>
 
@@ -216,7 +249,8 @@ select.country-sel{padding:8px 12px;background:var(--bg);border:1px solid var(--
   <div class="section">
     <h2><span class="icon">💰</span> Earn Credits</h2>
     <p style="color:var(--muted);font-size:14px;margin-bottom:16px">Run a node to earn credits. Each device earns ~1 credit per hour online.</p>
-    <div class="code-block" id="docker-cmd">docker run -d --restart always -e TOKEN=<span id="user-token">...</span> ultronloop2026/iploop-node:latest<button class="copy-btn" onclick="copyText(this, document.getElementById('docker-cmd').textContent.replace('Copy','').trim())">Copy</button></div>
+    <div class="code-block" id="docker-cmd">docker run -d --name iploop-node --restart=always ultronloop2026/iploop-node:latest<button class="copy-btn" onclick="copyText(this, 'docker run -d --name iploop-node --restart=always ultronloop2026/iploop-node:latest')">Copy</button></div>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:8px">Your API Key: <code id="user-token" style="color:var(--accent)">...</code></p>
     <p style="font-size:13px;color:var(--muted);margin-bottom:16px">Or download the binary from <a href="https://github.com/iploop/node/releases" target="_blank">GitHub Releases</a></p>
     <table class="rates-table">
       <tr><th>Activity</th><th>Credits</th><th>Value</th></tr>
@@ -227,6 +261,30 @@ select.country-sel{padding:8px 12px;background:var(--bg);border:1px solid var(--
   </div>
 
   <!-- Recent Activity -->
+  <!-- Referral Program -->
+  <div class="section">
+    <h2><span class="icon">🔗</span> Referral Program</h2>
+    <p style="color:var(--muted);font-size:14px;margin-bottom:16px">Invite friends → Both get <strong style="color:#4ADE80">2 GB free</strong>. Plus earn <strong style="color:#4ADE80">10%</strong> of their node earnings forever.</p>
+    <div style="display:flex;gap:8px;margin-bottom:16px">
+      <input type="text" id="ref-link" readonly style="flex:1;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 14px;color:var(--text);font-size:13px;font-family:monospace" value="Loading...">
+      <button onclick="navigator.clipboard.writeText(document.getElementById('ref-link').value);this.textContent='✓ Copied'" style="background:var(--accent);border:none;border-radius:8px;padding:10px 18px;color:#fff;font-weight:600;cursor:pointer;font-size:13px;white-space:nowrap">Copy Link</button>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px">
+      <div style="background:var(--bg1);border:1px solid var(--border);border-radius:8px;padding:14px;text-align:center">
+        <div style="font-size:24px;font-weight:700;color:var(--text)" id="ref-total">0</div>
+        <div style="font-size:12px;color:var(--muted)">Referrals</div>
+      </div>
+      <div style="background:var(--bg1);border:1px solid var(--border);border-radius:8px;padding:14px;text-align:center">
+        <div style="font-size:24px;font-weight:700;color:#4ADE80" id="ref-earned">0 MB</div>
+        <div style="font-size:12px;color:var(--muted)">Bonus Earned</div>
+      </div>
+      <div style="background:var(--bg1);border:1px solid var(--border);border-radius:8px;padding:14px;text-align:center">
+        <div style="font-size:24px;font-weight:700;color:#7B61FF" id="ref-passive">0 MB</div>
+        <div style="font-size:12px;color:var(--muted)">Passive (10%)</div>
+      </div>
+    </div>
+  </div>
+
   <div class="section">
     <h2><span class="icon">📋</span> Recent Activity</h2>
     <div id="activity-list"><p style="color:var(--muted);font-size:13px">No recent activity</p></div>
@@ -347,6 +405,13 @@ async function loadDashboardData() {
     document.getElementById('stat-bw').textContent = bw >= 1073741824 ? fmt(bw/1073741824) + ' GB' : bw >= 1048576 ? fmt(bw/1048576) + ' MB' : fmt(bw/1024) + ' KB';
     if (u.email) { userEmail = u.email; document.getElementById('user-email').textContent = u.email; }
     if (u.token) { document.getElementById('user-token').textContent = u.token; }
+    // Update current plan display
+    const plan = u.plan || u.current_plan || 'free';
+    const planNames = {free:'Free',starter:'Starter',growth:'Growth',business:'Business',enterprise:'Enterprise'};
+    const planData = {free:'0.5 GB',starter:'10 GB',growth:'50 GB',business:'200 GB',enterprise:'1 TB+'};
+    document.getElementById('current-plan').textContent = planNames[plan] || plan;
+    document.getElementById('plan-data').textContent = planData[plan] || '-';
+    document.getElementById('user-token').textContent = u.token || apiKey;
 
     // Recent activity
     const activity = d.recent_activity || d.credit_log || [];
@@ -357,6 +422,16 @@ async function loadDashboardData() {
       ).join('');
     }
   } catch(e) { console.error('Dashboard load error:', e); }
+  // Load referral data
+  try {
+    const rr = await fetch(API + '/api/referral?api_key=' + apiKey);
+    const rd = await rr.json();
+    if (rd.referral_link) document.getElementById('ref-link').value = rd.referral_link;
+    if (rd.referral_code) document.getElementById('ref-link').value = 'https://iploop.io/signup.html?ref=' + rd.referral_code;
+    document.getElementById('ref-total').textContent = rd.total_referrals || 0;
+    document.getElementById('ref-earned').textContent = fmt(rd.total_earned_mb || 0) + ' MB';
+    document.getElementById('ref-passive').textContent = fmt(rd.passive_earnings_mb || 0) + ' MB';
+  } catch(e) { console.error('Referral load error:', e); }
 }
 
 async function loadNetworkStats() {
@@ -383,17 +458,16 @@ function copyText(btn, text) {
 }
 
 async function buyPlan(plan) {
-  const apiKey = localStorage.getItem('api_key');
   if (!apiKey) { alert('Please log in first'); return; }
   try {
-    const r = await fetch('/api/stripe/checkout', {
+    const r = await fetch(API + '/api/stripe/checkout', {
       method: 'POST', headers: {'Content-Type':'application/json'},
       body: JSON.stringify({api_key: apiKey, plan: plan})
     });
     const d = await r.json();
     if (d.checkout_url) { window.location.href = d.checkout_url; }
-    else { alert(d.error || 'Error creating checkout'); }
-  } catch(e) { alert('Network error'); }
+    else { alert(d.error || 'Error creating checkout session'); }
+  } catch(e) { alert('Network error: ' + e.message); }
 }
 
 // Show payment success message

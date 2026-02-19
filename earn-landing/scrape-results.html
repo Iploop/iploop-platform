@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IPLoop QA — Scrape Test Dashboard</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { background: #0a0a1a; color: #e0e0e0; font-family: 'Inter', -apple-system, sans-serif; line-height: 1.6; }
+        .container { max-width: 1280px; margin: 0 auto; padding: 0 24px; }
+        a { color: #00d4ff; text-decoration: none; }
+
+        /* Header */
+        .header { padding: 32px 0 20px; border-bottom: 1px solid rgba(0,212,255,0.1); }
+        .header-top { display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 12px; }
+        .header h1 { font-size: 26px; font-weight: 700; }
+        .header h1 span { color: #00d4ff; }
+        .header-meta { display: flex; gap: 16px; font-size: 12px; color: #666; margin-top: 6px; flex-wrap: wrap; }
+        .badge { padding: 5px 14px; border-radius: 20px; font-size: 11px; font-weight: 600; }
+        .badge-pass { background: rgba(0,255,136,0.15); color: #00ff88; }
+        .badge-warn { background: rgba(255,149,0,0.15); color: #ff9500; }
+        
+        /* Test Selector */
+        .test-selector { display: flex; gap: 8px; padding: 20px 0; flex-wrap: wrap; }
+        .test-btn { padding: 10px 20px; border-radius: 10px; font-size: 13px; font-weight: 600; cursor: pointer; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); transition: all 0.2s; }
+        .test-btn.active { background: rgba(0,212,255,0.1); border-color: rgba(0,212,255,0.3); color: #00d4ff; }
+        .test-btn:hover:not(.active) { background: rgba(255,255,255,0.06); }
+        .test-btn .test-badge { display: inline-block; padding: 2px 8px; border-radius: 8px; font-size: 10px; margin-left: 6px; }
+        .test-btn .test-badge.green { background: rgba(0,255,136,0.15); color: #00ff88; }
+        .test-btn .test-badge.orange { background: rgba(255,149,0,0.15); color: #ff9500; }
+        
+        .test-panel { display: none; }
+        .test-panel.active { display: block; }
+
+        /* Summary Cards */
+        .summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; padding: 16px 0 24px; }
+        .stat-card { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); border-radius: 12px; padding: 16px; text-align: center; }
+        .stat-card .value { font-size: 26px; font-weight: 700; color: #00d4ff; }
+        .stat-card .label { font-size: 10px; color: #777; margin-top: 3px; text-transform: uppercase; letter-spacing: 1px; }
+        .stat-card.green .value { color: #00ff88; }
+        .stat-card.orange .value { color: #ff9500; }
+        .stat-card.purple .value { color: #b388ff; }
+        .stat-card.red .value { color: #ff4444; }
+
+        /* Section */
+        .section { padding: 24px 0; border-top: 1px solid rgba(255,255,255,0.05); }
+        .section-title { font-size: 16px; font-weight: 600; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+        .section-desc { color: #777; font-size: 12px; margin-bottom: 14px; }
+
+        /* Tables */
+        .tbl { width: 100%; border-collapse: collapse; font-size: 12px; }
+        .tbl th { text-align: left; padding: 8px 10px; font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: #555; border-bottom: 1px solid rgba(255,255,255,0.08); }
+        .tbl td { padding: 9px 10px; border-bottom: 1px solid rgba(255,255,255,0.03); }
+        .tbl tr:hover { background: rgba(0,212,255,0.02); }
+        .ip { font-family: 'Courier New', monospace; color: #00d4ff; font-size: 11px; }
+        .dot { width: 7px; height: 7px; border-radius: 50%; display: inline-block; margin-right: 5px; }
+        .dot.pass { background: #00ff88; box-shadow: 0 0 5px rgba(0,255,136,0.3); }
+        .dot.fail { background: #ff4444; box-shadow: 0 0 5px rgba(255,68,68,0.3); }
+        .sm-badge { padding: 2px 8px; border-radius: 10px; font-size: 10px; font-weight: 600; }
+        .sm-badge.pass { background: rgba(0,255,136,0.1); color: #00ff88; }
+        .sm-badge.fail { background: rgba(255,68,68,0.1); color: #ff4444; }
+
+        /* Bars */
+        .bar-row { display: flex; align-items: center; gap: 10px; padding: 5px 0; }
+        .bar-label { width: 100px; font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .bar-track { flex: 1; height: 22px; background: rgba(255,255,255,0.03); border-radius: 5px; overflow: hidden; }
+        .bar-fill { height: 100%; border-radius: 5px; display: flex; align-items: center; padding-left: 8px; font-size: 10px; font-weight: 600; color: rgba(255,255,255,0.9); }
+        .bar-fill.c1 { background: linear-gradient(90deg, #00ff88, #00d4ff); }
+        .bar-fill.c2 { background: linear-gradient(90deg, #00d4ff, #b388ff); }
+        .bar-fill.c3 { background: linear-gradient(90deg, #ff9500, #ff4444); }
+        .bar-val { width: 70px; text-align: right; font-size: 11px; color: #888; }
+
+        /* Grid Cards */
+        .card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 10px; }
+        .card { background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); border-radius: 10px; padding: 14px 16px; transition: border-color 0.2s; }
+        .card:hover { border-color: rgba(0,212,255,0.15); }
+        .card-head { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; }
+        .card-title { font-weight: 600; font-size: 13px; }
+        .card-sub { color: #777; font-size: 11px; margin-top: 2px; }
+        .card-stats { display: flex; gap: 14px; }
+        .card-stat .v { font-size: 15px; font-weight: 700; color: #00d4ff; }
+        .card-stat .l { font-size: 9px; color: #666; text-transform: uppercase; }
+        .card-time { font-size: 11px; color: #00ff88; font-weight: 600; }
+        .preview { background: rgba(0,0,0,0.3); border-radius: 6px; padding: 10px; font-size: 10px; color: #888; line-height: 1.6; font-family: Georgia, serif; font-style: italic; max-height: 56px; overflow: hidden; position: relative; }
+        .preview::after { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 24px; background: linear-gradient(transparent, rgba(10,10,26,0.95)); }
+        .genre-pill { padding: 2px 7px; border-radius: 8px; font-size: 9px; background: rgba(0,212,255,0.1); color: #00d4ff; }
+
+        /* Check rows */
+        .check { display: flex; align-items: center; gap: 10px; padding: 8px 14px; border-radius: 7px; margin-bottom: 4px; background: rgba(255,255,255,0.015); font-size: 12px; }
+        .check-detail { margin-left: auto; color: #555; font-size: 11px; }
+
+        /* Code */
+        .code { background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 12px 16px; font-family: 'Courier New', monospace; font-size: 11px; overflow-x: auto; line-height: 1.8; margin: 10px 0; }
+        .cc { color: #555; } .cg { color: #00ff88; } .co { color: #ff9500; } .cb { color: #00d4ff; }
+
+        /* World Map Dots */
+        .world-map { position: relative; background: rgba(255,255,255,0.02); border-radius: 12px; height: 200px; margin: 16px 0; border: 1px solid rgba(255,255,255,0.04); overflow: hidden; }
+        .map-dot { position: absolute; width: 10px; height: 10px; border-radius: 50%; background: #00d4ff; box-shadow: 0 0 8px rgba(0,212,255,0.5); transform: translate(-50%, -50%); }
+        .map-dot.fail { background: #ff4444; box-shadow: 0 0 8px rgba(255,68,68,0.5); }
+        .map-dot::after { content: attr(data-label); position: absolute; top: -16px; left: 50%; transform: translateX(-50%); font-size: 9px; color: #888; white-space: nowrap; }
+        .map-line { position: absolute; top: 50%; left: 0; right: 0; height: 1px; background: rgba(255,255,255,0.02); }
+
+        /* Footer */
+        .footer { padding: 24px 0; border-top: 1px solid rgba(255,255,255,0.04); margin-top: 16px; text-align: center; color: #444; font-size: 11px; }
+
+        /* Tabs inside test */
+        .tabs { display: flex; gap: 3px; margin-bottom: 16px; }
+        .tab { padding: 7px 16px; border-radius: 7px; font-size: 12px; font-weight: 500; cursor: pointer; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.04); transition: all 0.2s; }
+        .tab.active { background: rgba(0,212,255,0.08); border-color: rgba(0,212,255,0.2); color: #00d4ff; }
+        .tab-c { display: none; }
+        .tab-c.active { display: block; }
+
+        @media (max-width: 768px) {
+            .summary { grid-template-columns: repeat(3, 1fr); }
+            .card-grid { grid-template-columns: 1fr; }
+            .world-map { height: 140px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <!-- Header -->
+    <div class="header">
+        <div class="header-top">
+            <div>
+                <h1>🔬 <span>IPLoop</span> QA Test Dashboard</h1>
+                <div class="header-meta">
+                    <span>📅 Feb 17, 2026</span>
+                    <span>🔗 gateway.iploop.io:8880</span>
+                    <span>🖥️ 20,000+ residential nodes</span>
+                    <span>🌍 189 countries</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Test Selector -->
+    <div class="test-selector">
+        <div class="test-btn active" onclick="showTest('test2')">
+            🌐 Wikipedia Mega Test <span class="test-badge green">74/75</span>
+        </div>
+        <div class="test-btn" onclick="showTest('test1')">
+            📚 Verso Book Scrape <span class="test-badge green">35/35</span>
+        </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════ -->
+    <!-- TEST 2: Wikipedia Mega Test -->
+    <!-- ═══════════════════════════════════════════ -->
+    <div class="test-panel active" id="test2">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+            <div style="font-size: 11px; color: #666;">Wikipedia scrape · 20 countries · 75 requests · 48 MB total</div>
+            <span class="badge badge-pass">98.7% SUCCESS</span>
+        </div>
+
+        <div class="summary">
+            <div class="stat-card green"><div class="value">74/75</div><div class="label">Passed</div></div>
+            <div class="stat-card"><div class="value">20</div><div class="label">Countries</div></div>
+            <div class="stat-card purple"><div class="value">48 MB</div><div class="label">Data Scraped</div></div>
+            <div class="stat-card orange"><div class="value">2.0s</div><div class="label">Avg Response</div></div>
+            <div class="stat-card"><div class="value">50</div><div class="label">Rapid Burst</div></div>
+            <div class="stat-card"><div class="value">11.7s</div><div class="label">Burst Time</div></div>
+            <div class="stat-card red"><div class="value">1</div><div class="label">Failed (RU)</div></div>
+            <div class="stat-card green"><div class="value">20</div><div class="label">Unique IPs</div></div>
+        </div>
+
+        <!-- World Map -->
+        <div class="section">
+            <div class="section-title">🗺️ Global Coverage Map</div>
+            <div class="world-map">
+                <div class="map-line" style="top: 30%"></div>
+                <div class="map-line" style="top: 50%"></div>
+                <div class="map-line" style="top: 70%"></div>
+                <!-- Approximate positions -->
+                <div class="map-dot" style="left:22%;top:38%" data-label="US"></div>
+                <div class="map-dot" style="left:17%;top:50%" data-label="MX"></div>
+                <div class="map-dot" style="left:27%;top:72%" data-label="BR"></div>
+                <div class="map-dot" style="left:24%;top:80%" data-label="AR"></div>
+                <div class="map-dot" style="left:30%;top:42%" data-label="CA"></div>
+                <div class="map-dot" style="left:47%;top:35%" data-label="GB"></div>
+                <div class="map-dot" style="left:49%;top:38%" data-label="NL"></div>
+                <div class="map-dot" style="left:50%;top:36%" data-label="DE"></div>
+                <div class="map-dot" style="left:48%;top:42%" data-label="FR"></div>
+                <div class="map-dot" style="left:49%;top:44%" data-label="ES"></div>
+                <div class="map-dot" style="left:51%;top:42%" data-label="IT"></div>
+                <div class="map-dot" style="left:52%;top:38%" data-label="PL"></div>
+                <div class="map-dot" style="left:50%;top:34%" data-label="SE"></div>
+                <div class="map-dot fail" style="left:58%;top:34%" data-label="RU"></div>
+                <div class="map-dot" style="left:56%;top:44%" data-label="IL"></div>
+                <div class="map-dot" style="left:64%;top:50%" data-label="IN"></div>
+                <div class="map-dot" style="left:79%;top:40%" data-label="KR"></div>
+                <div class="map-dot" style="left:82%;top:40%" data-label="JP"></div>
+                <div class="map-dot" style="left:84%;top:72%" data-label="AU"></div>
+                <div class="map-dot" style="left:53%;top:75%" data-label="ZA"></div>
+            </div>
+        </div>
+
+        <div class="tabs">
+            <div class="tab active" onclick="showTab2('geo2')">🌍 20-Country Blast</div>
+            <div class="tab" onclick="showTab2('deep2')">📄 Deep Content</div>
+            <div class="tab" onclick="showTab2('rapid2')">⚡ 50-Request Burst</div>
+            <div class="tab" onclick="showTab2('checks2')">✅ Validation</div>
+        </div>
+
+        <!-- Tab: 20 Country -->
+        <div class="tab-c active" id="tab2-geo2">
+            <div class="section-desc">Wikipedia "Artificial Intelligence" article (1.2 MB) fetched from 20 countries simultaneously in 16.4 seconds.</div>
+            <table class="tbl">
+                <thead><tr><th></th><th>Country</th><th>Exit IP</th><th>Response</th><th>Size</th><th>Status</th></tr></thead>
+                <tbody>
+                    <tr><td>🇫🇷</td><td>France</td><td><span class="ip">79.83.237.18</span></td><td><span class="dot pass"></span>873ms</td><td>1.2 MB</td><td><span class="sm-badge pass">PASS</span></td></tr>
+                    <tr><td>🇮🇹</td><td>Italy</td><td><span class="ip">95.248.145.226</span></td><td><span class="dot pass"></span>930ms</td><td>1.2 MB</td><td><span class="sm-badge pass">PASS</span></td></tr>
+                    <tr><td>🇩🇪</td><td>Germany</td><td><span class="ip">95.91.222.88</span></td><td><span class="dot pass"></span>1,187ms</td><td>1.2 MB</td><td><span class="sm-badge pass">PASS</span></td></tr>
+                    <tr><td>🇳🇱</td><td>Netherlands</td><td><span class="ip">83.83.195.129</span></td><td><span class="dot pass"></span>1,276ms</td><td>1.2 MB</td><td><span class="sm-badge pass">PASS</span></td></tr>
+                    <tr><td>🇸🇪</td><td>Sweden</td><td><span class="ip">90.144.92.254</span></td><td><span class="dot pass"></span>1,293ms</td><td>1.2 MB</td><td><span class="sm-badge pass">PASS</span></td></tr>
+                    <tr><td>🇪🇸</td><td>Spain</td><td><span class="ip">2.155.3.149</span></td><td><span class="dot pass"></span>1,346ms</td><td>1.2 MB</td><td><span class="sm-badge pass">PASS</span></td></tr>
+                    <tr><td>🇬🇧</td><td>United Kingdom</td><td><span class="ip">90.248.43.125</span></td><td><span class="dot pass"></span>1,348ms</td><td>1.2 MB</td><td><span class="sm-badge pass">PASS</span></td></tr>
+                    <tr><td>🇺🇸</td><td>United States</td><td><span class="ip">68.82.16.225</span></td><td><span class="dot pass"></span>1,498ms</td><td>1.2 MB</td><td><span class="sm-badge pass">PASS</span></td></tr>
+                    <tr><td>🇮🇱</td><td>Israel</td><td><span class="ip">5.29.14.81</span></td><td><span class="dot pass"></span>1,513ms</td><td>1.2 MB</td><td><span class="sm-badge pass">PASS</span></td></tr>
+                    <tr><td>🇵🇱</td><td>Poland</td><td><span class="ip">87.207.41.121</span></td><td><span class="dot pass"></span>2,088ms</td><td>1.2 MB</td><td><span class="sm-badge pass">PASS</span></td></tr>
+                    <tr><td>🇮🇳</td><td>India</td><td><span class="ip">202.54.205.150</span></td><td><span class="dot pass"></span>2,604ms</td><td>1.2 MB</td><td><span class="sm-badge pass">PASS</span></td></tr>
+                    <tr><td>🇲🇽</td><td>Mexico</td><td><span class="ip">187.189.15.35</span></td><td><span class="dot pass"></span>2,738ms</td><td>1.2 MB</td><td><span class="sm-badge pass">PASS</span></td></tr>
+                    <tr><td>🇦🇺</td><td>Australia</td><td><span class="ip">101.115.64.104</span></td><td><span class="dot pass"></span>3,123ms</td><td>1.2 MB</td><td><span class="sm-badge pass">PASS</span></td></tr>
+                    <tr><td>🇨🇦</td><td>Canada</td><td><span class="ip">184.147.231.20</span></td><td><span class="dot pass"></span>3,502ms</td><td>1.2 MB</td><td><span class="sm-badge pass">PASS</span></td></tr>
+                    <tr><td>🇧🇷</td><td>Brazil</td><td><span class="ip">143.208.196.77</span></td><td><span class="dot pass"></span>3,824ms</td><td>1.2 MB</td><td><span class="sm-badge pass">PASS</span></td></tr>
+                    <tr><td>🇰🇷</td><td>South Korea</td><td><span class="ip">114.205.157.10</span></td><td><span class="dot pass"></span>3,996ms</td><td>1.2 MB</td><td><span class="sm-badge pass">PASS</span></td></tr>
+                    <tr><td>🇦🇷</td><td>Argentina</td><td><span class="ip">190.210.193.138</span></td><td><span class="dot pass"></span>4,874ms</td><td>1.2 MB</td><td><span class="sm-badge pass">PASS</span></td></tr>
+                    <tr><td>🇯🇵</td><td>Japan</td><td><span class="ip">125.30.131.152</span></td><td><span class="dot pass"></span>5,102ms</td><td>1.2 MB</td><td><span class="sm-badge pass">PASS</span></td></tr>
+                    <tr><td>🇿🇦</td><td>South Africa</td><td><span class="ip">105.214.112.100</span></td><td><span class="dot pass"></span>6,443ms</td><td>1.2 MB</td><td><span class="sm-badge pass">PASS</span></td></tr>
+                    <tr><td>🇷🇺</td><td>Russia</td><td><span class="ip">77.74.31.145</span></td><td><span class="dot fail"></span>15,035ms</td><td>0 B</td><td><span class="sm-badge fail">FAIL</span></td></tr>
+                </tbody>
+            </table>
+            <p style="color:#666;font-size:11px;margin-top:8px;">⚠️ Russia: IP resolved (real residential) but Wikipedia is partially blocked in Russia — confirms genuine residential routing.</p>
+        </div>
+
+        <!-- Tab: Deep Content -->
+        <div class="tab-c" id="tab2-deep2">
+            <div class="section-desc">5 Wikipedia articles scraped in depth, extracting full article text through US residential proxy.</div>
+            <table class="tbl">
+                <thead><tr><th>Article</th><th>Words</th><th>Size</th><th>Response</th><th>Throughput</th><th>Status</th></tr></thead>
+                <tbody>
+                    <tr><td>Artificial Intelligence</td><td>32,294</td><td>1.2 MB</td><td>1,449ms</td><td>842 KB/s</td><td><span class="sm-badge pass">PASS</span></td></tr>
+                    <tr><td>Internet Privacy</td><td>17,912</td><td>463 KB</td><td>3,529ms</td><td>131 KB/s</td><td><span class="sm-badge pass">PASS</span></td></tr>
+                    <tr><td>Residential Proxy</td><td>6,633</td><td>206 KB</td><td>2,425ms</td><td>85 KB/s</td><td><span class="sm-badge pass">PASS</span></td></tr>
+                    <tr><td>Proxy Server</td><td>6,629</td><td>205 KB</td><td>3,149ms</td><td>65 KB/s</td><td><span class="sm-badge pass">PASS</span></td></tr>
+                    <tr><td>Web Scraping</td><td>4,980</td><td>165 KB</td><td>1,735ms</td><td>95 KB/s</td><td><span class="sm-badge pass">PASS</span></td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Tab: Rapid Burst -->
+        <div class="tab-c" id="tab2-rapid2">
+            <div class="section-desc">50 Wikipedia articles scraped simultaneously — 10 tech articles × 5 countries — in 11.7 seconds.</div>
+            
+            <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:20px;">
+                <div class="stat-card"><div class="value" style="font-size:20px;">50/50</div><div class="label">Requests</div></div>
+                <div class="stat-card green"><div class="value" style="font-size:20px;">11.7s</div><div class="label">Total Time</div></div>
+                <div class="stat-card purple"><div class="value" style="font-size:20px;">24.3 MB</div><div class="label">Data</div></div>
+                <div class="stat-card orange"><div class="value" style="font-size:20px;">2.0s</div><div class="label">Avg/Request</div></div>
+                <div class="stat-card"><div class="value" style="font-size:20px;">0</div><div class="label">Blocks</div></div>
+            </div>
+
+            <div class="section-title" style="font-size:14px;">Average Response by Country</div>
+            <div class="bar-row"><div class="bar-label">🇬🇧 UK</div><div class="bar-track"><div class="bar-fill c1" style="width:24%">877ms</div></div><div class="bar-val">4.9 MB</div></div>
+            <div class="bar-row"><div class="bar-label">🇩🇪 Germany</div><div class="bar-track"><div class="bar-fill c1" style="width:25%">898ms</div></div><div class="bar-val">4.9 MB</div></div>
+            <div class="bar-row"><div class="bar-label">🇺🇸 US</div><div class="bar-track"><div class="bar-fill c2" style="width:42%">1,502ms</div></div><div class="bar-val">4.9 MB</div></div>
+            <div class="bar-row"><div class="bar-label">🇯🇵 Japan</div><div class="bar-track"><div class="bar-fill c2" style="width:93%">3,350ms</div></div><div class="bar-val">4.9 MB</div></div>
+            <div class="bar-row"><div class="bar-label">🇧🇷 Brazil</div><div class="bar-track"><div class="bar-fill c3" style="width:100%">3,592ms</div></div><div class="bar-val">4.9 MB</div></div>
+            
+            <div style="margin-top:16px;font-size:12px;color:#666;">
+                <strong>Pages scraped:</strong> Python, Machine Learning, Data Science, Cloud Computing, Cybersecurity, Blockchain, NLP, Computer Vision, Deep Learning, Neural Networks
+            </div>
+        </div>
+
+        <!-- Tab: Validation -->
+        <div class="tab-c" id="tab2-checks2">
+            <div class="check"><span>✅</span><span class="check-text">19/20 countries returned identical content</span><span class="check-detail">1,220,342 bytes each</span></div>
+            <div class="check"><span>✅</span><span class="check-text">20 unique residential IPs from 20 countries</span><span class="check-detail">All real ISP addresses</span></div>
+            <div class="check"><span>✅</span><span class="check-text">50/50 rapid burst requests completed</span><span class="check-detail">0 failures, 0 blocks</span></div>
+            <div class="check"><span>✅</span><span class="check-text">No CAPTCHAs or rate limiting triggered</span><span class="check-detail">75 total requests to Wikipedia</span></div>
+            <div class="check"><span>✅</span><span class="check-text">Concurrent 50-connection burst handled</span><span class="check-detail">11.7s wall time</span></div>
+            <div class="check"><span>⚠️</span><span class="check-text">Russia (RU) — Wikipedia blocked, IP resolved correctly</span><span class="check-detail">Confirms real residential routing</span></div>
+            <div class="check"><span>✅</span><span class="check-text">Total data integrity verified</span><span class="check-detail">48 MB, no corruption</span></div>
+            <div class="check"><span>✅</span><span class="check-text">Sub-second response from 6 EU countries</span><span class="check-detail">FR 873ms, IT 930ms, DE 1187ms</span></div>
+        </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════ -->
+    <!-- TEST 1: Verso Book Scrape -->
+    <!-- ═══════════════════════════════════════════ -->
+    <div class="test-panel" id="test1">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+            <div style="font-size: 11px; color: #666;">readverso.com · Full book text extraction · 15 novels · 14.8 MB</div>
+            <span class="badge badge-pass">100% SUCCESS</span>
+        </div>
+
+        <div class="summary">
+            <div class="stat-card green"><div class="value">35/35</div><div class="label">Passed</div></div>
+            <div class="stat-card"><div class="value">2.5M</div><div class="label">Words</div></div>
+            <div class="stat-card purple"><div class="value">14.8</div><div class="label">MB Data</div></div>
+            <div class="stat-card orange"><div class="value">2.8s</div><div class="label">Avg Time</div></div>
+            <div class="stat-card"><div class="value">5</div><div class="label">Countries</div></div>
+            <div class="stat-card"><div class="value">15</div><div class="label">Full Books</div></div>
+        </div>
+
+        <div class="tabs">
+            <div class="tab active" onclick="showTab1('text1')">📚 Books</div>
+            <div class="tab" onclick="showTab1('geo1')">🌍 Geo-Routing</div>
+            <div class="tab" onclick="showTab1('burst1')">⚡ Burst</div>
+        </div>
+
+        <div class="tab-c active" id="tab1-text1">
+            <div class="section-desc">15 complete novels extracted through residential proxy. Full text — chapters, paragraphs, dialogue.</div>
+            <div class="card-grid">
+                <div class="card"><div class="card-head"><div><div class="card-title">War and Peace</div><div class="card-sub">Leo Tolstoy</div></div><div class="card-time">3,712ms</div></div><div class="card-stats"><div class="card-stat"><div class="v">566K</div><div class="l">Words</div></div><div class="card-stat"><div class="v">3.3 MB</div><div class="l">Size</div></div></div><div class="preview">"Well, Prince, so Genoa and Lucca are now just family estates of the Buonapartes..."</div></div>
+                <div class="card"><div class="card-head"><div><div class="card-title">The Count of Monte Cristo</div><div class="card-sub">Alexandre Dumas</div></div><div class="card-time">3,930ms</div></div><div class="card-stats"><div class="card-stat"><div class="v">464K</div><div class="l">Words</div></div><div class="card-stat"><div class="v">2.7 MB</div><div class="l">Size</div></div></div><div class="preview">"On the 24th of February, 1815, the look-out at Notre-Dame de la Garde signalled the three-master..."</div></div>
+                <div class="card"><div class="card-head"><div><div class="card-title">Moby Dick</div><div class="card-sub">Herman Melville</div></div><div class="card-time">3,956ms</div></div><div class="card-stats"><div class="card-stat"><div class="v">215K</div><div class="l">Words</div></div><div class="card-stat"><div class="v">1.3 MB</div><div class="l">Size</div></div></div><div class="preview">"Call me Ishmael. Some years ago—never mind how long precisely—having little or no money in my purse..."</div></div>
+                <div class="card"><div class="card-head"><div><div class="card-title">Crime and Punishment</div><div class="card-sub">Fyodor Dostoevsky</div></div><div class="card-time">12,078ms</div></div><div class="card-stats"><div class="card-stat"><div class="v">206K</div><div class="l">Words</div></div><div class="card-stat"><div class="v">1.2 MB</div><div class="l">Size</div></div></div><div class="preview">"On an exceptionally hot evening early in July, a young man came out of the garret..."</div></div>
+                <div class="card"><div class="card-head"><div><div class="card-title">Jane Eyre</div><div class="card-sub">Charlotte Brontë</div></div><div class="card-time">3,399ms</div></div><div class="card-stats"><div class="card-stat"><div class="v">188K</div><div class="l">Words</div></div><div class="card-stat"><div class="v">1.0 MB</div><div class="l">Size</div></div></div><div class="preview">"There was no possibility of taking a walk that day..."</div></div>
+                <div class="card"><div class="card-head"><div><div class="card-title">Dracula</div><div class="card-sub">Bram Stoker</div></div><div class="card-time">3,180ms</div></div><div class="card-stats"><div class="card-stat"><div class="v">164K</div><div class="l">Words</div></div><div class="card-stat"><div class="v">881 KB</div><div class="l">Size</div></div></div><div class="preview">"3 May. Bistritz.—Left Munich at 8:35 P.M., on 1st May..."</div></div>
+                <div class="card"><div class="card-head"><div><div class="card-title">Pride and Prejudice</div><div class="card-sub">Jane Austen</div></div><div class="card-time">2,679ms</div></div><div class="card-stats"><div class="card-stat"><div class="v">130K</div><div class="l">Words</div></div><div class="card-stat"><div class="v">754 KB</div><div class="l">Size</div></div></div><div class="preview">"It is a truth universally acknowledged, that a single man in possession of a good fortune..."</div></div>
+                <div class="card"><div class="card-head"><div><div class="card-title">Wuthering Heights</div><div class="card-sub">Emily Brontë</div></div><div class="card-time">3,000ms</div></div><div class="card-stats"><div class="card-stat"><div class="v">119K</div><div class="l">Words</div></div><div class="card-stat"><div class="v">678 KB</div><div class="l">Size</div></div></div><div class="preview">"1801.—I have just returned from a visit to my landlord..."</div></div>
+                <div class="card"><div class="card-head"><div><div class="card-title">Sherlock Holmes</div><div class="card-sub">Arthur Conan Doyle</div></div><div class="card-time">3,108ms</div></div><div class="card-stats"><div class="card-stat"><div class="v">107K</div><div class="l">Words</div></div><div class="card-stat"><div class="v">594 KB</div><div class="l">Size</div></div></div><div class="preview">"To Sherlock Holmes she is always the woman..."</div></div>
+                <div class="card"><div class="card-head"><div><div class="card-title">Dorian Gray</div><div class="card-sub">Oscar Wilde</div></div><div class="card-time">2,980ms</div></div><div class="card-stats"><div class="card-stat"><div class="v">82K</div><div class="l">Words</div></div><div class="card-stat"><div class="v">458 KB</div><div class="l">Size</div></div></div><div class="preview">"The studio was filled with the rich odour of roses..."</div></div>
+                <div class="card"><div class="card-head"><div><div class="card-title">Frankenstein</div><div class="card-sub">Mary Shelley</div></div><div class="card-time">3,223ms</div></div><div class="card-stats"><div class="card-stat"><div class="v">78K</div><div class="l">Words</div></div><div class="card-stat"><div class="v">447 KB</div><div class="l">Size</div></div></div><div class="preview">"You will rejoice to hear that no disaster has accompanied the commencement..."</div></div>
+                <div class="card"><div class="card-head"><div><div class="card-title">Treasure Island</div><div class="card-sub">R.L. Stevenson</div></div><div class="card-time">2,544ms</div></div><div class="card-stats"><div class="card-stat"><div class="v">72K</div><div class="l">Words</div></div><div class="card-stat"><div class="v">392 KB</div><div class="l">Size</div></div></div><div class="preview">"Squire Trelawney, Dr. Livesey, and the rest of these gentlemen..."</div></div>
+                <div class="card"><div class="card-head"><div><div class="card-title">The Great Gatsby</div><div class="card-sub">F. Scott Fitzgerald</div></div><div class="card-time">3,072ms</div></div><div class="card-stats"><div class="card-stat"><div class="v">51K</div><div class="l">Words</div></div><div class="card-stat"><div class="v">297 KB</div><div class="l">Size</div></div></div><div class="preview">"In my younger and more vulnerable years my father gave me some advice..."</div></div>
+                <div class="card"><div class="card-head"><div><div class="card-title">A Christmas Carol</div><div class="card-sub">Charles Dickens</div></div><div class="card-time">2,108ms</div></div><div class="card-stats"><div class="card-stat"><div class="v">32K</div><div class="l">Words</div></div><div class="card-stat"><div class="v">182 KB</div><div class="l">Size</div></div></div><div class="preview">"Marley was dead: to begin with. There is no doubt whatever about that..."</div></div>
+                <div class="card"><div class="card-head"><div><div class="card-title">Alice in Wonderland</div><div class="card-sub">Lewis Carroll</div></div><div class="card-time">2,651ms</div></div><div class="card-stats"><div class="card-stat"><div class="v">30K</div><div class="l">Words</div></div><div class="card-stat"><div class="v">168 KB</div><div class="l">Size</div></div></div><div class="preview">"Alice was beginning to get very tired of sitting by her sister on the bank..."</div></div>
+            </div>
+        </div>
+
+        <div class="tab-c" id="tab1-geo1">
+            <div class="section-desc">Pride and Prejudice (754 KB) from 5 countries — verifying geo-routing and data consistency.</div>
+            <div class="bar-row"><div class="bar-label">🇬🇧 UK</div><div class="bar-track"><div class="bar-fill c1" style="width:32%">1,474ms</div></div><div class="bar-val"><span class="ip">2.101.16.186</span></div></div>
+            <div class="bar-row"><div class="bar-label">🇫🇷 France</div><div class="bar-track"><div class="bar-fill c1" style="width:38%">1,743ms</div></div><div class="bar-val"><span class="ip">176.139.154.126</span></div></div>
+            <div class="bar-row"><div class="bar-label">🇩🇪 Germany</div><div class="bar-track"><div class="bar-fill c1" style="width:39%">1,800ms</div></div><div class="bar-val"><span class="ip">92.208.101.38</span></div></div>
+            <div class="bar-row"><div class="bar-label">🇺🇸 US</div><div class="bar-track"><div class="bar-fill c2" style="width:75%">3,440ms</div></div><div class="bar-val"><span class="ip">24.46.152.241</span></div></div>
+            <div class="bar-row"><div class="bar-label">🇯🇵 Japan</div><div class="bar-track"><div class="bar-fill c3" style="width:100%">4,606ms</div></div><div class="bar-val"><span class="ip">101.140.238.51</span></div></div>
+        </div>
+
+        <div class="tab-c" id="tab1-burst1">
+            <div class="section-desc">5 novels downloaded simultaneously through US residential proxy.</div>
+            <div class="bar-row"><div class="bar-label">Christmas Carol</div><div class="bar-track"><div class="bar-fill c1" style="width:37%">2,428ms</div></div><div class="bar-val">178 KB</div></div>
+            <div class="bar-row"><div class="bar-label">Frankenstein</div><div class="bar-track"><div class="bar-fill c1" style="width:40%">2,623ms</div></div><div class="bar-val">438 KB</div></div>
+            <div class="bar-row"><div class="bar-label">Alice</div><div class="bar-track"><div class="bar-fill c1" style="width:43%">2,794ms</div></div><div class="bar-val">170 KB</div></div>
+            <div class="bar-row"><div class="bar-label">Dracula</div><div class="bar-track"><div class="bar-fill c2" style="width:49%">3,176ms</div></div><div class="bar-val">870 KB</div></div>
+            <div class="bar-row"><div class="bar-label">Treasure Island</div><div class="bar-track"><div class="bar-fill c3" style="width:100%">6,500ms</div></div><div class="bar-val">212 KB</div></div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+        <p>IPLoop Residential Proxy · <a href="https://iploop.io">iploop.io</a> · <a href="https://dashboard.iploop.io">Dashboard</a> · 20,000+ nodes · 189 countries</p>
+    </div>
+</div>
+
+<script>
+function showTest(id) {
+    document.querySelectorAll('.test-panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.test-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    event.target.closest('.test-btn').classList.add('active');
+}
+function showTab1(id) {
+    document.querySelectorAll('#test1 .tab-c').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('#test1 .tab').forEach(t => t.classList.remove('active'));
+    document.getElementById('tab1-' + id).classList.add('active');
+    event.target.classList.add('active');
+}
+function showTab2(id) {
+    document.querySelectorAll('#test2 .tab-c').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('#test2 .tab').forEach(t => t.classList.remove('active'));
+    document.getElementById('tab2-' + id).classList.add('active');
+    event.target.classList.add('active');
+}
+</script>
+</body>
+</html>

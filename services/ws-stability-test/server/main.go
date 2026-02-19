@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"strconv"
 	"log"
 	"math"
 	"math/rand"
@@ -23,15 +24,280 @@ import (
 	"time"
 
 	crand "crypto/rand"
+	"crypto/sha256"
 	"encoding/hex"
 	"regexp"
 
 	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
 	_ "github.com/lib/pq"
+	"github.com/redis/go-redis/v9"
 	"golang.org/x/crypto/bcrypt"
 	_ "net/http/pprof"
 )
+
+// ─── Sticky Session Map ────────────────────────────────────────────────────────
+
+type stickySession struct {
+	nodeID   string
+	nodeIP   string
+	lastUsed time.Time
+	country  string
+}
+
+// Redis-backed sticky session helpers (shared across GW instances)
+const stickySessionTTL = 10 * time.Minute
+const stickyPrefix = "sticky:"
+
+func stickyStore(sessionID string, s *stickySession) {
+	if rdb == nil { return }
+	val := s.nodeID + "|" + s.country + "|" + s.nodeIP
+	rdb.Set(context.Background(), stickyPrefix+sessionID, val, stickySessionTTL)
+}
+
+func stickyLoad(sessionID string) (*stickySession, bool) {
+	if rdb == nil { return nil, false }
+	val, err := rdb.Get(context.Background(), stickyPrefix+sessionID).Result()
+	if err != nil { return nil, false }
+	parts := strings.SplitN(val, "|", 3)
+	country := ""
+	nodeIP := ""
+	if len(parts) > 1 { country = parts[1] }
+	if len(parts) > 2 { nodeIP = parts[2] }
+	return &stickySession{nodeID: parts[0], nodeIP: nodeIP, lastUsed: time.Now(), country: country}, true
+}
+
+func stickyDelete(sessionID string) {
+	if rdb == nil { return }
+	rdb.Del(context.Background(), stickyPrefix+sessionID)
+}
+
+// Legacy in-memory map kept as local cache only
+var sessionMap sync.Map // session_id -> *stickySession
+
+// ─── Redis Node Registry ───────────────────────────────────────────────────────
+
+var (
+	rdb        *redis.Client
+	instanceID string
+)
+
+func initRedis() {
+	redisAddr := os.Getenv("REDIS_ADDR")
+	if redisAddr == "" {
+		redisAddr = "localhost:6379"
+	}
+
+	redisPassword := os.Getenv("REDIS_PASSWORD")
+
+	rdb = redis.NewClient(&redis.Options{
+		Addr:         redisAddr,
+		Password:     redisPassword,
+		DialTimeout:  3 * time.Second,
+		ReadTimeout:  2 * time.Second,
+		WriteTimeout: 2 * time.Second,
+		PoolSize:     20,
+	})
+
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+	if err := rdb.Ping(ctx).Err(); err != nil {
+		log.Printf("[REDIS] ⚠️ Failed to connect to %s: %v (continuing without Redis)", redisAddr, err)
+	} else {
+		log.Printf("[REDIS] Connected to %s", redisAddr)
+	}
+
+	// Generate instance ID
+	instanceID = os.Getenv("INSTANCE_ID")
+	if instanceID == "" {
+		hostname, err := os.Hostname()
+		if err != nil {
+			hostname = "unknown"
+		}
+		port := os.Getenv("PORT")
+		if port == "" {
+			port = "9090"
+		}
+		instanceID = hostname + ":" + port
+	}
+	log.Printf("[REDIS] Instance ID: %s", instanceID)
+
+	// Register this instance
+	go func() {
+		ctx := context.Background()
+		if err := rdb.SAdd(ctx, "instances:active", instanceID).Err(); err != nil {
+			log.Printf("[REDIS] Failed to register instance: %v", err)
+		}
+	}()
+
+	// Periodic instance heartbeat (refresh every 2 minutes)
+	go func() {
+		ticker := time.NewTicker(2 * time.Minute)
+		defer ticker.Stop()
+		for range ticker.C {
+			ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+			rdb.SAdd(ctx, "instances:active", instanceID)
+			cancel()
+		}
+	}()
+}
+
+// redisRegisterNode registers a node in Redis on connect (async, non-blocking)
+func redisRegisterNode(nodeID, ip, country, city, os, model, sdkVersion string) {
+	if rdb == nil {
+		return
+	}
+	go func() {
+		ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+		defer cancel()
+
+		key := "node:" + nodeID
+		fields := map[string]interface{}{
+			"instance_id":  instanceID,
+			"ip":           ip,
+			"country":      country,
+			"city":         city,
+			"os":           os,
+			"model":        model,
+			"sdk":          sdkVersion,
+			"connected_at": time.Now().UTC().Format(time.RFC3339),
+			"capacity":     1,
+		}
+		if err := rdb.HSet(ctx, key, fields).Err(); err != nil {
+			log.Printf("[REDIS] Failed to register node %s: %v", nodeID, err)
+			return
+		}
+		rdb.Expire(ctx, key, 360*time.Second)
+		rdb.SAdd(ctx, "nodes:instance:"+instanceID, nodeID)
+		if country != "" {
+			rdb.SAdd(ctx, "nodes:country:"+country, nodeID)
+		}
+	}()
+}
+
+// redisUnregisterNode removes a node from Redis on disconnect (async, non-blocking)
+func redisUnregisterNode(nodeID, country string) {
+	if rdb == nil {
+		return
+	}
+	go func() {
+		ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+		defer cancel()
+
+		rdb.Del(ctx, "node:"+nodeID)
+		rdb.SRem(ctx, "nodes:instance:"+instanceID, nodeID)
+		if country != "" {
+			rdb.SRem(ctx, "nodes:country:"+country, nodeID)
+		}
+	}()
+}
+
+// redisRefreshNodeTTL refreshes the TTL for a node on pong (async, non-blocking)
+func redisRefreshNodeTTL(nodeID string) {
+	if rdb == nil {
+		return
+	}
+	go func() {
+		ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+		defer cancel()
+		rdb.Expire(ctx, "node:"+nodeID, 360*time.Second)
+	}()
+}
+
+// redisUpdateNodeIPInfo updates geo info for a node in Redis (async, non-blocking)
+func redisUpdateNodeIPInfo(nodeID, oldCountry, newCountry, city, isp string) {
+	if rdb == nil {
+		return
+	}
+	go func() {
+		ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+		defer cancel()
+
+		fields := map[string]interface{}{}
+		if newCountry != "" {
+			fields["country"] = newCountry
+		}
+		if city != "" {
+			fields["city"] = city
+		}
+		if isp != "" {
+			fields["isp"] = isp
+		}
+		if len(fields) > 0 {
+			rdb.HSet(ctx, "node:"+nodeID, fields)
+		}
+
+		// Update country index if changed
+		if oldCountry != newCountry && newCountry != "" {
+			if oldCountry != "" {
+				rdb.SRem(ctx, "nodes:country:"+oldCountry, nodeID)
+			}
+			rdb.SAdd(ctx, "nodes:country:"+newCountry, nodeID)
+		}
+	}()
+}
+
+// findNodeForProxy finds a random node in a country via Redis for cross-instance routing
+func findNodeForProxy(country string) (nodeID string, nodeInstanceID string, err error) {
+	if rdb == nil {
+		return "", "", fmt.Errorf("redis not available")
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	defer cancel()
+
+	key := "nodes:country:" + country
+	nodeID, err = rdb.SRandMember(ctx, key).Result()
+	if err != nil {
+		return "", "", fmt.Errorf("no nodes in country %s: %v", country, err)
+	}
+
+	nodeInstanceID, err = rdb.HGet(ctx, "node:"+nodeID, "instance_id").Result()
+	if err != nil {
+		return "", "", fmt.Errorf("failed to get instance for node %s: %v", nodeID, err)
+	}
+
+	return nodeID, nodeInstanceID, nil
+}
+
+// redisGetStats returns Redis-based stats for the dashboard
+func redisGetStats() map[string]interface{} {
+	stats := map[string]interface{}{
+		"instance_id": instanceID,
+		"redis_nodes": 0,
+		"instances":   []string{},
+	}
+	if rdb == nil {
+		return stats
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	defer cancel()
+
+	// Count node keys
+	var cursor uint64
+	var nodeCount int64
+	for {
+		keys, nextCursor, err := rdb.Scan(ctx, cursor, "node:*", 1000).Result()
+		if err != nil {
+			break
+		}
+		nodeCount += int64(len(keys))
+		cursor = nextCursor
+		if cursor == 0 {
+			break
+		}
+	}
+	stats["redis_nodes"] = nodeCount
+
+	// Active instances
+	instances, err := rdb.SMembers(ctx, "instances:active").Result()
+	if err == nil {
+		stats["instances"] = instances
+	}
+
+	return stats
+}
 
 // ─── Node Quality Scoring ──────────────────────────────────────────────────────
 
@@ -106,7 +372,7 @@ const (
 // ─── Constants ─────────────────────────────────────────────────────────────────
 
 const (
-	pingInterval   = 60 * time.Second
+	pingInterval   = 5 * 60 * time.Second // 5 minutes — reduces heartbeat CPU ~80%
 	pongWait       = 45 * time.Second
 	writeWait      = 10 * time.Second
 	maxMessageSize = 2097152 // 2MB for proxy responses with base64 payloads
@@ -345,13 +611,122 @@ const (
 	cooldownDuration    = 10 * time.Minute
 )
 
+// ─── Anti-Abuse: Device Fingerprint ────────────────────────────────────────────
+// Hash of node_id + OS + model + IP /24 subnet. Limits registrations per subnet.
+
+var (
+	deviceFingerprints   = make(map[string]int)    // fingerprint -> registration count
+	deviceFingerprintsMu sync.Mutex
+	subnetNodeCount      = make(map[string]int)    // /24 subnet -> node count
+	subnetNodeCountMu    sync.Mutex
+)
+
+const maxNodesPerSubnet = 5 // max 5 nodes per /24 subnet
+
+// getIPSubnet extracts /24 subnet from IP (e.g., "1.2.3.4" -> "1.2.3.0/24")
+func getIPSubnet(ip string) string {
+	parsed := net.ParseIP(ip)
+	if parsed == nil {
+		return ip
+	}
+	parsed = parsed.To4()
+	if parsed == nil {
+		return ip
+	}
+	return fmt.Sprintf("%d.%d.%d.0/24", parsed[0], parsed[1], parsed[2])
+}
+
+// computeDeviceFingerprint hashes node_id + OS + model + /24 subnet
+func computeDeviceFingerprint(nodeID, os, model, ip string) string {
+	subnet := getIPSubnet(ip)
+	h := sha256.Sum256([]byte(nodeID + "|" + os + "|" + model + "|" + subnet))
+	return hex.EncodeToString(h[:16]) // 32 hex chars
+}
+
+// ─── Anti-Abuse: Credit Velocity Cap ───────────────────────────────────────────
+// Max 10 GB worth of credits per user per day. Resets at midnight UTC.
+
+const maxCreditsPerDay = 10.0 / defaultGBPerCredit // 10 GB / 0.001 GB per credit = 10000 credits/day
+
+var (
+	dailyCreditTotals   = make(map[string]float64) // user_id -> credits earned today
+	dailyCreditTotalsMu sync.Mutex
+	dailyCreditResetDay int                         // day of month for reset tracking
+)
+
+// addDailyCredits adds credits for a user, returns actual amount added (may be capped)
+func addDailyCredits(userID string, amount float64) float64 {
+	dailyCreditTotalsMu.Lock()
+	defer dailyCreditTotalsMu.Unlock()
+
+	// Reset at midnight UTC (new day)
+	today := time.Now().UTC().Day()
+	if today != dailyCreditResetDay {
+		dailyCreditTotals = make(map[string]float64)
+		dailyCreditResetDay = today
+	}
+
+	current := dailyCreditTotals[userID]
+	remaining := maxCreditsPerDay - current
+	if remaining <= 0 {
+		return 0 // already at daily cap
+	}
+	if amount > remaining {
+		amount = remaining // cap to remaining allowance
+	}
+	dailyCreditTotals[userID] += amount
+	return amount
+}
+
+// ─── Anti-Abuse: Minimum Uptime Before Credits ────────────────────────────────
+// Nodes must be connected >= 5 minutes before earning credits.
+
+const minUptimeForCredits = 5 * time.Minute
+
+// ─── Anti-Abuse: Disposable Email Domains ──────────────────────────────────────
+
+var disposableEmailDomains = map[string]bool{
+	"mailinator.com":       true,
+	"tempmail.com":         true,
+	"guerrillamail.com":    true,
+	"throwaway.email":      true,
+	"yopmail.com":          true,
+	"sharklasers.com":      true,
+	"guerrillamailblock.com": true,
+	"grr.la":               true,
+	"dispostable.com":      true,
+	"maildrop.cc":          true,
+}
+
+// isDisposableEmail checks if email uses a known disposable domain
+func isDisposableEmail(email string) bool {
+	parts := strings.SplitN(email, "@", 2)
+	if len(parts) != 2 {
+		return false
+	}
+	domain := strings.ToLower(parts[1])
+	return disposableEmailDomains[domain]
+}
+
+// ─── Anti-Abuse: Global Fallback Rate Limits ───────────────────────────────────
+// Unknown/new API keys get max 10 rps, 20 concurrent (instead of auto-created 50).
+
+const (
+	globalFallbackRPS        = 10
+	globalFallbackConcurrent = 20
+)
+
 // ─── DB ────────────────────────────────────────────────────────────────────────
 
 var db *sql.DB
 
 func initDB() {
 	var err error
-	db, err = sql.Open("postgres", "postgres://iploop:xK9mP2vL7nQ4wR8s@localhost/iploop?sslmode=disable")
+	dbURL := os.Getenv("DATABASE_URL")
+	if dbURL == "" {
+		dbURL = "postgres://iploop:xK9mP2vL7nQ4wR8s@localhost/iploop?sslmode=disable"
+	}
+	db, err = sql.Open("postgres", dbURL)
 	if err != nil {
 		log.Fatal("Failed to open DB:", err)
 	}
@@ -382,6 +757,30 @@ func initDB() {
 	db.Exec(`CREATE INDEX IF NOT EXISTS idx_users_api_key ON users(api_key)`)
 	db.Exec(`CREATE INDEX IF NOT EXISTS idx_users_token ON users(token)`)
 	db.Exec(`CREATE INDEX IF NOT EXISTS idx_users_signup_ip ON users(signup_ip)`)
+
+	// Referral system columns on users
+	db.Exec(`ALTER TABLE users ADD COLUMN IF NOT EXISTS referral_code TEXT`)
+	db.Exec(`ALTER TABLE users ADD COLUMN IF NOT EXISTS referred_by TEXT`)
+	db.Exec(`CREATE INDEX IF NOT EXISTS idx_users_referral_code ON users(referral_code)`)
+
+	// Referral events table
+	db.Exec(`CREATE TABLE IF NOT EXISTS referrals (
+		id SERIAL PRIMARY KEY,
+		referrer_user_id TEXT NOT NULL,
+		referred_user_id TEXT,
+		referral_code TEXT NOT NULL,
+		status TEXT DEFAULT 'pending',
+		referrer_bonus_mb REAL DEFAULT 2048,
+		referred_bonus_mb REAL DEFAULT 2048,
+		node_boost_pct REAL DEFAULT 50,
+		node_boost_days INT DEFAULT 7,
+		referrer_passive_pct REAL DEFAULT 10,
+		created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+		redeemed_at TIMESTAMP
+	)`)
+	db.Exec(`CREATE INDEX IF NOT EXISTS idx_referrals_code ON referrals(referral_code)`)
+	db.Exec(`CREATE INDEX IF NOT EXISTS idx_referrals_referrer ON referrals(referrer_user_id)`)
+	db.Exec(`CREATE INDEX IF NOT EXISTS idx_referrals_referred ON referrals(referred_user_id)`)
 }
 
 func storeBandwidth(customer, routeType, target string, bytesIn, bytesOut int64) {
@@ -401,12 +800,45 @@ func storeBandwidth(customer, routeType, target string, bytesIn, bytesOut int64)
 // ─── Credit System ─────────────────────────────────────────────────────────────
 
 const (
-	creditsPerHour     = 100.0
+	// Tiered credit rates (credits = MB of proxy access)
+	// Bronze: 0-6h uptime  → 50 MB/hour
+	// Silver: 6-24h uptime → 75 MB/hour
+	// Gold:   24h+ uptime  → 100 MB/hour
+	creditRateBronze   = 50.0  // 0-6h
+	creditRateSilver   = 75.0  // 6-24h
+	creditRateGold     = 100.0 // 24h+
 	defaultGBPerCredit = 0.001 // 1000 credits = 1 GB
-	uptimeBonus24h     = 1.5
-	uptimeBonus72h     = 2.0
 	multiDeviceBonus   = 0.2
+
+	// Referral system constants
+	referralBonusMB    = 2048.0 // 2 GB each (referrer + referred)
+	referralBoostPct   = 50.0   // +50% node credits for 7 days
+	referralBoostDays  = 7
+	referralPassivePct = 10.0   // 10% of referee's earnings forever
 )
+
+// calculateTieredCredits computes credits for a session spanning cumulative uptime
+// Bronze (0-6h): 50 MB/h, Silver (6-24h): 75 MB/h, Gold (24h+): 100 MB/h
+func calculateTieredCredits(startH, endH float64) float64 {
+	var credits float64
+	// Bronze tier: 0-6h
+	if startH < 6 {
+		bronzeEnd := math.Min(endH, 6)
+		credits += (bronzeEnd - startH) * creditRateBronze
+	}
+	// Silver tier: 6-24h
+	if endH > 6 && startH < 24 {
+		silverStart := math.Max(startH, 6)
+		silverEnd := math.Min(endH, 24)
+		credits += (silverEnd - silverStart) * creditRateSilver
+	}
+	// Gold tier: 24h+
+	if endH > 24 {
+		goldStart := math.Max(startH, 24)
+		credits += (endH - goldStart) * creditRateGold
+	}
+	return credits
+}
 
 func creditNodeConnected(nodeID, token string) {
 	if token == "" {
@@ -443,22 +875,37 @@ func creditNodeDisconnected(nodeID string) {
 			hours = 0.001
 		}
 
-		credits := hours * creditsPerHour
+		// Anti-abuse: Minimum uptime before credits (5 minutes)
+		if hours < minUptimeForCredits.Hours() {
+			// Close session without awarding credits
+			db.Exec(`UPDATE credit_sessions SET disconnected_at = CURRENT_TIMESTAMP, uptime_hours = $1, credits_earned = 0 WHERE id = $2`, hours, sessionID)
+			log.Printf("[CREDITS] session closed (no credits, uptime %.1fmin < 5min): node=%s user=%s", hours*60, nodeID, userID)
+			return
+		}
 
-		// Uptime streak bonus
+		// Tiered credit calculation based on cumulative uptime
 		var totalUptime float64
 		db.QueryRow(`SELECT COALESCE(SUM(uptime_hours), 0) FROM credit_sessions WHERE user_id = $1 AND disconnected_at IS NOT NULL`, userID).Scan(&totalUptime)
-		if totalUptime+hours >= 72 {
-			credits *= uptimeBonus72h
-		} else if totalUptime+hours >= 24 {
-			credits *= uptimeBonus24h
-		}
+		cumulativeStart := totalUptime
+		cumulativeEnd := totalUptime + hours
+		credits := calculateTieredCredits(cumulativeStart, cumulativeEnd)
 
 		// Multi-device bonus
 		var activeDevices int
 		db.QueryRow(`SELECT COUNT(*) FROM credit_sessions WHERE user_id = $1 AND disconnected_at IS NULL`, userID).Scan(&activeDevices)
 		if activeDevices > 1 {
 			credits *= 1.0 + float64(activeDevices-1)*multiDeviceBonus
+		}
+
+		// Referral boost: +50% for first 7 days if referred
+		credits *= getReferralBoostMultiplier(userID)
+
+		// Anti-abuse: Credit velocity cap — max 10 GB/day per user
+		credits = addDailyCredits(userID, credits)
+		if credits <= 0 {
+			db.Exec(`UPDATE credit_sessions SET disconnected_at = CURRENT_TIMESTAMP, uptime_hours = $1, credits_earned = 0 WHERE id = $2`, hours, sessionID)
+			log.Printf("[CREDITS] session closed (daily cap reached): node=%s user=%s hours=%.2f", nodeID, userID, hours)
+			return
 		}
 
 		// Close session + add credits
@@ -469,6 +916,9 @@ func creditNodeDisconnected(nodeID string) {
 		db.Exec(`INSERT INTO credit_log (user_id, amount, reason) VALUES ($1, $2, $3)`,
 			userID, credits, fmt.Sprintf("uptime %.2fh node=%s", hours, nodeID))
 		log.Printf("[CREDITS] session closed: node=%s user=%s hours=%.2f credits=%.2f", nodeID, userID, hours, credits)
+
+		// Passive referral earnings: award 10% to referrer
+		go awardReferralPassive(userID, credits)
 	}()
 }
 
@@ -494,7 +944,18 @@ func creditPeriodicUpdate() {
 				continue
 			}
 
-			credits := hours * creditsPerHour
+			// Anti-abuse: skip credit update if node uptime < 5 minutes
+			if hours < minUptimeForCredits.Hours() {
+				continue
+			}
+
+			// Tiered credits based on cumulative uptime
+			var totalUptime float64
+			db.QueryRow(`SELECT COALESCE(SUM(uptime_hours), 0) FROM credit_sessions WHERE user_id = $1 AND disconnected_at IS NOT NULL`, userID).Scan(&totalUptime)
+			credits := calculateTieredCredits(totalUptime, totalUptime+hours)
+
+			// Referral boost: +50% for first 7 days if referred
+			credits *= getReferralBoostMultiplier(userID)
 
 			// Get previous earned for this session to calculate delta
 			var prevEarned float64
@@ -504,9 +965,17 @@ func creditPeriodicUpdate() {
 				continue
 			}
 
+			// Anti-abuse: Credit velocity cap — apply daily limit
+			delta = addDailyCredits(userID, delta)
+			if delta <= 0 {
+				continue
+			}
+
 			// Update session and user balance
-			db.Exec(`UPDATE credit_sessions SET uptime_hours = $1, credits_earned = $2 WHERE id = $3`, hours, credits, sessionID)
+			db.Exec(`UPDATE credit_sessions SET uptime_hours = $1, credits_earned = $2 WHERE id = $3`, hours, prevEarned+delta, sessionID)
 			db.Exec(`UPDATE credit_users SET credits = credits + $1, total_earned = total_earned + $2 WHERE user_id = $3`, delta, delta, userID)
+			// Passive referral earnings
+			go awardReferralPassive(userID, delta)
 			updated++
 		}
 		rows.Close()
@@ -602,13 +1071,13 @@ func getCustomer(apiKey string) (*Customer, error) {
 		&c.APIKey, &c.Name, &c.QuotaBytes, &c.RateLimit, &c.MaxConcurrent, &enabled)
 	
 	if err != nil {
-		// Auto-create new customer with 5GB free
+		// Auto-create new customer with 5GB free and restricted fallback limits
 		c = Customer{
 			APIKey:        apiKey,
 			Name:          apiKey,
 			QuotaBytes:    5 * 1024 * 1024 * 1024, // 5GB
-			RateLimit:     10,
-			MaxConcurrent: 50,
+			RateLimit:     globalFallbackRPS,        // Anti-abuse: new/unknown keys get 10 rps
+			MaxConcurrent: globalFallbackConcurrent,  // Anti-abuse: new/unknown keys get 20 concurrent
 			Enabled:       true,
 		}
 		_, dbErr := db.Exec(`INSERT INTO customers (api_key, name, quota_bytes, rate_limit, max_concurrent, enabled)
@@ -616,7 +1085,7 @@ func getCustomer(apiKey string) (*Customer, error) {
 		if dbErr != nil {
 			log.Printf("[CUSTOMER] Failed to create customer %s: %v", apiKey, dbErr)
 		} else {
-			log.Printf("[CUSTOMER] Auto-created customer %s with 5GB free", apiKey)
+			log.Printf("[CUSTOMER] Auto-created customer %s with 5GB free (fallback limits: %d rps, %d concurrent)", apiKey, globalFallbackRPS, globalFallbackConcurrent)
 		}
 	} else {
 		c.Enabled = enabled == 1
@@ -753,6 +1222,12 @@ func storeRequest(reqType, nodeID, target string, success bool, latencyMs int, e
 	}()
 }
 
+// Cache for IP info DB writes — skip duplicate writes for same node+IP within 1h
+var (
+	ipInfoWriteCacheMu sync.RWMutex
+	ipInfoWriteCache   = make(map[string]time.Time) // key: nodeID+ip -> last write time
+)
+
 func storeIPInfo(nodeID string, msg map[string]interface{}, nodeOS string) {
 	if nodeOS == "" {
 		nodeOS = "android"
@@ -762,9 +1237,19 @@ func storeIPInfo(nodeID string, msg map[string]interface{}, nodeOS string) {
 		return
 	}
 
+	// Skip DB write if same node+IP was written within 1 hour
+	ip, _ := msg["ip"].(string)
+	cacheKey := nodeID + ":" + ip
+	ipInfoWriteCacheMu.RLock()
+	if lastWrite, ok := ipInfoWriteCache[cacheKey]; ok && time.Since(lastWrite) < 24*time.Hour {
+		ipInfoWriteCacheMu.RUnlock()
+		return
+	}
+	ipInfoWriteCacheMu.RUnlock()
+
 	deviceID, _ := msg["device_id"].(string)
 	deviceModel, _ := msg["device_model"].(string)
-	ip, _ := msg["ip"].(string)
+	// ip already extracted above for cache key
 	ipFetchMs, _ := msg["ip_fetch_ms"].(float64)
 	infoFetchMs, _ := msg["info_fetch_ms"].(float64)
 
@@ -797,10 +1282,12 @@ func storeIPInfo(nodeID string, msg map[string]interface{}, nodeOS string) {
 
 	if err != nil {
 		log.Printf("[DB_ERROR] store ip_info: %v", err)
+	} else {
+		// Mark in write cache
+		ipInfoWriteCacheMu.Lock()
+		ipInfoWriteCache[cacheKey] = time.Now()
+		ipInfoWriteCacheMu.Unlock()
 	}
-
-	log.Printf("[IP_INFO] node=%s country=%s city=%s isp=%s proxy=%s ip_fetch=%dms info_fetch=%dms",
-		nodeID, countryCode, city, isp, proxyType, int(ipFetchMs), int(infoFetchMs))
 }
 
 func storeDisconnect(event DisconnectEvent) {
@@ -841,12 +1328,49 @@ func isSDKVersionAllowed(version string) bool {
 	return patch >= 62
 }
 
-// lookupIPGeo fetches geolocation for an IP address via ip-api.com
+// ─── IP Geo Cache ──────────────────────────────────────────────────────────────
+// Cache IP geo lookups to avoid repeated HTTP calls for the same IP.
+// Nodes reconnect frequently with the same IP — no need to re-fetch.
+
+type geoEntry struct {
+	info      *IPGeoInfo
+	fetchedAt time.Time
+}
+
+var (
+	geoCacheMu sync.RWMutex
+	geoCache   = make(map[string]geoEntry)
+	geoCacheTTL = 30 * 24 * time.Hour // 30 days — geo data rarely changes
+)
+
+func geoCacheCleanup() {
+	for {
+		time.Sleep(10 * time.Minute)
+		geoCacheMu.Lock()
+		now := time.Now()
+		for k, v := range geoCache {
+			if now.Sub(v.fetchedAt) > geoCacheTTL {
+				delete(geoCache, k)
+			}
+		}
+		geoCacheMu.Unlock()
+	}
+}
+
+// lookupIPGeo fetches geolocation for an IP address via ip-api.com (with cache)
 func lookupIPGeo(ip string) (*IPGeoInfo, error) {
 	if strings.HasPrefix(ip, "10.") || strings.HasPrefix(ip, "192.168.") ||
 		strings.HasPrefix(ip, "172.") || ip == "127.0.0.1" || ip == "::1" {
 		return nil, fmt.Errorf("private IP address")
 	}
+
+	// Check cache first
+	geoCacheMu.RLock()
+	if entry, ok := geoCache[ip]; ok && time.Since(entry.fetchedAt) < geoCacheTTL {
+		geoCacheMu.RUnlock()
+		return entry.info, nil
+	}
+	geoCacheMu.RUnlock()
 
 	client := &http.Client{Timeout: 3 * time.Second}
 	resp, err := client.Get(fmt.Sprintf("http://ip-api.com/json/%s", ip))
@@ -864,6 +1388,11 @@ func lookupIPGeo(ip string) (*IPGeoInfo, error) {
 	if err := json.Unmarshal(body, &geo); err != nil {
 		return nil, err
 	}
+
+	// Store in cache
+	geoCacheMu.Lock()
+	geoCache[ip] = geoEntry{info: &geo, fetchedAt: time.Now()}
+	geoCacheMu.Unlock()
 
 	return &geo, nil
 }
@@ -1480,11 +2009,16 @@ func (h *Hub) Add(nodeID string, conn *Connection) {
 	h.connections[nodeID] = conn
 	h.totalConns++
 	h.mu.Unlock()
-	log.Printf("[CONNECT] node=%s ip=%s model=%s os=%s sdk=%s total=%d", nodeID, conn.IP, conn.DeviceModel, conn.OS, conn.SDKVersion, h.Count())
+	// Log every 100th connection to reduce CPU overhead
+	if h.totalConns%100 == 0 {
+		log.Printf("[CONNECT] total=%d (last: node=%s ip=%s os=%s)", h.Count(), nodeID, conn.IP, conn.OS)
+	}
 	// Credit tracking for Docker/community nodes
 	if conn.Token != "" {
 		creditNodeConnected(nodeID, conn.Token)
 	}
+	// Redis node registry
+	redisRegisterNode(nodeID, conn.IP, conn.Country, conn.City, conn.OS, conn.DeviceModel, conn.SDKVersion)
 }
 
 func (h *Hub) Remove(nodeID, reason string) {
@@ -1492,15 +2026,9 @@ func (h *Hub) Remove(nodeID, reason string) {
 	conn, ok := h.connections[nodeID]
 	if ok {
 		dur := time.Since(conn.ConnectedAt)
-		proxyType := ""
+		proxyType := conn.ProxyType
 		country := conn.Country
-		// Look up proxy type from DB
-		row := db.QueryRow("SELECT proxy_type FROM ip_info WHERE node_id = $1", nodeID)
-		row.Scan(&proxyType)
-		if country == "" {
-			row2 := db.QueryRow("SELECT country_code FROM ip_info WHERE node_id = $1", nodeID)
-			row2.Scan(&country)
-		}
+		// Use in-memory data instead of DB queries on every disconnect
 		event := DisconnectEvent{
 			NodeID:      nodeID,
 			IP:          conn.IP,
@@ -1525,8 +2053,13 @@ func (h *Hub) Remove(nodeID, reason string) {
 		if conn.Token != "" {
 			creditNodeDisconnected(nodeID)
 		}
-		log.Printf("[DISCONNECT] node=%s reason=%q duration=%s pings=%d/%d total=%d",
-			nodeID, reason, dur.Round(time.Second), conn.PongsRecv, conn.PingsSent, h.Count())
+		// Redis node registry
+		redisUnregisterNode(nodeID, country)
+		// Log every 100th disconnect to reduce overhead
+		if h.totalDiscons%100 == 0 {
+			log.Printf("[DISCONNECT] total_disconnects=%d active=%d (last: node=%s duration=%s)",
+				h.totalDiscons, h.Count(), nodeID, dur.Round(time.Second))
+		}
 	} else {
 		h.mu.Unlock()
 	}
@@ -1539,6 +2072,8 @@ func (h *Hub) UpdatePong(nodeID string) {
 		conn.PongsRecv++
 	}
 	h.mu.Unlock()
+	// Refresh Redis TTL on pong
+	redisRefreshNodeTTL(nodeID)
 }
 
 func (h *Hub) SetIPInfo(nodeID string, msg map[string]interface{}) {
@@ -1561,9 +2096,11 @@ func (h *Hub) SetIPInfo(nodeID string, msg map[string]interface{}) {
 	}
 
 	nodeOS := "android"
+	var oldCountry string
 	h.mu.Lock()
 	if conn, ok := h.connections[nodeID]; ok {
 		conn.HasIPInfo = true
+		oldCountry = conn.Country
 		if cc != "" {
 			conn.Country = cc
 		}
@@ -1586,6 +2123,8 @@ func (h *Hub) SetIPInfo(nodeID string, msg map[string]interface{}) {
 	}
 	h.mu.Unlock()
 	go storeIPInfo(nodeID, msg, nodeOS)
+	// Update Redis with new geo info
+	redisUpdateNodeIPInfo(nodeID, oldCountry, cc, city, isp)
 }
 
 func (h *Hub) IncrPing(nodeID string) {
@@ -1637,11 +2176,11 @@ func (h *Hub) GetConnectionByIP(ip string) *Connection {
 // Format: user:apikey-node-NODEID-ip-ADDRESS-country-XX
 // Returns: nodeID, ip, country (any may be empty)
 func parseProxyAuth(req *http.Request) (targetNode, targetIP, targetCountry string) {
-	targetNode, targetIP, targetCountry, _ = parseProxyAuthFull(req)
+	targetNode, targetIP, targetCountry, _, _ = parseProxyAuthFull(req)
 	return
 }
 
-func parseProxyAuthFull(req *http.Request) (targetNode, targetIP, targetCountry, customer string) {
+func parseProxyAuthFull(req *http.Request) (targetNode, targetIP, targetCountry, customer, sessionID string) {
 	auth := req.Header.Get("Proxy-Authorization")
 	if auth == "" {
 		return
@@ -1670,6 +2209,9 @@ func parseProxyAuthFull(req *http.Request) (targetNode, targetIP, targetCountry,
 			i++
 		case "country":
 			targetCountry = strings.ToUpper(tokens[i+1])
+			i++
+		case "session":
+			sessionID = tokens[i+1]
 			i++
 		}
 	}
@@ -1826,18 +2368,189 @@ func (h *Hub) Stats() map[string]interface{} {
 	}
 }
 
+// ─── DDoS / abuse protection ───────────────────────────────────────────────────
+
+const (
+	maxWSPerIP       = 50
+	maxTotalWS       = 30000
+	apiRateLimitN    = 60 // requests per minute per IP
+	apiRateWindowSec = 60
+)
+
+var (
+	wsPerIP      sync.Map // ip -> *int64
+	totalWSConns int64
+)
+
+func wsIPTrack(ip string) bool {
+	val, _ := wsPerIP.LoadOrStore(ip, new(int64))
+	cnt := val.(*int64)
+	if atomic.AddInt64(cnt, 1) > maxWSPerIP {
+		atomic.AddInt64(cnt, -1)
+		return false
+	}
+	return true
+}
+
+func wsIPRelease(ip string) {
+	if val, ok := wsPerIP.Load(ip); ok {
+		cnt := val.(*int64)
+		if atomic.AddInt64(cnt, -1) <= 0 {
+			wsPerIP.Delete(ip)
+		}
+	}
+}
+
+type apiRateBucket struct {
+	mu      sync.Mutex
+	tokens  int
+	limit   int
+	last    time.Time
+	resetAt time.Time
+}
+
+var apiRateBuckets sync.Map
+
+// getPlanRateLimit returns requests-per-minute for a given plan
+func getPlanRateLimit(plan string) int {
+	switch strings.ToLower(plan) {
+	case "starter":
+		return 120
+	case "growth":
+		return 300
+	case "business":
+		return 600
+	case "enterprise":
+		return 1000
+	case "free":
+		return 30
+	default:
+		return 30
+	}
+}
+
+// lookupPlanByAPIKey returns the plan for an API key (cached in memory for 60s)
+var planCache sync.Map // apiKey -> {plan string, expiry time.Time}
+
+type planCacheEntry struct {
+	plan   string
+	expiry time.Time
+}
+
+func lookupPlanByAPIKey(apiKey string) string {
+	if apiKey == "" {
+		return "free"
+	}
+	// Check cache
+	if v, ok := planCache.Load(apiKey); ok {
+		entry := v.(*planCacheEntry)
+		if time.Now().Before(entry.expiry) {
+			return entry.plan
+		}
+	}
+	// DB lookup
+	var plan string
+	err := db.QueryRow(`SELECT COALESCE(plan, 'free') FROM users WHERE api_key = $1`, apiKey).Scan(&plan)
+	if err != nil {
+		plan = "free"
+	}
+	planCache.Store(apiKey, &planCacheEntry{plan: plan, expiry: time.Now().Add(60 * time.Second)})
+	return plan
+}
+
+func apiRateAllowTiered(key string, limit int) (allowed bool, remaining int, resetUnix int64) {
+	now := time.Now()
+	windowEnd := now.Truncate(time.Minute).Add(time.Minute)
+
+	val, _ := apiRateBuckets.LoadOrStore(key, &apiRateBucket{tokens: limit, limit: limit, last: now, resetAt: windowEnd})
+	b := val.(*apiRateBucket)
+	b.mu.Lock()
+	defer b.mu.Unlock()
+
+	// If window has passed, reset
+	if now.After(b.resetAt) {
+		b.tokens = limit
+		b.limit = limit
+		b.resetAt = now.Truncate(time.Minute).Add(time.Minute)
+	} else if b.limit != limit {
+		// Plan changed — adjust
+		b.limit = limit
+		if b.tokens > limit {
+			b.tokens = limit
+		}
+	}
+
+	resetUnix = b.resetAt.Unix()
+
+	if b.tokens <= 0 {
+		return false, 0, resetUnix
+	}
+	b.tokens--
+	return true, b.tokens, resetUnix
+}
+
+func rateLimitAPI(next http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		apiKey := extractAPIKey(r)
+		plan := lookupPlanByAPIKey(apiKey)
+		limit := getPlanRateLimit(plan)
+
+		// Rate limit key: prefer api_key, fallback to IP
+		rateKey := apiKey
+		if rateKey == "" {
+			rateKey = "ip:" + extractClientIP(r)
+		}
+
+		allowed, remaining, resetUnix := apiRateAllowTiered(rateKey, limit)
+
+		// Always set rate limit headers
+		w.Header().Set("X-RateLimit-Limit", strconv.Itoa(limit))
+		w.Header().Set("X-RateLimit-Remaining", strconv.Itoa(remaining))
+		w.Header().Set("X-RateLimit-Reset", strconv.FormatInt(resetUnix, 10))
+
+		if !allowed {
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusTooManyRequests)
+			json.NewEncoder(w).Encode(map[string]interface{}{
+				"error": "rate limit exceeded",
+				"limit": limit,
+				"reset": resetUnix,
+			})
+			return
+		}
+		next(w, r)
+	}
+}
+
 // ─── WebSocket handler ─────────────────────────────────────────────────────────
 
 var hub = NewHub()
 
 func handleWS(w http.ResponseWriter, r *http.Request) {
+	// DDoS protection: total connection cap
+	if atomic.LoadInt64(&totalWSConns) >= maxTotalWS {
+		http.Error(w, `{"error":"server at capacity"}`, http.StatusServiceUnavailable)
+		return
+	}
+	ip := extractClientIP(r)
+	// DDoS protection: per-IP connection limit
+	if !wsIPTrack(ip) {
+		http.Error(w, `{"error":"too many connections from your IP"}`, http.StatusTooManyRequests)
+		return
+	}
+	atomic.AddInt64(&totalWSConns, 1)
+
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		log.Printf("[ERROR] upgrade: %v", err)
 		return
 	}
 
-	ip := extractClientIP(r)
+	// DDoS protection: release counters when this handler returns
+	defer func() {
+		atomic.AddInt64(&totalWSConns, -1)
+		wsIPRelease(ip)
+	}()
 
 	conn.SetReadLimit(maxMessageSize)
 
@@ -2130,6 +2843,33 @@ func handleRegistration(nodeID, clientIP string, conn *Connection, m map[string]
 	log.Printf("[REGISTER] node=%s device_id=%s device_type=%s sdk_version=%s",
 		nodeID, regData.DeviceID, regData.DeviceType, regData.SDKVersion)
 
+	// Anti-abuse: Device fingerprint — limit registrations per /24 subnet
+	fingerprint := computeDeviceFingerprint(nodeID, conn.OS, conn.DeviceModel, clientIP)
+	subnet := getIPSubnet(clientIP)
+
+	subnetNodeCountMu.Lock()
+	subnetCount := subnetNodeCount[subnet]
+	if subnetCount >= maxNodesPerSubnet {
+		subnetNodeCountMu.Unlock()
+		log.Printf("[REGISTER] Rejected: too many nodes from subnet %s (count=%d, fingerprint=%s)", subnet, subnetCount, fingerprint[:16])
+		errMsg, _ := json.Marshal(Message{
+			Type: "error",
+			Data: map[string]interface{}{
+				"error":     "Too many nodes registered from this network",
+				"timestamp": time.Now().UTC(),
+			},
+		})
+		conn.SafeWrite(websocket.TextMessage, errMsg)
+		return
+	}
+	subnetNodeCount[subnet]++
+	subnetNodeCountMu.Unlock()
+
+	// Track fingerprint
+	deviceFingerprintsMu.Lock()
+	deviceFingerprints[fingerprint]++
+	deviceFingerprintsMu.Unlock()
+
 	// Validate SDK version
 	if !isSDKVersionAllowed(regData.SDKVersion) {
 		log.Printf("[REGISTER] Rejected old SDK %s from device %s", regData.SDKVersion, regData.DeviceID)
@@ -2170,25 +2910,8 @@ func handleRegistration(nodeID, clientIP string, conn *Connection, m map[string]
 		}
 		log.Printf("[REGISTER] SDK geo: %s, %s (sdk=%s)", regData.Country, regData.City, regData.SDKVersion)
 	} else {
-		// Fallback to server-side geo lookup
-		geo, err := lookupIPGeo(clientIP)
-		if err == nil && geo != nil {
-			regData.Country = geo.Country
-			regData.CountryName = geo.CountryName
-			regData.City = geo.City
-			regData.Region = geo.Region
-			regData.Latitude = geo.Latitude
-			regData.Longitude = geo.Longitude
-			regData.ISP = geo.ISP
-			if geo.ASN != "" {
-				var asn int
-				fmt.Sscanf(geo.ASN, "AS%d", &asn)
-				regData.ASN = asn
-			}
-			log.Printf("[REGISTER] Server geo lookup: %s -> %s, %s", clientIP, regData.Country, regData.City)
-		} else {
-			log.Printf("[REGISTER] Geo lookup failed for %s: %v", clientIP, err)
-		}
+		// No server-side lookups — SDK provides all geo data
+		log.Printf("[REGISTER] No geo from SDK: node=%s ip=%s sdk=%s", regData.DeviceID, clientIP, regData.SDKVersion)
 	}
 
 	// Update connection with registration data
@@ -2376,16 +3099,74 @@ func handleDashboard(w http.ResponseWriter, r *http.Request) {
 	tunnelStats := queryStats("tunnel")
 	proxyStats := queryStats("proxy")
 
+	// Redis stats
+	redisStats := redisGetStats()
+
+	// Global node count from Redis (all instances combined)
+	globalNodes := redisStats["redis_nodes"]
+	if globalNodes == nil || globalNodes == 0 {
+		globalNodes = connected // fallback to local if Redis unavailable
+	}
+
+	// Global country counts from Redis
+	globalCountries := make(map[string]int)
+	if rdb != nil {
+		rctx, rcancel := context.WithTimeout(context.Background(), 2*time.Second)
+		defer rcancel()
+		var ccCursor uint64
+		for {
+			keys, nextCursor, err := rdb.Scan(rctx, ccCursor, "nodes:country:*", 100).Result()
+			if err != nil {
+				break
+			}
+			for _, k := range keys {
+				cc := k[len("nodes:country:"):]
+				cnt, err := rdb.SCard(rctx, k).Result()
+				if err == nil {
+					globalCountries[cc] = int(cnt)
+				}
+			}
+			ccCursor = nextCursor
+			if ccCursor == 0 {
+				break
+			}
+		}
+	}
+
+	// Build global top countries if available
+	if len(globalCountries) > 0 {
+		countries = make([]countryEntry, 0, len(globalCountries))
+		for cc, n := range globalCountries {
+			countries = append(countries, countryEntry{cc, n})
+		}
+		for i := 0; i < len(countries); i++ {
+			for j := i + 1; j < len(countries); j++ {
+				if countries[j].Nodes > countries[i].Nodes {
+					countries[i], countries[j] = countries[j], countries[i]
+				}
+			}
+		}
+		top5 = countries
+		if len(top5) > 5 {
+			top5 = top5[:5]
+		}
+	}
+
 	result := map[string]interface{}{
-		"active_nodes":     connected,
+		"active_nodes":     globalNodes,
+		"local_nodes":      connected,
 		"unique_nodes_24h": uniqueNodes24h,
 		"unique_nodes_1h":  uniqueNodes1h,
+		"total_countries":  len(globalCountries),
 		"top_countries":    top5,
 		"os_active":        osCount,
 		"os_unique_24h":    uniqueOSCount,
 		"tunnel":           tunnelStats,
 		"proxy":            proxyStats,
 		"timestamp":        time.Now().UTC().Format(time.RFC3339),
+		"redis_nodes":      redisStats["redis_nodes"],
+		"instance_id":      redisStats["instance_id"],
+		"instances":        redisStats["instances"],
 	}
 
 	json.NewEncoder(w).Encode(result)
@@ -3078,7 +3859,37 @@ func handleProxyConn(clientConn net.Conn) {
 	}
 
 	// Parse targeting from auth
-	pTargetNode, pTargetIP, pTargetCountry := parseProxyAuth(req)
+	pTargetNode, pTargetIP, pTargetCountry, _, pSessionID := parseProxyAuthFull(req)
+
+	// Sticky session for plain HTTP (Redis-backed)
+	if pSessionID != "" && pTargetNode == "" && pTargetIP == "" {
+		s, found := stickyLoad(pSessionID)
+		if !found {
+			if val, ok := sessionMap.Load(pSessionID); ok {
+				s = val.(*stickySession)
+				found = true
+			}
+		}
+		if found {
+			conn := hub.GetConnectionByNodeID(s.nodeID)
+			// Cross-GW: node might be on the other GW, try finding same IP locally
+			if conn == nil && s.nodeIP != "" {
+				conn = hub.GetConnectionByIP(s.nodeIP)
+			}
+			if conn != nil {
+				s.lastUsed = time.Now()
+				s.nodeID = conn.NodeID // update to local node ID
+				s.nodeIP = conn.IP
+				stickyStore(pSessionID, s)
+				sessionMap.Store(pSessionID, s)
+				pTargetNode = conn.NodeID
+			} else {
+				// Don't delete from Redis — other GW might still have the node
+				sessionMap.Delete(pSessionID)
+			}
+		}
+	}
+
 	var alt *Connection
 	if pTargetNode != "" {
 		alt = hub.GetConnectionByNodeID(pTargetNode)
@@ -3090,6 +3901,13 @@ func handleProxyConn(clientConn net.Conn) {
 	if alt == nil {
 		clientConn.Write([]byte("HTTP/1.1 503 No Nodes Available\r\n\r\n"))
 		return
+	}
+
+	// Store sticky session for plain HTTP (Redis + local)
+	if pSessionID != "" {
+		ss := &stickySession{nodeID: alt.NodeID, nodeIP: alt.IP, lastUsed: time.Now(), country: pTargetCountry}
+		stickyStore(pSessionID, ss)
+		sessionMap.Store(pSessionID, ss)
 	}
 
 	log.Printf("[HTTP_PROXY] %s %s via node=%s", req.Method, req.URL.String(), alt.NodeID)
@@ -3294,8 +4112,42 @@ func handleCONNECTRaw(clientConn net.Conn, req *http.Request) {
 	_ = cust
 	defer releaseConn(customer)
 
-	// Parse targeting from auth: node-XXX, ip-XXX, country-XX
-	targetNode, targetIP, targetCountry := parseProxyAuth(req)
+	// Parse targeting from auth: node-XXX, ip-XXX, country-XX, session-XXX
+	targetNode, targetIP, targetCountry, _, sessionID := parseProxyAuthFull(req)
+
+	// Sticky session: resolve session_id → node_id (Redis-backed, shared across GW instances)
+	if sessionID != "" && targetNode == "" && targetIP == "" {
+		s, found := stickyLoad(sessionID)
+		if !found {
+			// Fallback: check local cache
+			if val, ok := sessionMap.Load(sessionID); ok {
+				s = val.(*stickySession)
+				found = true
+			}
+		}
+		if found {
+			// Check if the node is still connected
+			conn := hub.GetConnectionByNodeID(s.nodeID)
+			// Cross-GW: node might be on the other GW, try finding same IP locally
+			if conn == nil && s.nodeIP != "" {
+				conn = hub.GetConnectionByIP(s.nodeIP)
+			}
+			if conn != nil {
+				// Node still alive — use it
+				s.lastUsed = time.Now()
+				s.nodeID = conn.NodeID
+				s.nodeIP = conn.IP
+				stickyStore(sessionID, s)
+				sessionMap.Store(sessionID, s)
+				targetNode = conn.NodeID
+				log.Printf("[SESSION] Reusing session %s → node=%s ip=%s", sessionID, targetNode, conn.IP)
+			} else {
+				// Don't delete from Redis — other GW might still have the node
+				sessionMap.Delete(sessionID)
+				log.Printf("[SESSION] Node %s (ip=%s) not on this GW, clearing local cache for session %s", s.nodeID, s.nodeIP, sessionID)
+			}
+		}
+	}
 
 	// If specific node or IP requested, try direct routing
 	if targetNode != "" || targetIP != "" {
@@ -3332,6 +4184,14 @@ func handleCONNECTRaw(clientConn net.Conn, req *http.Request) {
 		log.Printf("[HTTP_PROXY] Tunnel %s established for %s via targeted node %s in %dms",
 			t.ID[:8], target, directConn.NodeID[:16], latencyMs)
 		storeRequest("tunnel", directConn.NodeID, target, true, latencyMs, "")
+
+		// Store sticky session mapping (Redis + local)
+		if sessionID != "" {
+			ss := &stickySession{nodeID: directConn.NodeID, nodeIP: directConn.IP, lastUsed: time.Now(), country: targetCountry}
+			stickyStore(sessionID, ss)
+			sessionMap.Store(sessionID, ss)
+			log.Printf("[SESSION] Stored session %s → node=%s ip=%s (Redis)", sessionID, directConn.NodeID, directConn.IP)
+		}
 
 		// Remove deadline for tunnel relay
 		clientConn.SetDeadline(time.Time{})
@@ -3373,7 +4233,7 @@ func handleCONNECTRaw(clientConn net.Conn, req *http.Request) {
 	}
 
 	// ── Partner pool routing (US residential, 95/5 split) ──
-	if shouldUsePartner(targetCountry) {
+	if sessionID == "" && shouldUsePartner(targetCountry) {
 		// Retry up to 3 different partner servers before fallback
 		triedServers := map[string]bool{}
 		for attempt := 0; attempt < 3; attempt++ {
@@ -3532,6 +4392,14 @@ func handleCONNECTRaw(clientConn net.Conn, req *http.Request) {
 	latencyMs := int(time.Since(connectStart).Milliseconds())
 	log.Printf("[HTTP_PROXY] Tunnel %s established for %s via %s in %dms", winTunnel.ID[:8], target, winConn.NodeID, latencyMs)
 	storeRequest("tunnel", winConn.NodeID, target, true, latencyMs, "")
+
+	// Store sticky session mapping (Redis + local)
+	if sessionID != "" {
+		ss := &stickySession{nodeID: winConn.NodeID, nodeIP: winConn.IP, lastUsed: time.Now(), country: targetCountry}
+		stickyStore(sessionID, ss)
+		sessionMap.Store(sessionID, ss)
+		log.Printf("[SESSION] Stored session %s → node=%s (Redis)", sessionID, winConn.NodeID)
+	}
 
 	// Remove deadline for tunnel relay
 	clientConn.SetDeadline(time.Time{})
@@ -3836,6 +4704,219 @@ func getAPIKeyFromRequest(r *http.Request) string {
 	return ""
 }
 
+// ─── Referral System ────────────────────────────────────────────────────────────
+
+func generateReferralCode() string {
+	const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+	b := make([]byte, 8)
+	crand.Read(b)
+	for i := range b {
+		b[i] = chars[int(b[i])%len(chars)]
+	}
+	return string(b)
+}
+
+func maskEmail(email string) string {
+	parts := strings.Split(email, "@")
+	if len(parts) != 2 || len(parts[0]) == 0 {
+		return "***"
+	}
+	name := parts[0]
+	if len(name) <= 1 {
+		return name + "***@" + parts[1]
+	}
+	return name[:1] + "***@" + parts[1]
+}
+
+// applyReferralBoost checks if user was referred and within boost window, returns multiplier
+func getReferralBoostMultiplier(userID string) float64 {
+	var referredBy sql.NullString
+	var createdAt time.Time
+	err := db.QueryRow(`SELECT referred_by, created_at FROM users WHERE token = $1`, userID).Scan(&referredBy, &createdAt)
+	if err != nil || !referredBy.Valid || referredBy.String == "" {
+		return 1.0
+	}
+	if time.Since(createdAt).Hours() > float64(referralBoostDays*24) {
+		return 1.0
+	}
+	return 1.0 + referralBoostPct/100.0
+}
+
+// awardReferralPassive awards passive earnings to referrer (10% of referee's credits)
+func awardReferralPassive(userID string, credits float64) {
+	if credits <= 0 {
+		return
+	}
+	var referredBy sql.NullString
+	err := db.QueryRow(`SELECT referred_by FROM users WHERE token = $1`, userID).Scan(&referredBy)
+	if err != nil || !referredBy.Valid || referredBy.String == "" {
+		return
+	}
+	// Find referrer's token
+	var referrerToken string
+	err = db.QueryRow(`SELECT token FROM users WHERE referral_code = $1`, referredBy.String).Scan(&referrerToken)
+	if err != nil || referrerToken == "" {
+		return
+	}
+	passive := credits * referralPassivePct / 100.0
+	if passive < 0.01 {
+		return
+	}
+	db.Exec(`UPDATE credit_users SET credits = credits + $1, total_earned = total_earned + $2 WHERE user_id = $3`, passive, passive, referrerToken)
+	db.Exec(`INSERT INTO credit_log (user_id, amount, reason) VALUES ($1, $2, $3)`, referrerToken, passive, fmt.Sprintf("referral_passive from %s", userID))
+}
+
+func handleReferralInfo(w http.ResponseWriter, r *http.Request) {
+	corsHeaders(w)
+	if r.Method == "OPTIONS" {
+		w.WriteHeader(200)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+
+	apiKey := getAPIKeyFromRequest(r)
+	if apiKey == "" {
+		w.WriteHeader(401)
+		json.NewEncoder(w).Encode(map[string]string{"error": "missing api_key"})
+		return
+	}
+
+	var token, referralCode string
+	err := db.QueryRow(`SELECT token, COALESCE(referral_code, '') FROM users WHERE api_key = $1`, apiKey).Scan(&token, &referralCode)
+	if err != nil {
+		w.WriteHeader(404)
+		json.NewEncoder(w).Encode(map[string]string{"error": "user not found"})
+		return
+	}
+
+	// Count referrals
+	var totalReferrals int
+	db.QueryRow(`SELECT COUNT(*) FROM referrals WHERE referrer_user_id = $1 AND status = 'redeemed'`, token).Scan(&totalReferrals)
+
+	// Total earned from referral bonuses
+	var totalEarnedMB float64
+	db.QueryRow(`SELECT COALESCE(SUM(amount), 0) FROM credit_log WHERE user_id = $1 AND (reason = 'referral_bonus' OR reason LIKE 'referral_passive%%')`, token).Scan(&totalEarnedMB)
+
+	// Passive earnings only
+	var passiveEarnings float64
+	db.QueryRow(`SELECT COALESCE(SUM(amount), 0) FROM credit_log WHERE user_id = $1 AND reason LIKE 'referral_passive%%'`, token).Scan(&passiveEarnings)
+
+	// Get referral list
+	type referralEntry struct {
+		Email       string `json:"email"`
+		Date        string `json:"date"`
+		Status      string `json:"status"`
+		NodeRunning bool   `json:"node_running"`
+	}
+	var referrals []referralEntry
+
+	rows, err := db.Query(`SELECT r.referred_user_id, r.created_at, r.status FROM referrals r WHERE r.referrer_user_id = $1 ORDER BY r.created_at DESC LIMIT 50`, token)
+	if err == nil {
+		defer rows.Close()
+		for rows.Next() {
+			var refUserID, status string
+			var createdAt time.Time
+			rows.Scan(&refUserID, &createdAt, &status)
+
+			var email string
+			db.QueryRow(`SELECT email FROM users WHERE token = $1`, refUserID).Scan(&email)
+
+			// Check if referred user has active node
+			var nodeRunning bool
+			var activeCount int
+			db.QueryRow(`SELECT COUNT(*) FROM credit_sessions WHERE user_id = $1 AND disconnected_at IS NULL`, refUserID).Scan(&activeCount)
+			nodeRunning = activeCount > 0
+
+			referrals = append(referrals, referralEntry{
+				Email:       maskEmail(email),
+				Date:        createdAt.Format("2006-01-02"),
+				Status:      status,
+				NodeRunning: nodeRunning,
+			})
+		}
+	}
+	if referrals == nil {
+		referrals = []referralEntry{}
+	}
+
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"referral_code":      referralCode,
+		"referral_link":      "https://iploop.io/signup.html?ref=" + referralCode,
+		"total_referrals":    totalReferrals,
+		"total_earned_mb":    totalEarnedMB,
+		"passive_earnings_mb": passiveEarnings,
+		"referrals":          referrals,
+	})
+}
+
+func handleReferralStats(w http.ResponseWriter, r *http.Request) {
+	corsHeaders(w)
+	if r.Method == "OPTIONS" {
+		w.WriteHeader(200)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+
+	apiKey := getAPIKeyFromRequest(r)
+	if apiKey == "" {
+		w.WriteHeader(401)
+		json.NewEncoder(w).Encode(map[string]string{"error": "missing api_key"})
+		return
+	}
+
+	var token string
+	err := db.QueryRow(`SELECT token FROM users WHERE api_key = $1`, apiKey).Scan(&token)
+	if err != nil {
+		w.WriteHeader(404)
+		json.NewEncoder(w).Encode(map[string]string{"error": "user not found"})
+		return
+	}
+
+	// User's referral count
+	var myReferrals int
+	db.QueryRow(`SELECT COUNT(*) FROM referrals WHERE referrer_user_id = $1 AND status = 'redeemed'`, token).Scan(&myReferrals)
+
+	// Leaderboard position
+	var position int
+	db.QueryRow(`SELECT COUNT(DISTINCT referrer_user_id) + 1 FROM referrals WHERE status = 'redeemed' GROUP BY referrer_user_id HAVING COUNT(*) > $1`, myReferrals).Scan(&position)
+	if position == 0 {
+		position = 1
+	}
+
+	// Total users with referrals
+	var totalReferrers int
+	db.QueryRow(`SELECT COUNT(DISTINCT referrer_user_id) FROM referrals WHERE status = 'redeemed'`).Scan(&totalReferrers)
+
+	// Top 10 leaderboard
+	type leaderEntry struct {
+		Email     string `json:"email"`
+		Referrals int    `json:"referrals"`
+	}
+	var leaderboard []leaderEntry
+	rows, err := db.Query(`SELECT r.referrer_user_id, COUNT(*) as cnt FROM referrals r WHERE r.status = 'redeemed' GROUP BY r.referrer_user_id ORDER BY cnt DESC LIMIT 10`)
+	if err == nil {
+		defer rows.Close()
+		for rows.Next() {
+			var uid string
+			var cnt int
+			rows.Scan(&uid, &cnt)
+			var email string
+			db.QueryRow(`SELECT email FROM users WHERE token = $1`, uid).Scan(&email)
+			leaderboard = append(leaderboard, leaderEntry{Email: maskEmail(email), Referrals: cnt})
+		}
+	}
+	if leaderboard == nil {
+		leaderboard = []leaderEntry{}
+	}
+
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"my_referrals":    myReferrals,
+		"position":        position,
+		"total_referrers": totalReferrers,
+		"leaderboard":     leaderboard,
+	})
+}
+
 func handleAuthSignup(w http.ResponseWriter, r *http.Request) {
 	corsHeaders(w)
 	if r.Method == "OPTIONS" {
@@ -3851,6 +4932,7 @@ func handleAuthSignup(w http.ResponseWriter, r *http.Request) {
 	var req struct {
 		Email    string `json:"email"`
 		Password string `json:"password"`
+		Ref      string `json:"ref"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		json.NewEncoder(w).Encode(map[string]string{"error": "invalid JSON"})
@@ -3858,11 +4940,20 @@ func handleAuthSignup(w http.ResponseWriter, r *http.Request) {
 	}
 
 	req.Email = strings.TrimSpace(strings.ToLower(req.Email))
+	req.Ref = strings.TrimSpace(strings.ToUpper(req.Ref))
 	if !emailRegex.MatchString(req.Email) {
 		w.WriteHeader(400)
 		json.NewEncoder(w).Encode(map[string]string{"error": "invalid email format"})
 		return
 	}
+
+	// Anti-abuse: block disposable email domains
+	if isDisposableEmail(req.Email) {
+		w.WriteHeader(400)
+		json.NewEncoder(w).Encode(map[string]string{"error": "disposable email addresses are not allowed"})
+		return
+	}
+
 	if len(req.Password) < 8 {
 		w.WriteHeader(400)
 		json.NewEncoder(w).Encode(map[string]string{"error": "password must be at least 8 characters"})
@@ -3916,15 +5007,184 @@ func handleAuthSignup(w http.ResponseWriter, r *http.Request) {
 		VALUES ($1, $2, $3, $4, $5, 1) ON CONFLICT (api_key) DO NOTHING`,
 		apiKey, req.Email, int64(0.5*1024*1024*1024), 10, 50)
 
-	log.Printf("[AUTH] signup: user=%d email=%s ip=%s", userID, req.Email, clientIP)
+	// Generate referral code for new user
+	refCode := generateReferralCode()
+	db.Exec(`UPDATE users SET referral_code = $1 WHERE id = $2`, refCode, userID)
+
+	// Process referral if ref code provided
+	var referredByCode string
+	if req.Ref != "" {
+		var referrerToken string
+		err := db.QueryRow(`SELECT token FROM users WHERE referral_code = $1`, req.Ref).Scan(&referrerToken)
+		if err == nil && referrerToken != "" {
+			referredByCode = req.Ref
+			// Set referred_by on new user
+			db.Exec(`UPDATE users SET referred_by = $1 WHERE id = $2`, req.Ref, userID)
+
+			// Award bonus credits to both (2 GB each)
+			db.Exec(`UPDATE credit_users SET credits = credits + $1, total_earned = total_earned + $2 WHERE user_id = $3`, referralBonusMB, referralBonusMB, referrerToken)
+			db.Exec(`INSERT INTO credit_log (user_id, amount, reason) VALUES ($1, $2, 'referral_bonus')`, referrerToken, referralBonusMB)
+
+			db.Exec(`UPDATE credit_users SET credits = credits + $1, total_earned = total_earned + $2 WHERE user_id = $3`, referralBonusMB, referralBonusMB, token)
+			db.Exec(`INSERT INTO credit_log (user_id, amount, reason) VALUES ($1, $2, 'referral_bonus')`, token, referralBonusMB)
+
+			// Log referral event
+			db.Exec(`INSERT INTO referrals (referrer_user_id, referred_user_id, referral_code, status, redeemed_at) VALUES ($1, $2, $3, 'redeemed', CURRENT_TIMESTAMP)`,
+				referrerToken, token, req.Ref)
+
+			log.Printf("[REFERRAL] %s referred by %s (code=%s), 2GB bonus each", req.Email, referrerToken, req.Ref)
+		}
+	}
+
+	log.Printf("[AUTH] signup: user=%d email=%s ip=%s ref=%s", userID, req.Email, clientIP, referredByCode)
+
+	// Send welcome email (async, non-blocking)
+	go sendWelcomeEmail(req.Email, apiKey, token)
 
 	json.NewEncoder(w).Encode(map[string]interface{}{
-		"user_id": userID,
-		"email":   req.Email,
-		"api_key": apiKey,
-		"token":   token,
-		"free_gb": 0.5,
+		"user_id":       userID,
+		"email":         req.Email,
+		"api_key":       apiKey,
+		"token":         token,
+		"free_gb":       0.5,
+		"referral_code": refCode,
 	})
+}
+
+// ─── Welcome Email via Resend ──────────────────────────────────────────────────
+
+const resendAPIKey = "re_be1nbzw6_LwbJ9idGDigxztWK2uKKtVVv"
+
+func sendWelcomeEmail(email, apiKey, token string) {
+	htmlBody := fmt.Sprintf(`<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"></head>
+<body style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;max-width:600px;margin:0 auto;background:#0a0a0a;color:#e0e0e0;padding:40px 20px;">
+
+<div style="text-align:center;margin-bottom:30px;">
+  <h1 style="color:#00d4ff;font-size:28px;margin:0;">🌐 Welcome to IPLoop</h1>
+  <p style="color:#888;font-size:14px;">Your residential proxy network is ready</p>
+</div>
+
+<div style="background:#1a1a2e;border-radius:12px;padding:24px;margin-bottom:20px;">
+  <h2 style="color:#00d4ff;font-size:18px;margin-top:0;">🎁 Your Free Tier</h2>
+  <p>You start with <strong style="color:#00ff88;">0.5 GB free</strong> proxy data. No credit card needed.</p>
+  <p style="font-size:13px;color:#888;">Your API Key:</p>
+  <code style="background:#0d0d1a;color:#00ff88;padding:8px 12px;border-radius:6px;display:block;word-break:break-all;font-size:13px;">%s</code>
+</div>
+
+<div style="background:#1a1a2e;border-radius:12px;padding:24px;margin-bottom:20px;">
+  <h2 style="color:#00d4ff;font-size:18px;margin-top:0;">🚀 Quick Start</h2>
+  <p>Use your proxy right now:</p>
+  <code style="background:#0d0d1a;color:#ccc;padding:8px 12px;border-radius:6px;display:block;font-size:12px;word-break:break-all;">curl -x "http://user:%s@gateway.iploop.io:8880" https://httpbin.org/ip</code>
+  <p style="margin-top:12px;">Target a country:</p>
+  <code style="background:#0d0d1a;color:#ccc;padding:8px 12px;border-radius:6px;display:block;font-size:12px;word-break:break-all;">curl -x "http://user:%s-country-US@gateway.iploop.io:8880" https://example.com</code>
+</div>
+
+<div style="background:#1a1a2e;border-radius:12px;padding:24px;margin-bottom:20px;">
+  <h2 style="color:#00d4ff;font-size:18px;margin-top:0;">💰 Earn Free Proxy Credits</h2>
+  <p>Share your unused bandwidth and earn credits. Just run:</p>
+  <code style="background:#0d0d1a;color:#00ff88;padding:8px 12px;border-radius:6px;display:block;font-size:12px;">docker run -d --name iploop-node --restart=always ultronloop2026/iploop-node:latest</code>
+
+  <table style="width:100%%;margin-top:16px;border-collapse:collapse;font-size:14px;">
+    <tr style="border-bottom:1px solid #333;">
+      <th style="text-align:left;padding:8px;color:#888;">Tier</th>
+      <th style="text-align:left;padding:8px;color:#888;">Uptime</th>
+      <th style="text-align:left;padding:8px;color:#888;">Rate</th>
+      <th style="text-align:left;padding:8px;color:#888;">Daily</th>
+    </tr>
+    <tr style="border-bottom:1px solid #222;">
+      <td style="padding:8px;">🥉 Bronze</td>
+      <td style="padding:8px;">0 – 6h</td>
+      <td style="padding:8px;">50 MB/hr</td>
+      <td style="padding:8px;">300 MB</td>
+    </tr>
+    <tr style="border-bottom:1px solid #222;">
+      <td style="padding:8px;">🥈 Silver</td>
+      <td style="padding:8px;">6 – 24h</td>
+      <td style="padding:8px;">75 MB/hr</td>
+      <td style="padding:8px;">1.35 GB</td>
+    </tr>
+    <tr>
+      <td style="padding:8px;">🥇 Gold</td>
+      <td style="padding:8px;">24h+</td>
+      <td style="padding:8px;">100 MB/hr</td>
+      <td style="padding:8px;color:#00ff88;"><strong>2.4 GB/day</strong></td>
+    </tr>
+  </table>
+  <p style="color:#888;font-size:13px;margin-top:8px;">Run 24/7 → earn <strong style="color:#00ff88;">~70 GB/month</strong> in free proxy credits!</p>
+</div>
+
+<div style="background:#1a1a2e;border-radius:12px;padding:24px;margin-bottom:20px;">
+  <h2 style="color:#00d4ff;font-size:18px;margin-top:0;">📊 Upgrade Plans</h2>
+  <table style="width:100%%;border-collapse:collapse;font-size:14px;">
+    <tr style="border-bottom:1px solid #333;">
+      <th style="text-align:left;padding:8px;color:#888;">Plan</th>
+      <th style="text-align:left;padding:8px;color:#888;">Data</th>
+      <th style="text-align:left;padding:8px;color:#888;">Price</th>
+      <th style="text-align:left;padding:8px;color:#888;">Per GB</th>
+    </tr>
+    <tr style="border-bottom:1px solid #222;">
+      <td style="padding:8px;">Free</td><td style="padding:8px;">0.5 GB</td><td style="padding:8px;">$0</td><td style="padding:8px;">Free</td>
+    </tr>
+    <tr style="border-bottom:1px solid #222;">
+      <td style="padding:8px;">Starter</td><td style="padding:8px;">10 GB</td><td style="padding:8px;">$10/mo</td><td style="padding:8px;">$1.00</td>
+    </tr>
+    <tr style="border-bottom:1px solid #222;">
+      <td style="padding:8px;">Growth</td><td style="padding:8px;">50 GB</td><td style="padding:8px;">$40/mo</td><td style="padding:8px;">$0.80</td>
+    </tr>
+    <tr>
+      <td style="padding:8px;">Business</td><td style="padding:8px;">200 GB</td><td style="padding:8px;">$120/mo</td><td style="padding:8px;">$0.60</td>
+    </tr>
+    <tr>
+      <td style="padding:8px;">Enterprise</td><td style="padding:8px;">1 TB+</td><td style="padding:8px;">Custom</td><td style="padding:8px;">$0.40+</td>
+    </tr>
+  </table>
+  <p style="color:#aaa;font-size:14px;margin-top:12px;">Need more? Enterprise plans from $0.40/GB → <a href="mailto:partners@iploop.io" style="color:#00d4ff;">partners@iploop.io</a></p>
+</div>
+
+<div style="background:#1a1a2e;border-radius:12px;padding:24px;margin-bottom:20px;">
+  <h2 style="color:#00d4ff;font-size:18px;margin-top:0;">🌍 Network</h2>
+  <p><strong>2,000,000+</strong> residential IPs • <strong>50+</strong> countries • Android, Windows, Mac & Smart TV devices</p>
+</div>
+
+<div style="text-align:center;padding:20px 0;border-top:1px solid #222;">
+  <p style="color:#888;font-size:13px;">
+    <a href="https://iploop.io" style="color:#00d4ff;text-decoration:none;">Dashboard</a> •
+    <a href="https://github.com/iploop/iploop-node" style="color:#00d4ff;text-decoration:none;">GitHub</a> •
+    <a href="https://iploop.io/privacy.html" style="color:#00d4ff;text-decoration:none;">Privacy</a> •
+    <a href="https://iploop.io/terms.html" style="color:#00d4ff;text-decoration:none;">Terms</a>
+  </p>
+  <p style="color:#888;font-size:13px;">Questions? Email <a href="mailto:partners@iploop.io" style="color:#00d4ff;text-decoration:none;">partners@iploop.io</a> or chat on <a href="https://t.me/iploop_support" style="color:#00d4ff;text-decoration:none;">Telegram</a></p>
+  <p style="color:#555;font-size:11px;">© 2026 IPLoop. All rights reserved.</p>
+</div>
+
+</body>
+</html>`, apiKey, apiKey, apiKey)
+
+	payload := fmt.Sprintf(`{"from":"IPLoop <noreply@iploop.io>","to":["%s"],"subject":"Welcome to IPLoop — Your API Key & Free 0.5 GB","html":%s}`,
+		email, strconv.Quote(htmlBody))
+
+	req, err := http.NewRequest("POST", "https://api.resend.com/emails", strings.NewReader(payload))
+	if err != nil {
+		log.Printf("[EMAIL] welcome email build error: %v", err)
+		return
+	}
+	req.Header.Set("Authorization", "Bearer "+resendAPIKey)
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		log.Printf("[EMAIL] welcome email send error: %v", err)
+		return
+	}
+	defer resp.Body.Close()
+	body, _ := io.ReadAll(resp.Body)
+	if resp.StatusCode >= 300 {
+		log.Printf("[EMAIL] welcome email failed (%d): %s", resp.StatusCode, string(body[:min(len(body), 200)]))
+	} else {
+		log.Printf("[EMAIL] welcome email sent to %s", email)
+	}
 }
 
 func handleAuthLogin(w http.ResponseWriter, r *http.Request) {
@@ -4282,6 +5542,519 @@ func min(a, b int) int {
 	return b
 }
 
+// ─── Internal Relay Endpoint (cross-instance routing) ──────────────────────────
+
+func handleInternalRelay(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	var payload struct {
+		NodeID string `json:"node_id"`
+		Target string `json:"target"` // host:port
+	}
+	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
+		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		return
+	}
+
+	if payload.NodeID == "" || payload.Target == "" {
+		http.Error(w, "Missing node_id or target", http.StatusBadRequest)
+		return
+	}
+
+	host, port, err := net.SplitHostPort(payload.Target)
+	if err != nil {
+		host = payload.Target
+		port = "443"
+	}
+
+	// Verify node is on THIS instance
+	conn := hub.GetConnectionByNodeID(payload.NodeID)
+	if conn == nil {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusNotFound)
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"success": false,
+			"error":   "node not found on this instance",
+		})
+		return
+	}
+
+	tunnel, err := hub.tunnelManager.OpenTunnel(payload.NodeID, host, port)
+	if err != nil {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusBadGateway)
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"success": false,
+			"error":   err.Error(),
+		})
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"success":     true,
+		"tunnel_id":   tunnel.ID,
+		"instance_id": instanceID,
+	})
+}
+
+// ─── Support API Endpoints ──────────────────────────────────────────────────────
+
+func extractAPIKey(r *http.Request) string {
+	if k := r.URL.Query().Get("api_key"); k != "" {
+		return k
+	}
+	auth := r.Header.Get("Authorization")
+	if strings.HasPrefix(auth, "Bearer ") {
+		return strings.TrimPrefix(auth, "Bearer ")
+	}
+	return ""
+}
+
+func getActiveNodeCount() int {
+	// Use Redis to get global count across all instances
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	defer cancel()
+	total := 0
+	var cursor uint64
+	for {
+		keys, nextCursor, err := rdb.Scan(ctx, cursor, "nodes:country:*", 100).Result()
+		if err != nil {
+			break
+		}
+		for _, k := range keys {
+			cnt, err := rdb.SCard(ctx, k).Result()
+			if err == nil {
+				total += int(cnt)
+			}
+		}
+		cursor = nextCursor
+		if cursor == 0 {
+			break
+		}
+	}
+	// Fallback to local hub count if Redis returned 0
+	if total == 0 {
+		total = hub.Count()
+	}
+	return total
+}
+
+func getTopCountries(n int) []string {
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	defer cancel()
+	type cc struct {
+		name  string
+		count int64
+	}
+	var countries []cc
+	var cursor uint64
+	for {
+		keys, nextCursor, err := rdb.Scan(ctx, cursor, "nodes:country:*", 100).Result()
+		if err != nil {
+			break
+		}
+		for _, k := range keys {
+			country := k[len("nodes:country:"):]
+			if country == "" || country == "unknown" {
+				continue
+			}
+			cnt, err := rdb.SCard(ctx, k).Result()
+			if err == nil && cnt > 0 {
+				countries = append(countries, cc{country, cnt})
+			}
+		}
+		cursor = nextCursor
+		if cursor == 0 {
+			break
+		}
+	}
+	sort.Slice(countries, func(i, j int) bool { return countries[i].count > countries[j].count })
+	result := make([]string, 0, n)
+	for i := 0; i < len(countries) && i < n; i++ {
+		result = append(result, strings.ToUpper(countries[i].name))
+	}
+	return result
+}
+
+func getAvailableCountryCount() int {
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	defer cancel()
+	count := 0
+	var cursor uint64
+	for {
+		keys, nextCursor, err := rdb.Scan(ctx, cursor, "nodes:country:*", 100).Result()
+		if err != nil {
+			break
+		}
+		for _, k := range keys {
+			country := k[len("nodes:country:"):]
+			if country == "" || country == "unknown" {
+				continue
+			}
+			cnt, err := rdb.SCard(ctx, k).Result()
+			if err == nil && cnt > 0 {
+				count++
+			}
+		}
+		cursor = nextCursor
+		if cursor == 0 {
+			break
+		}
+	}
+	return count
+}
+
+func handleSupportStatus(w http.ResponseWriter, r *http.Request) {
+	if r.Method != "GET" {
+		http.Error(w, "Method not allowed", 405)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"status":              "operational",
+		"network":             "High volume residential IP pool worldwide",
+		"countries_available": 195,
+		"coverage":            "High availability across all regions",
+		"protocols":           []string{"HTTP CONNECT", "SOCKS5"},
+		"proxy_endpoint":      "gateway.iploop.io:8880",
+		"supported_targeting": []string{"country", "city", "session", "sticky"},
+		"docs":                "https://docs.iploop.io",
+	})
+}
+
+func handleSupportDiagnose(w http.ResponseWriter, r *http.Request) {
+	if r.Method != "GET" {
+		http.Error(w, "Method not allowed", 405)
+		return
+	}
+	apiKey := extractAPIKey(r)
+	if apiKey == "" {
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"key_valid": false,
+			"error":     "API key required",
+			"fix":       "Provide api_key query param or Authorization: Bearer header",
+		})
+		return
+	}
+
+	// Look up user by api_key
+	var plan string
+	var freeGBRemaining float64
+	err := db.QueryRow(`SELECT COALESCE(plan, 'free'), COALESCE(free_gb_remaining, 0.5) FROM users WHERE api_key = $1`, apiKey).Scan(&plan, &freeGBRemaining)
+	if err != nil {
+		// Also check customers table
+		cust, custErr := getCustomer(apiKey)
+		if custErr != nil || cust == nil {
+			w.Header().Set("Content-Type", "application/json")
+			json.NewEncoder(w).Encode(map[string]interface{}{
+				"key_valid": false,
+				"error":     "API key not found",
+				"fix":       "Sign up at https://iploop.io/signup.html",
+			})
+			return
+		}
+		plan = "starter"
+		freeGBRemaining = float64(cust.QuotaBytes) / (1024 * 1024 * 1024)
+	}
+
+	// Get quota based on plan
+	var quotaGB float64
+	switch plan {
+	case "free":
+		quotaGB = freeGBRemaining
+	case "starter":
+		quotaGB = 10.0
+	case "pro":
+		quotaGB = 100.0
+	case "enterprise":
+		quotaGB = 1000.0
+	default:
+		quotaGB = freeGBRemaining
+	}
+
+	// Get used bytes from bandwidth table
+	usedBytes := getCustomerUsedBytes(apiKey)
+	usedGB := float64(usedBytes) / (1024 * 1024 * 1024)
+	remainingGB := quotaGB - usedGB
+	if remainingGB < 0 {
+		remainingGB = 0
+	}
+	usagePercent := 0
+	if quotaGB > 0 {
+		usagePercent = int((usedGB / quotaGB) * 100)
+	}
+
+	// Suggestion
+	suggestion := fmt.Sprintf("Your key is healthy. %d%% quota remaining.", 100-usagePercent)
+	if usagePercent > 100 {
+		suggestion = "Quota exceeded. Upgrade at dashboard.iploop.io"
+	} else if usagePercent > 80 {
+		suggestion = fmt.Sprintf("⚠️ Warning: %d%% of quota used. Consider upgrading at dashboard.iploop.io", usagePercent)
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"key_valid":           true,
+		"plan":                plan,
+		"quota_gb":            math.Round(quotaGB*100) / 100,
+		"used_gb":             math.Round(usedGB*100) / 100,
+		"remaining_gb":        math.Round(remainingGB*100) / 100,
+		"usage_percent":       usagePercent,
+		"network":             "High volume residential IP pool available",
+		"countries_available": 195,
+		"best_countries":      []string{"US", "GB", "CA", "DE", "IN", "FR", "BR", "AU", "JP", "KR"},
+		"suggestion":          suggestion,
+	})
+}
+
+func handleSupportErrors(w http.ResponseWriter, r *http.Request) {
+	if r.Method != "GET" {
+		http.Error(w, "Method not allowed", 405)
+		return
+	}
+	// Extract error code from path: /api/support/errors/407
+	path := r.URL.Path
+	parts := strings.Split(strings.TrimSuffix(path, "/"), "/")
+	codeStr := ""
+	if len(parts) > 0 {
+		codeStr = parts[len(parts)-1]
+	}
+	code, _ := strconv.Atoi(codeStr)
+
+	errorMap := map[int][2]string{
+		407: {"Proxy Authentication Required — invalid or missing API key", "Check api_key in proxy password field. Format: user:YOUR_API_KEY-country-US"},
+		403: {"Forbidden — quota exceeded or account suspended", "Check quota: GET /api/support/diagnose?api_key=YOUR_KEY"},
+		502: {"Bad Gateway — no available node for requested country", "Try a different country or retry in 30 seconds"},
+		503: {"Service temporarily unavailable", "System is under maintenance. Retry in a few minutes"},
+		504: {"Gateway Timeout — node did not respond", "Retry the request. If persistent, try country-US for best availability"},
+		429: {"Rate limit exceeded", "Reduce request frequency. Max 60 requests/min per IP"},
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	if entry, ok := errorMap[code]; ok {
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"code":        code,
+			"error":       entry[0],
+			"fix":         entry[1],
+			"docs":        "https://docs.iploop.io",
+			"diagnose":    "/api/support/diagnose?api_key=YOUR_KEY",
+		})
+	} else {
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"code":    code,
+			"error":   "Unknown error code",
+			"fix":     "Contact support@iploop.io",
+			"docs":    "https://docs.iploop.io",
+		})
+	}
+}
+
+func handleSupportAsk(w http.ResponseWriter, r *http.Request) {
+	if r.Method != "POST" {
+		http.Error(w, "Method not allowed", 405)
+		return
+	}
+	apiKey := extractAPIKey(r)
+	if apiKey == "" {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(401)
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"error": "API key required",
+			"fix":   "Provide api_key query param or Authorization: Bearer header",
+		})
+		return
+	}
+
+	var body struct {
+		Question string `json:"question"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil || body.Question == "" {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(400)
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"error": "Please provide a question in JSON body: {\"question\": \"your question\"}",
+		})
+		return
+	}
+
+	q := strings.ToLower(body.Question)
+	var answer string
+	related := map[string]interface{}{}
+
+	switch {
+	case strings.Contains(q, "timeout") || strings.Contains(q, "slow") || strings.Contains(q, "latency") || strings.Contains(q, "speed") || strings.Contains(q, "performance") || strings.Contains(q, "response time"):
+		answer = "For best speed: 1) Use country-US — largest pool, fastest response. 2) Use sticky sessions for multi-request flows. 3) Avoid small countries during off-peak hours. 4) Set timeout to 30s for first request. 5) If persistent timeouts, check your quota via /api/support/diagnose. Avg response time: <2s for US/EU targets."
+		related["best_countries_speed"] = []string{"US", "GB", "DE", "CA", "FR"}
+		related["tip"] = "US pool has highest availability 24/7"
+		related["diagnose"] = "/api/support/diagnose?api_key=" + apiKey
+
+	case strings.Contains(q, "quota") || strings.Contains(q, "limit") || strings.Contains(q, "bandwidth") || strings.Contains(q, "usage") || strings.Contains(q, "remaining") || strings.Contains(q, "how much"):
+		// Get their usage
+		usedBytes := getCustomerUsedBytes(apiKey)
+		usedGB := float64(usedBytes) / (1024 * 1024 * 1024)
+		answer = fmt.Sprintf("Your current usage this month: %.2f GB. Check your quota: GET /api/support/diagnose?api_key=YOUR_KEY. Shows plan, used GB, remaining GB, usage percent. When quota is exceeded, requests return 403. Upgrade at dashboard.iploop.io or earn credits by running a Docker node.", usedGB)
+		related["check"] = "/api/support/diagnose?api_key=" + apiKey
+		related["earn"] = "docker run -d ultronloop2026/iploop-node:latest"
+		related["upgrade"] = "https://dashboard.iploop.io"
+
+	case strings.Contains(q, "how many") || strings.Contains(q, "pool size") || strings.Contains(q, "ips"):
+		answer = "Our network spans high volume residential IPs across 195+ countries with high availability in all major regions."
+		related["docs"] = "https://docs.iploop.io"
+
+	case strings.Contains(q, "countr") || strings.Contains(q, "geo") || strings.Contains(q, "location"):
+		answer = "IPLoop covers 195+ countries with high volume residential IPs. High availability in US, UK, Canada, Germany, India, France, Brazil, Australia, Japan, South Korea and many more."
+		related["example"] = "user:YOUR_API_KEY-country-DE"
+		related["docs"] = "https://docs.iploop.io"
+
+	case strings.Contains(q, "price") || strings.Contains(q, "plan") || strings.Contains(q, "upgrade"):
+		answer = "Plans: Free (0.5 GB), Starter ($49/mo, 10 GB), Pro ($199/mo, 100 GB), Enterprise (custom). Upgrade at dashboard.iploop.io"
+		related["pricing"] = "https://iploop.io/#pricing"
+		related["dashboard"] = "https://dashboard.iploop.io"
+
+	case strings.Contains(q, "error") || strings.Contains(q, "fail"):
+		answer = "Run a diagnostic check on your API key to identify the issue. Common errors: 407 (bad auth), 403 (quota exceeded), 502 (no nodes for country)."
+		related["diagnose"] = "/api/support/diagnose?api_key=" + apiKey
+		related["errors"] = "/api/support/errors/{code}"
+
+	case strings.Contains(q, "captcha") || strings.Contains(q, "recaptcha") || strings.Contains(q, "hcaptcha") || strings.Contains(q, "challenge"):
+		answer = "IPLoop provides clean residential IPs to minimize CAPTCHAs. For CAPTCHA solving, we recommend integrating a third-party solver alongside our proxy: 2Captcha (2captcha.com), Anti-Captcha (anti-captcha.com), CapMonster (capmonster.cloud), or CapsOver (capsolver.com). Use sticky sessions (-session-ID) to maintain the same IP during CAPTCHA solving."
+		related["tip"] = "Use -session-ID in your proxy password for consistent IP during CAPTCHA flow"
+		related["recommended_solvers"] = []string{"2captcha.com", "anti-captcha.com", "capmonster.cloud", "capsolver.com"}
+
+	case strings.Contains(q, "block") || strings.Contains(q, "blocked") || strings.Contains(q, "ban") || strings.Contains(q, "banned") || strings.Contains(q, "detect") || strings.Contains(q, "fingerprint"):
+		answer = "To reduce blocks: 1) Use sticky sessions for consistent IP identity. 2) Rotate user-agents matching your target country. 3) Use city-level targeting for local IP appearance. 4) Add delays between requests (2-5s). 5) For browser automation, use residential IPs with tools like Puppeteer/Playwright with stealth plugins."
+		related["tip"] = "Format: user:KEY-country-US-city-miami-session-myid@gateway.iploop.io:8880"
+		related["tools"] = []string{"puppeteer-extra-plugin-stealth", "playwright-stealth"}
+
+	case strings.Contains(q, "browser") || strings.Contains(q, "headless") || strings.Contains(q, "puppeteer") || strings.Contains(q, "playwright") || strings.Contains(q, "selenium"):
+		answer = "IPLoop works great with browser automation. For Puppeteer/Playwright, set the proxy in launch options. Use sticky sessions for multi-page flows. Combine with stealth plugins to reduce detection. Example: --proxy-server=http://gateway.iploop.io:8880 with auth user:KEY-country-US-session-browse1"
+		related["example_puppeteer"] = "puppeteer.launch({args: ['--proxy-server=http://gateway.iploop.io:8880']})"
+		related["stealth"] = "npm i puppeteer-extra-plugin-stealth"
+
+	case strings.Contains(q, "serp") || strings.Contains(q, "google") || strings.Contains(q, "search engine") || strings.Contains(q, "bing") || strings.Contains(q, "search results"):
+		answer = "For SERP scraping through IPLoop: 1) Use country-targeted IPs matching your search locale (country-US for google.com). 2) Use sticky sessions per search session (-session-google1). 3) Rotate IPs between searches, not during. 4) Set realistic headers (Accept-Language matching country). 5) Add 2-5s random delays between requests. 6) For Google specifically: use city-level targeting for localized results. We recommend Puppeteer/Playwright with stealth plugin for JS-rendered SERPs."
+		related["example"] = "user:KEY-country-US-city-newyork-session-serp001@gateway.iploop.io:8880"
+		related["tools"] = []string{"puppeteer-extra-plugin-stealth", "cheerio for parsing"}
+		related["tip"] = "Rotate session ID per search, keep same session for pagination"
+
+	case strings.Contains(q, "scale") || strings.Contains(q, "scaling") || strings.Contains(q, "high volume") || strings.Contains(q, "100k") || strings.Contains(q, "10k") || strings.Contains(q, "1000") || strings.Contains(q, "concurrent") || strings.Contains(q, "parallel") || strings.Contains(q, "bulk"):
+		answer = "Scaling best practices with IPLoop: 1) Use rotating sessions (new session ID per request) for maximum IP diversity. 2) Spread requests across multiple countries when possible. 3) For 1K+/hour: use connection pooling, keep-alive, and async requests. 4) For 10K+/hour: distribute across multiple API keys or contact us for Enterprise rate limits. 5) For 100K+/day: use our Enterprise plan with dedicated support. Monitor your usage via /api/support/diagnose."
+		related["rate_limits"] = map[string]string{"free": "30 req/min", "starter": "120 req/min", "growth": "300 req/min", "business": "600 req/min", "enterprise": "custom"}
+		related["tip"] = "Enterprise plan includes dedicated account manager and custom rate limits"
+
+	case strings.Contains(q, "data") || strings.Contains(q, "pipeline") || strings.Contains(q, "etl") || strings.Contains(q, "scrape") || strings.Contains(q, "scraping") || strings.Contains(q, "crawl") || strings.Contains(q, "crawling") || strings.Contains(q, "extract"):
+		answer = "Building a data pipeline with IPLoop: 1) Proxy layer: use our HTTP CONNECT proxy with country targeting. 2) Browser layer: Puppeteer/Playwright for JS-rendered pages, or raw HTTP for static content. 3) Parser layer: Cheerio/BeautifulSoup for HTML, or use readability for article extraction. 4) Storage: stream results to your DB/S3. 5) Use sticky sessions for multi-page crawls (login flows, pagination). 6) Monitor quota via /api/support/diagnose. We handle the IP infrastructure — you build the logic."
+		related["stack"] = map[string]string{"proxy": "IPLoop HTTP CONNECT", "browser": "Puppeteer + stealth", "parser": "Cheerio / BeautifulSoup", "scheduler": "Bull / Celery"}
+		related["tip"] = "Use session IDs to maintain state across paginated crawls"
+
+	case strings.Contains(q, "rotate") || strings.Contains(q, "rotation") || strings.Contains(q, "ip rotation") || strings.Contains(q, "new ip"):
+		answer = "IP rotation with IPLoop: 1) Auto-rotate: every new request without a session ID gets a fresh IP. 2) Sticky sessions: add -session-MYID to keep the same IP for multiple requests. 3) Timed rotation: create new session IDs on your schedule (per minute, per page, etc). 4) Per-country rotation: combine country targeting with rotation for geo-specific pools. Best practice: rotate between searches, keep same IP during multi-step flows."
+		related["formats"] = map[string]string{"auto_rotate": "user:KEY-country-US@gateway.iploop.io:8880", "sticky": "user:KEY-country-US-session-abc@gateway.iploop.io:8880"}
+		related["tip"] = "Session IDs can be any string — use descriptive names like 'google-search-1'"
+
+	case strings.Contains(q, "auth") || strings.Contains(q, "authentication") || strings.Contains(q, "login") || strings.Contains(q, "password") || strings.Contains(q, "credentials") || strings.Contains(q, "proxy auth"):
+		answer = "Proxy authentication format: http://user:YOUR_API_KEY@gateway.iploop.io:8880. Your API key goes in the password field. Username can be anything. Add targeting: user:KEY-country-US-session-abc@gateway.iploop.io:8880. Get your key at iploop.io/signup.html"
+		related["format"] = "http://user:API_KEY-country-XX-session-ID@gateway.iploop.io:8880"
+
+	case strings.Contains(q, "setup") || strings.Contains(q, "install") || strings.Contains(q, "getting started") || strings.Contains(q, "how to use") || strings.Contains(q, "quickstart") || strings.Contains(q, "tutorial"):
+		answer = "Quick start: 1) Sign up at iploop.io/signup.html — get your API key instantly. 2) Test: curl -x http://user:YOUR_KEY@gateway.iploop.io:8880 https://httpbin.org/ip. 3) Add country: curl -x http://user:YOUR_KEY-country-US@gateway.iploop.io:8880 https://httpbin.org/ip. 4) Check quota: GET /api/support/diagnose?api_key=YOUR_KEY. Done in 30 seconds."
+		related["signup"] = "https://iploop.io/signup.html"
+		related["docs"] = "https://github.com/iploop/iploop-node/blob/main/docs/SUPPORT-API.md"
+
+	case strings.Contains(q, "connect") || strings.Contains(q, "connection") || strings.Contains(q, "refused") || strings.Contains(q, "reset") || strings.Contains(q, "closed") || strings.Contains(q, "socket") || strings.Contains(q, "tcp"):
+		answer = "Connection issues: 1) Verify your API key is valid: GET /api/support/diagnose?api_key=YOUR_KEY. 2) Check proxy format: http://user:KEY@gateway.iploop.io:8880. 3) Port 8880 for HTTP CONNECT. 4) If connection refused: check your firewall allows outbound to port 8880. 5) If connection reset: retry — a different node will be selected. 6) For persistent issues: contact support@iploop.io"
+		related["ports"] = map[string]int{"http_connect": 8880, "api": 9443}
+
+	case strings.Contains(q, "dns") || strings.Contains(q, "resolve") || strings.Contains(q, "domain"):
+		answer = "DNS resolution happens on the exit node (residential IP), not on your machine. This means target sites see DNS queries from residential IPs. If you need specific DNS: use SOCKS5 proxy mode. For DNS leaks: ensure your client is configured to resolve through the proxy."
+		related["tip"] = "HTTP CONNECT proxies resolve DNS on the exit node by default"
+
+	case strings.Contains(q, "bill") || strings.Contains(q, "billing") || strings.Contains(q, "invoice") || strings.Contains(q, "charge") || strings.Contains(q, "payment") || strings.Contains(q, "pay") || strings.Contains(q, "credit card") || strings.Contains(q, "refund"):
+		answer = "Billing info: Manage your subscription at dashboard.iploop.io. Plans: Free (0.5GB), Starter $10/10GB, Growth $40/50GB, Business $120/200GB, Enterprise custom. Upgrade anytime — prorated. Cancel anytime. For billing issues: support@iploop.io"
+		related["dashboard"] = "https://dashboard.iploop.io"
+		related["plans"] = map[string]string{"free": "0.5GB", "starter": "10GB/$10", "growth": "50GB/$40", "business": "200GB/$120"}
+
+	case strings.Contains(q, "cancel") || strings.Contains(q, "downgrade") || strings.Contains(q, "unsubscribe"):
+		answer = "To cancel or downgrade: visit dashboard.iploop.io or contact support@iploop.io. Cancellation is immediate, no lock-in. Remaining quota stays active until end of billing period. You can always use the Free tier (0.5GB/month) after cancellation."
+		related["support"] = "support@iploop.io"
+
+	case strings.Contains(q, "python") || strings.Contains(q, "requests") || strings.Contains(q, "aiohttp") || strings.Contains(q, "httpx"):
+		answer = "Python integration: proxies = {'http': 'http://user:KEY-country-US@gateway.iploop.io:8880', 'https': 'http://user:KEY-country-US@gateway.iploop.io:8880'}. Works with requests, aiohttp, httpx, scrapy. For async: use aiohttp with proxy parameter. For Scrapy: set HTTPPROXY_AUTH_ENCODING and proxy middleware."
+		related["requests"] = "requests.get(url, proxies=proxies)"
+		related["aiohttp"] = "session.get(url, proxy='http://user:KEY@gateway.iploop.io:8880')"
+		related["scrapy"] = "DOWNLOADER_MIDDLEWARES HttpProxyMiddleware"
+
+	case strings.Contains(q, "nodejs") || strings.Contains(q, "javascript") || strings.Contains(q, "axios") || strings.Contains(q, "fetch") || strings.Contains(q, "got"):
+		answer = "Node.js integration: Use axios with proxy config, node-fetch with agent, or got with proxy option. For axios: {proxy: {host: 'gateway.iploop.io', port: 8880, auth: {username: 'user', password: 'KEY-country-US'}}}. For undici/fetch: use ProxyAgent."
+		related["axios_example"] = "axios.get(url, {proxy: {host: 'gateway.iploop.io', port: 8880, auth: {username: 'user', password: 'KEY'}}})"
+		related["packages"] = []string{"axios", "proxy-agent", "node-fetch"}
+
+	case strings.Contains(q, "java") || strings.Contains(q, "kotlin") || strings.Contains(q, "android"):
+		answer = "Java/Android integration: Use java.net.Proxy with InetSocketAddress('gateway.iploop.io', 8880). Set Authenticator for proxy auth. For OkHttp: use .proxy() and .proxyAuthenticator(). For Android SDK integration: contact partners@iploop.io"
+		related["okhttp"] = "new OkHttpClient.Builder().proxy(proxy).proxyAuthenticator(auth).build()"
+
+	case strings.Contains(q, "curl") || strings.Contains(q, "wget") || strings.Contains(q, "cli") || strings.Contains(q, "command line") || strings.Contains(q, "terminal"):
+		answer = "CLI usage: curl -x http://user:KEY-country-US@gateway.iploop.io:8880 https://target.com. For wget: use -e use_proxy=yes -e http_proxy=... For environment variables: export HTTP_PROXY=http://user:KEY@gateway.iploop.io:8880 and HTTPS_PROXY same."
+		related["curl"] = "curl -x http://user:KEY@gateway.iploop.io:8880 URL"
+		related["env"] = "export HTTPS_PROXY=http://user:KEY@gateway.iploop.io:8880"
+
+	case strings.Contains(q, "socks") || strings.Contains(q, "socks5") || strings.Contains(q, "socks4"):
+		answer = "SOCKS5 supported on gateway.iploop.io:8880. Format: socks5://user:KEY-country-US@gateway.iploop.io:8880. Works with curl --socks5, Python socks, and all major libraries. SOCKS5 supports UDP and DNS resolution on exit node."
+		related["curl"] = "curl --socks5 user:KEY@gateway.iploop.io:8880 URL"
+		related["python"] = "pip install pysocks"
+
+	case strings.Contains(q, "ecommerce") || strings.Contains(q, "amazon") || strings.Contains(q, "ebay") || strings.Contains(q, "shopify") || strings.Contains(q, "price monitoring"):
+		answer = "For e-commerce scraping: 1) Use country-targeted IPs matching the marketplace locale. 2) Sticky sessions for browsing flows (search → product → details). 3) Rotate IPs between products. 4) Use residential IPs to avoid marketplace blocks. 5) City targeting for local pricing. Best practice: 3-5s delays between page loads."
+		related["tip"] = "Use session IDs per product browsing flow"
+		related["recommended_delay"] = "3-5 seconds"
+
+	case strings.Contains(q, "social") || strings.Contains(q, "instagram") || strings.Contains(q, "facebook") || strings.Contains(q, "twitter") || strings.Contains(q, "tiktok") || strings.Contains(q, "linkedin") || strings.Contains(q, "social media"):
+		answer = "For social media: 1) Use sticky sessions — social platforms track IP consistency. 2) Match country to account locale. 3) Use city targeting for location-based content. 4) Residential IPs essential — datacenter IPs are instantly blocked. 5) Rate limit yourself: 1-2 requests per 5-10 seconds. 6) Rotate accounts across different sticky sessions."
+		related["warning"] = "Respect platform ToS. Use for legitimate research only."
+		related["tip"] = "One sticky session per account"
+
+	case strings.Contains(q, "seo") || strings.Contains(q, "rank") || strings.Contains(q, "ranking") || strings.Contains(q, "keyword") || strings.Contains(q, "backlink"):
+		answer = "For SEO monitoring: 1) Use country+city targeting for localized SERP results. 2) Sticky sessions per search query. 3) Rotate IPs between different keywords. 4) Support for Google, Bing, Yahoo, Yandex, Baidu. 5) Use headless browser for accurate rendering. Format: user:KEY-country-US-city-newyork-session-seo1@gateway.iploop.io:8880"
+		related["engines"] = []string{"Google", "Bing", "Yahoo", "Yandex", "Baidu"}
+		related["tip"] = "City targeting gives localized SERP results"
+
+	case strings.Contains(q, "ad verification") || strings.Contains(q, "ads") || strings.Contains(q, "verification") || strings.Contains(q, "creative"):
+		answer = "For ad verification: 1) Use city-level targeting to check ads in specific geolocations. 2) Sticky sessions to maintain advertiser view. 3) Residential IPs see real ads — datacenter IPs get filtered. 4) Support all major ad networks. 5) Rotate across cities to verify geo-targeting compliance."
+		related["tip"] = "City targeting is key for accurate ad verification"
+
+	case strings.Contains(q, "ticket") || strings.Contains(q, "sneaker") || strings.Contains(q, "drop") || strings.Contains(q, "bot") || strings.Contains(q, "checkout") || strings.Contains(q, "nike") || strings.Contains(q, "supreme") || strings.Contains(q, "retail"):
+		answer = "For retail/ticket bots: 1) Use sticky sessions per checkout flow. 2) US residential IPs for US drops. 3) City targeting near fulfillment centers. 4) Pre-warm sessions before drop time. 5) High-speed rotation between attempts. Growth or Business plan recommended for rate limits. Format: user:KEY-country-US-city-losangeles-session-drop001@gateway.iploop.io:8880"
+		related["recommended_plan"] = "Growth or Business for higher rate limits"
+		related["tip"] = "Create sticky sessions 5-10min before drop"
+
+	case strings.Contains(q, "market") || strings.Contains(q, "research") || strings.Contains(q, "competitive") || strings.Contains(q, "intelligence") || strings.Contains(q, "competitor"):
+		answer = "For market research: 1) Multi-country targeting to compare pricing, content, availability across regions. 2) Sticky sessions for consistent browsing. 3) City targeting for local market data. 4) Use /api/support/diagnose to monitor usage. 5) Combine with headless browser for JS-rendered content. Enterprise plan available for high-volume research."
+		related["tip"] = "Target specific cities for hyper-local market data"
+
+	case strings.Contains(q, "api") || strings.Contains(q, "documentation") || strings.Contains(q, "docs") || strings.Contains(q, "help") || strings.Contains(q, "support"):
+		answer = "Full API documentation: https://github.com/iploop/iploop-node/blob/main/docs/SUPPORT-API.md. Endpoints: /api/support/status, /api/support/diagnose, /api/support/errors/{code}, /api/support/ask. For account help: support@iploop.io. Dashboard: dashboard.iploop.io"
+		related["docs"] = "https://github.com/iploop/iploop-node/blob/main/docs/SUPPORT-API.md"
+		related["support"] = "support@iploop.io"
+
+	default:
+		answer = "Visit docs.iploop.io for full documentation or contact support@iploop.io for personalized help."
+		related["docs"] = "https://docs.iploop.io"
+		related["support"] = "support@iploop.io"
+		related["diagnose"] = "/api/support/diagnose?api_key=" + apiKey
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"answer":  answer,
+		"related": related,
+	})
+}
+
 func main() {
 	port := os.Getenv("PORT")
 	if port == "" {
@@ -4291,12 +6064,16 @@ func main() {
 	initDB()
 	defer db.Close()
 
+	// Initialize Redis for node registry
+	initRedis()
+
 	// Initialize tunnel and proxy managers
 	hub.tunnelManager = NewTunnelManager(hub)
 	hub.proxyManager = NewProxyManager(hub)
 
 	// Periodic credit update — real-time balance for active sessions
 	go creditPeriodicUpdate()
+	go geoCacheCleanup()
 
 	// Hourly snapshot — saves active node count + stats for graphing
 	go func() {
@@ -4413,36 +6190,47 @@ func main() {
 	http.HandleFunc("/snapshots", handleSnapshots)
 	http.HandleFunc("/ip-info", handleIPInfo)
 
-	// API: Tunnel endpoints
-	http.HandleFunc("/api/tunnel/open", handleAPITunnelOpen)
-	http.HandleFunc("/api/tunnel/data", handleAPITunnelData)
-	http.HandleFunc("/api/tunnel/close", handleAPITunnelClose)
-	http.HandleFunc("/api/tunnel/ws", handleAPITunnelWS)
-	http.HandleFunc("/api/tunnel/standby", handleAPITunnelStandby)
+	// API: Tunnel endpoints (rate limited)
+	http.HandleFunc("/api/tunnel/open", rateLimitAPI(handleAPITunnelOpen))
+	http.HandleFunc("/api/tunnel/data", rateLimitAPI(handleAPITunnelData))
+	http.HandleFunc("/api/tunnel/close", rateLimitAPI(handleAPITunnelClose))
+	http.HandleFunc("/api/tunnel/ws", rateLimitAPI(handleAPITunnelWS))
+	http.HandleFunc("/api/tunnel/standby", rateLimitAPI(handleAPITunnelStandby))
 
-	// API: Proxy endpoint
-	http.HandleFunc("/api/proxy", handleAPIProxy)
+	// API: Proxy endpoint (rate limited)
+	http.HandleFunc("/api/proxy", rateLimitAPI(handleAPIProxy))
 
-	// API: Nodes endpoints
-	http.HandleFunc("/api/nodes", handleAPINodes)
-	http.HandleFunc("/api/nodes/", handleAPINodeByID)
+	// API: Nodes endpoints (rate limited)
+	http.HandleFunc("/api/nodes", rateLimitAPI(handleAPINodes))
+	http.HandleFunc("/api/nodes/", rateLimitAPI(handleAPINodeByID))
 
-	// API: Node quality scores
-	http.HandleFunc("/api/node-scores", handleAPINodeScores)
-	http.HandleFunc("/api/bandwidth", handleAPIBandwidth)
-	http.HandleFunc("/api/credits", handleAPICredits)
-	http.HandleFunc("/api/customers", handleAPICustomers)
+	// API: Node quality scores (rate limited)
+	http.HandleFunc("/api/node-scores", rateLimitAPI(handleAPINodeScores))
+	http.HandleFunc("/api/bandwidth", rateLimitAPI(handleAPIBandwidth))
+	http.HandleFunc("/api/credits", rateLimitAPI(handleAPICredits))
+	http.HandleFunc("/api/customers", rateLimitAPI(handleAPICustomers))
 
-	// Auth endpoints
-	http.HandleFunc("/api/auth/signup", handleAuthSignup)
-	http.HandleFunc("/api/auth/login", handleAuthLogin)
-	http.HandleFunc("/api/auth/me", handleAuthMe)
-	http.HandleFunc("/api/user/dashboard", handleUserDashboard)
+	// Auth endpoints (rate limited)
+	http.HandleFunc("/api/auth/signup", rateLimitAPI(handleAuthSignup))
+	http.HandleFunc("/api/auth/login", rateLimitAPI(handleAuthLogin))
+	http.HandleFunc("/api/auth/me", rateLimitAPI(handleAuthMe))
+	http.HandleFunc("/api/user/dashboard", rateLimitAPI(handleUserDashboard))
+	http.HandleFunc("/api/referral", rateLimitAPI(handleReferralInfo))
+	http.HandleFunc("/api/referral/stats", rateLimitAPI(handleReferralStats))
 
-	// Stripe endpoints
-	http.HandleFunc("/api/stripe/checkout", handleStripeCheckout)
-	http.HandleFunc("/api/stripe/success", handleStripeSuccess)
-	http.HandleFunc("/api/stripe/webhook", handleStripeWebhook)
+	// Support API endpoints
+	http.HandleFunc("/api/support/status", rateLimitAPI(handleSupportStatus))
+	http.HandleFunc("/api/support/diagnose", rateLimitAPI(handleSupportDiagnose))
+	http.HandleFunc("/api/support/errors/", rateLimitAPI(handleSupportErrors))
+	http.HandleFunc("/api/support/ask", rateLimitAPI(handleSupportAsk))
+
+	// Internal cross-instance relay
+	http.HandleFunc("/internal/relay", rateLimitAPI(handleInternalRelay))
+
+	// Stripe endpoints (rate limited)
+	http.HandleFunc("/api/stripe/checkout", rateLimitAPI(handleStripeCheckout))
+	http.HandleFunc("/api/stripe/success", rateLimitAPI(handleStripeSuccess))
+	http.HandleFunc("/api/stripe/webhook", rateLimitAPI(handleStripeWebhook))
 
 	// Serve dashboard.html
 	http.HandleFunc("/dashboard.html", func(w http.ResponseWriter, r *http.Request) {
@@ -4455,13 +6243,21 @@ func main() {
 	// Start HTTP CONNECT proxy on port 8880
 	go startHTTPProxy("8880")
 
+	// Slowloris protection via timeouts
+	srv := &http.Server{
+		Addr:              ":" + port,
+		ReadHeaderTimeout: 10 * time.Second,
+		IdleTimeout:       120 * time.Second,
+	}
+
 	if tlsCert != "" && tlsKey != "" {
 		log.Printf("IPLoop Node Server starting on :%s (TLS)", port)
 		log.Printf("  WebSocket: wss://0.0.0.0:%s/ws", port)
 		log.Printf("  Stats:     https://0.0.0.0:%s/stats", port)
 		log.Printf("  API:       https://0.0.0.0:%s/api/...", port)
 		log.Printf("  Ping interval: %v, Pong timeout: %v", pingInterval, pongWait)
-		if err := http.ListenAndServeTLS(":"+port, tlsCert, tlsKey, nil); err != nil {
+		log.Printf("  Protection: maxWSPerIP=%d, maxTotalWS=%d, apiRate=%d/min", maxWSPerIP, maxTotalWS, apiRateLimitN)
+		if err := srv.ListenAndServeTLS(tlsCert, tlsKey); err != nil {
 			log.Fatal(err)
 		}
 	} else {
@@ -4470,7 +6266,8 @@ func main() {
 		log.Printf("  Stats:     http://0.0.0.0:%s/stats", port)
 		log.Printf("  API:       http://0.0.0.0:%s/api/...", port)
 		log.Printf("  Ping interval: %v, Pong timeout: %v", pingInterval, pongWait)
-		if err := http.ListenAndServe(":"+port, nil); err != nil {
+		log.Printf("  Protection: maxWSPerIP=%d, maxTotalWS=%d, apiRate=%d/min", maxWSPerIP, maxTotalWS, apiRateLimitN)
+		if err := srv.ListenAndServe(); err != nil {
 			log.Fatal(err)
 		}
 	}

@@ -1,0 +1,11 @@
+{
+  "testName": "security-test",
+  "timestamp": "2026-02-18T18:22:57.501Z",
+  "duration": 3464,
+  "passed": false,
+  "exitCode": 0,
+  "summary": {
+    "failed": 6
+  },
+  "output": "🛡️  Security Test Suite\n============================================================\nProxy: localhost:8080\nServer IP: 178.128.172.81\n============================================================\n\nIP not leaked in response body               ... ❌ Parse error\nIP not in X-Forwarded-For                    ... ❌ Parse error\nNo Via header exposing server                ... ❌ Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON\nCRLF injection in URL blocked                ... ❌ Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON\nHeader injection via header value blocked    ... ❌ Invalid character in header content [\"X-Test\"]\nRequest smuggling (CL.TE) prevented          ... ✅ Status: 501\nLocalhost access blocked                     ... ✅ Blocked\nInternal IP (10.x) blocked                   ... ✅ Blocked\nInternal IP (192.168.x) blocked              ... ✅ Blocked\nMetadata endpoint blocked                    ... ✅ Blocked\nFile:// protocol blocked                     ... ✅ Blocked\nGopher:// protocol blocked                   ... ✅ Blocked\nDNS rebinding protection (check)             ... ✅ Manual verification recommended\nCredentials not echoed in error              ... ✅ Safe\nOversized headers handled                    ... ✅ Status: 431\nVery long URL handled                        ... ❌ Status: 404\n\n============================================================\nSECURITY TEST RESULTS\n============================================================\nPassed: 10\nFailed: 6\nSkipped: 0\n\n🚨 CRITICAL SECURITY ISSUES:\n  🔴 IP not leaked in response body\n  🔴 IP not in X-Forwarded-For\n\n⚠️  Note: This is automated testing. Manual security review recommended.\n"
+}

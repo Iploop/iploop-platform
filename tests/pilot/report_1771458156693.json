@@ -1,0 +1,23 @@
+{
+  "started": 1771457855688,
+  "totalRequests": 117821,
+  "successfulRequests": 0,
+  "failedRequests": 117821,
+  "latencies": [],
+  "errors": {
+    "HTTP_404": 117821
+  },
+  "ipsObserved": [],
+  "geoResults": {},
+  "sessionTests": {
+    "passed": 0,
+    "failed": 5855
+  },
+  "bytesTransferred": 0,
+  "elapsed": 301.004,
+  "successRate": 0,
+  "rps": 391.43,
+  "latencyP50": 0,
+  "latencyP95": 0,
+  "latencyP99": 0
+}

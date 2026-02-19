@@ -3,9 +3,12 @@ package main
 import (
 	"context"
 	"database/sql"
+	"net"
 	"net/http"
 	"os"
 	"os/signal"
+	"sync"
+	"sync/atomic"
 	"syscall"
 	"time"
 
@@ -20,6 +23,91 @@ import (
 	"node-registration/internal/websocket"
 	"node-registration/internal/nodemanager"
 )
+
+// --- DDoS / abuse protection ---
+
+const (
+	maxWSPerIP        = 50
+	maxTotalWS        = 30000
+	apiRateLimit      = 60 // requests per minute per IP
+	apiRateWindowSecs = 60
+)
+
+var (
+	wsPerIP      sync.Map // ip -> *int64 (atomic counter)
+	totalWSConns int64    // atomic
+)
+
+func getClientIP(r *http.Request) string {
+	if xff := r.Header.Get("X-Forwarded-For"); xff != "" {
+		if ip, _, err := net.SplitHostPort(xff); err == nil {
+			return ip
+		}
+		// might not have port
+		return xff
+	}
+	ip, _, _ := net.SplitHostPort(r.RemoteAddr)
+	return ip
+}
+
+// wsIPTrack increments per-IP WS counter, returns true if allowed
+func wsIPTrack(ip string) bool {
+	val, _ := wsPerIP.LoadOrStore(ip, new(int64))
+	cnt := val.(*int64)
+	if atomic.AddInt64(cnt, 1) > maxWSPerIP {
+		atomic.AddInt64(cnt, -1)
+		return false
+	}
+	return true
+}
+
+func wsIPRelease(ip string) {
+	if val, ok := wsPerIP.Load(ip); ok {
+		cnt := val.(*int64)
+		if atomic.AddInt64(cnt, -1) <= 0 {
+			wsPerIP.Delete(ip)
+		}
+	}
+}
+
+// Simple sliding window rate limiter for API
+type apiRateBucket struct {
+	mu     sync.Mutex
+	tokens int
+	last   time.Time
+}
+
+var apiRateBuckets sync.Map // ip -> *apiRateBucket
+
+func apiRateAllow(ip string) bool {
+	now := time.Now()
+	val, _ := apiRateBuckets.LoadOrStore(ip, &apiRateBucket{tokens: apiRateLimit, last: now})
+	b := val.(*apiRateBucket)
+	b.mu.Lock()
+	defer b.mu.Unlock()
+	elapsed := now.Sub(b.last).Seconds()
+	b.tokens += int(elapsed * float64(apiRateLimit) / float64(apiRateWindowSecs))
+	if b.tokens > apiRateLimit {
+		b.tokens = apiRateLimit
+	}
+	b.last = now
+	if b.tokens <= 0 {
+		return false
+	}
+	b.tokens--
+	return true
+}
+
+func apiRateLimitMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		ip := c.ClientIP()
+		if !apiRateAllow(ip) {
+			c.AbortWithStatusJSON(http.StatusTooManyRequests, gin.H{"error": "rate limit exceeded"})
+			return
+		}
+		c.Next()
+	}
+}
 
 func main() {
 	// Load environment variables
@@ -50,9 +138,17 @@ func main() {
 	logger.Info("Connected to database")
 
 	// Initialize Redis client
+	redisAddr := cfg.RedisAddr
+	if redisAddr == "" {
+		// Fall back to REDIS_URL, strip redis:// prefix
+		redisAddr = cfg.RedisURL
+		if len(redisAddr) > 8 {
+			redisAddr = redisAddr[8:]
+		}
+	}
 	rdb := redis.NewClient(&redis.Options{
-		Addr:     cfg.RedisURL[8:], // Remove redis:// prefix
-		Password: "",
+		Addr:     redisAddr,
+		Password: cfg.RedisPassword,
 		DB:       0,
 	})
 	defer rdb.Close()
@@ -87,8 +183,24 @@ func main() {
 	router := gin.New()
 	router.Use(gin.Recovery())
 
-	// WebSocket endpoint for node connections
+	// WebSocket endpoint for node connections (with per-IP and total limits)
 	router.GET("/ws", func(c *gin.Context) {
+		// Check total connection cap
+		if atomic.LoadInt64(&totalWSConns) >= maxTotalWS {
+			c.AbortWithStatusJSON(http.StatusServiceUnavailable, gin.H{"error": "server at capacity"})
+			return
+		}
+		ip := c.ClientIP()
+		if !wsIPTrack(ip) {
+			c.AbortWithStatusJSON(http.StatusTooManyRequests, gin.H{"error": "too many connections from your IP"})
+			return
+		}
+		atomic.AddInt64(&totalWSConns, 1)
+		// NOTE: release counters when connection closes — handled via defer in a wrapper
+		defer func() {
+			atomic.AddInt64(&totalWSConns, -1)
+			wsIPRelease(ip)
+		}()
 		websocket.HandleNodeConnection(hub, c.Writer, c.Request)
 	})
 
@@ -152,24 +264,30 @@ func main() {
 		})
 	})
 
+	// Apply rate limiting to internal/API endpoints
+	internal := router.Group("/")
+	internal.Use(apiRateLimitMiddleware())
+
 	// Internal proxy endpoint (called by proxy-gateway)
-	router.POST("/internal/proxy", func(c *gin.Context) {
+	internal.POST("/internal/proxy", func(c *gin.Context) {
 		proxyHandler.HandleProxyRequest(c.Writer, c.Request)
 	})
 
 	// Internal tunnel WebSocket endpoint (called by proxy-gateway for CONNECT)
-	router.GET("/internal/tunnel", func(c *gin.Context) {
+	internal.GET("/internal/tunnel", func(c *gin.Context) {
 		tunnelHandler.HandleTunnelWebSocket(c.Writer, c.Request)
 	})
 
 	// Internal standby tunnel endpoint (pre-opened tunnel pool)
-	router.GET("/internal/tunnel-standby", func(c *gin.Context) {
+	internal.GET("/internal/tunnel-standby", func(c *gin.Context) {
 		tunnelHandler.HandleTunnelStandby(c.Writer, c.Request)
 	})
 
 	server := &http.Server{
-		Addr:    ":" + cfg.Port,
-		Handler: router,
+		Addr:              ":" + cfg.Port,
+		Handler:           router,
+		ReadHeaderTimeout: 10 * time.Second,
+		IdleTimeout:       120 * time.Second,
 	}
 
 	// Start server in goroutine

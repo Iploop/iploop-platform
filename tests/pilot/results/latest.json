@@ -1,118 +1,117 @@
 {
   "geo-test": {
-    "timestamp": "2026-02-17T10:30:47.623Z",
+    "timestamp": "2026-02-19T16:15:31.681Z",
     "summary": {
       "errors": 8
     },
     "passed": false,
-    "duration": 8102
+    "duration": 8110
   },
   "leak-test": {
-    "timestamp": "2026-02-17T11:15:27.144Z",
+    "timestamp": "2026-02-19T16:26:30.306Z",
     "summary": {},
     "passed": false,
-    "duration": 243
+    "duration": 262
   },
   "stress-test": {
-    "timestamp": "2026-02-17T11:15:25.852Z",
+    "timestamp": "2026-02-19T16:26:28.990Z",
     "summary": {
-      "totalRequests": 683,
-      "failed": 683,
-      "throughput": 22.03,
+      "totalRequests": 667,
+      "failed": 667,
+      "throughput": 21.51,
       "ipsObserved": 0
     },
     "passed": false,
     "duration": 31058
   },
   "protocol-test": {
-    "timestamp": "2026-02-17T11:15:32.960Z",
+    "timestamp": "2026-02-19T16:26:36.149Z",
     "summary": {
       "failed": 23
     },
     "passed": false,
-    "duration": 4765
+    "duration": 4773
   },
   "rotation-test": {
-    "timestamp": "2026-02-17T10:30:58.929Z",
+    "timestamp": "2026-02-19T16:15:43.016Z",
     "summary": {
       "totalRequests": 0,
       "errors": 50,
       "uniqueIps": 0
     },
     "passed": false,
-    "duration": 10252
+    "duration": 10279
   },
   "sticky-stress": {
-    "timestamp": "2026-02-17T10:31:12.620Z",
+    "timestamp": "2026-02-19T16:15:56.697Z",
     "summary": {
       "failed": 0,
       "totalRequests": 0,
       "errors": 500
     },
     "passed": false,
-    "duration": 12633
+    "duration": 12623
   },
   "security-test": {
-    "timestamp": "2026-02-17T09:35:44.928Z",
+    "timestamp": "2026-02-19T16:09:17.132Z",
     "summary": {
       "failed": 6
     },
     "passed": false,
-    "duration": 3470
+    "duration": 3502
   },
   "auth-test": {
-    "timestamp": "2026-02-17T09:35:48.758Z",
+    "timestamp": "2026-02-19T16:09:20.961Z",
     "summary": {
       "failed": 26
     },
     "passed": false,
-    "duration": 2774
+    "duration": 2775
   },
   "bandwidth-test": {
-    "timestamp": "2026-02-17T10:24:11.767Z",
+    "timestamp": "2026-02-19T15:07:51.199Z",
     "summary": {},
     "passed": false,
-    "duration": 93
+    "duration": 100
   },
   "latency-test": {
-    "timestamp": "2026-02-17T10:24:36.276Z",
+    "timestamp": "2026-02-19T15:08:15.586Z",
     "summary": {
       "p99Latency": 0,
-      "errors": 50,
-      "failed": 1
+      "errors": 50
     },
     "passed": false,
-    "duration": 23450
+    "duration": 23335
   },
   "failure-test": {
-    "timestamp": "2026-02-17T05:50:00.125Z",
+    "timestamp": "2026-02-19T12:38:56.061Z",
     "summary": {},
     "passed": false,
-    "duration": 98
+    "duration": 90
   },
   "connection-limits": {
-    "timestamp": "2026-02-17T05:51:11.140Z",
+    "timestamp": "2026-02-19T12:40:05.918Z",
     "summary": {},
     "passed": true,
-    "duration": 20547
+    "duration": 20574
   },
   "concurrency-edge": {
-    "timestamp": "2026-02-17T05:53:20.944Z",
+    "timestamp": "2026-02-19T12:41:25.805Z",
     "summary": {
-      "avgLatency": 1090,
-      "throughput": 467.9,
+      "avgLatency": 393,
+      "throughput": 469,
       "successRate": 100,
-      "totalRequests": 14036
+      "totalRequests": 14070
     },
     "passed": false,
-    "duration": 128754
+    "duration": 78835
   },
   "peer-behavior-test": {
-    "timestamp": "2026-02-17T05:54:02.900Z",
+    "timestamp": "2026-02-19T12:42:09.422Z",
     "summary": {
       "uniqueIps": 0
     },
     "passed": false,
-    "duration": 40902
+    "duration": 42553
   }
 }

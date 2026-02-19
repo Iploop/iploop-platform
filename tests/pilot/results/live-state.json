@@ -1,16 +1,16 @@
 {
   "running": false,
-  "suite": "quick",
-  "description": "Quick health check",
+  "suite": "feature",
+  "description": "Feature validation",
   "total": 3,
   "progress": 3,
   "currentTest": null,
-  "startTime": 1771522106858,
-  "suiteStartTime": 1771522073442,
+  "startTime": 1771525211039,
+  "suiteStartTime": 1771525190563,
   "queue": [],
   "lastTest": {
-    "name": "protocol-test.js",
+    "name": "sticky-stress.js",
     "passed": false,
-    "duration": 4827
+    "duration": 12690
   }
 }

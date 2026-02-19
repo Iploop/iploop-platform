@@ -1,268 +1,107 @@
 ══════════════════════════════════════════════════
-📋 QUICK SUITE: Quick health check
+📋 FEATURE SUITE: Feature validation
 Total tests: 3
 ══════════════════════════════════════════════════
 
 ──────────────────────────────────────────────────
-🧪 Running: stress-test.js --profile=smoke
+🧪 Running: geo-test.js
 ──────────────────────────────────────────────────
-🧪 Running test: stress-test
+🧪 Running test: geo-test
 ──────────────────────────────────────────────────
-🚀 IPLoop Pilot Stress Test
-============================================================
-Profile: smoke
-Target concurrency: 5
-Duration: 30s
-Ramp time: 5s
+🗺️  IPLoop Geographic Targeting Test
+==================================================
 Proxy: localhost:8080
-============================================================
-============================================================
-📈 Progress Report
-============================================================
-Duration: 5.0s
-Total Requests: 51
-Successful: 0 (0.00%)
-Failed: 51
-Throughput: 10.19 req/s
-Data Transferred: 0.00 MB
-
-🌐 Unique IPs Observed: 0
-
-❌ Errors:
-  HTTP_404: 51
-
-🔗 Session Stickiness Tests: 0 passed, 2 failed
-============================================================
-📈 Progress Report
-============================================================
-Duration: 10.0s
-Total Requests: 173
-Successful: 0 (0.00%)
-Failed: 173
-Throughput: 17.29 req/s
-Data Transferred: 0.00 MB
-
-🌐 Unique IPs Observed: 0
-
-❌ Errors:
-  HTTP_404: 173
-
-🔗 Session Stickiness Tests: 0 passed, 6 failed
-============================================================
-📈 Progress Report
-============================================================
-Duration: 15.0s
-Total Requests: 293
-Successful: 0 (0.00%)
-Failed: 293
-Throughput: 19.53 req/s
-Data Transferred: 0.00 MB
-🌐 Unique IPs Observed: 0
-
-❌ Errors:
-  HTTP_404: 293
-
-🔗 Session Stickiness Tests: 0 passed, 10 failed
-============================================================
-📈 Progress Report
-============================================================
-Duration: 20.0s
-Total Requests: 414
-Successful: 0 (0.00%)
-Failed: 414
-Throughput: 20.70 req/s
-Data Transferred: 0.00 MB
-
-🌐 Unique IPs Observed: 0
-
-❌ Errors:
-  HTTP_404: 414
-
-🔗 Session Stickiness Tests: 0 passed, 16 failed
-============================================================
-📈 Progress Report
-============================================================
-Duration: 25.0s
-Total Requests: 532
-Successful: 0 (0.00%)
-Failed: 532
-Throughput: 21.28 req/s
-Data Transferred: 0.00 MB
-
-🌐 Unique IPs Observed: 0
-
-❌ Errors:
-  HTTP_404: 532
-
-🔗 Session Stickiness Tests: 0 passed, 21 failed
-============================================================
-📈 Progress Report
-============================================================
-Duration: 30.0s
-Total Requests: 653
-Successful: 0 (0.00%)
-Failed: 653
-Throughput: 21.76 req/s
-Data Transferred: 0.00 MB
-
-🌐 Unique IPs Observed: 0
-
-❌ Errors:
-  HTTP_404: 653
-
-🔗 Session Stickiness Tests: 0 passed, 29 failed
-============================================================
-📊 FINAL REPORT
-============================================================
-Duration: 31.0s
-Total Requests: 653
-Successful: 0 (0.00%)
-Failed: 653
-Throughput: 21.06 req/s
-Data Transferred: 0.00 MB
-
-🌐 Unique IPs Observed: 0
-
-❌ Errors:
-  HTTP_404: 653
-
-🔗 Session Stickiness Tests: 0 passed, 29 failed
-
-============================================================
-🐛 BUG DETECTION SUMMARY
-============================================================
-⚠️  Success rate below 95%: 0.00%
-⚠️  Low IP diversity: only 0 unique IPs
-⚠️  Session stickiness failing: 29/29
-📁 Full report saved to: /root/clawd-secure/iploop-platform/tests/pilot/report_1771522104540.json
-📊 Results saved to: stress-test-2026-02-19T17-28-24-552Z.json
-──────────────────────────────────────────────────
-❌ Test stress-test FAILED in 31063ms
-❌ stress-test.js - 31.1s
-
-──────────────────────────────────────────────────
-🧪 Running: leak-test.js
-──────────────────────────────────────────────────
-🧪 Running test: leak-test
-──────────────────────────────────────────────────
-🔍 IPLoop IP Leak Detection Test
 ==================================================
 
-Detecting server real IP...
-Server real IP: 178.128.172.81
-
---- Test 1: Proxy IP Check ---
-❌ Error: Unexpected token '<', "<!DOCTYPE "... is not valid JSON
---- Test 2: Header Leak Check ---
-❌ Error: Unexpected token '<', "<!DOCTYPE "... is not valid JSON
---- Test 3: Consistency Check ---
-api.ipify.org?format=json: Error - Unexpected token '<', "<!DOCTYPE "... is not valid JSON
-ip-api.com: Error - Unexpected token '<', "<!DOCTYPE "... is not valid JSON
-httpbin.org: Error - Unexpected token '<', "<!DOCTYPE "... is not valid JSON
-
---- Test 4: Fingerprint Check ---
-Error: Unexpected token '<', "<!DOCTYPE "... is not valid JSON
+Testing US...
+❌ Error: Parse error
+Testing DE...
+❌ Error: Parse error
+Testing GB...
+❌ Error: Parse error
+Testing FR...
+❌ Error: Parse error
+Testing JP...
+❌ Error: Parse error
+Testing AU...
+❌ Error: Parse error
+Testing BR...
+❌ Error: Parse error
+Testing IN...
+❌ Error: Parse error
 ==================================================
-LEAK TEST SUMMARY
+SUMMARY
 ==================================================
-Issues found:
-  🔴 IP check failed: Unexpected token '<', "<!DOCTYPE "... is not valid JSON
-📊 Results saved to: leak-test-2026-02-19T17-28-25-844Z.json
+Passed: 0/8
+Failed (wrong country): 0
+Errors: 8
+
+⚠️  Some geographic targeting tests failed
+📊 Results saved to: geo-test-2026-02-19T18-19-58-709Z.json
 ──────────────────────────────────────────────────
-❌ Test leak-test FAILED in 233ms
-❌ leak-test.js - 0.3s
+❌ Test geo-test FAILED in 8105ms
+❌ geo-test.js - 8.2s
 
 ──────────────────────────────────────────────────
-🧪 Running: protocol-test.js
+🧪 Running: rotation-test.js
 ──────────────────────────────────────────────────
-🧪 Running test: protocol-test
+🧪 Running test: rotation-test
 ──────────────────────────────────────────────────
-📡 Protocol Comprehensive Test
+🔄 IPLoop IP Rotation Test
 ============================================================
 Proxy: localhost:8080
-Tests: 23
+Requests: 50
 ============================================================
 
-GET request                        ...
-❌ (unexpected result)
-POST with JSON body                ...
-❌ Unexpected token '<', "<!DOCTYPE "... is not valid JSON
-POST with form data                ...
-❌ Unexpected token '<', "<!DOCTYPE "... is not valid JSON
-PUT request                        ...
-❌ (unexpected result)
-DELETE request                     ...
-❌ (unexpected result)
-HEAD request                       ...
-❌ (unexpected result)
-OPTIONS request                    ...
-❌ (unexpected result)
-Custom headers preserved           ...
-❌ Unexpected token '<', "<!DOCTYPE "... is not valid JSON
-User-Agent preserved               ...
-❌ Unexpected token '<', "<!DOCTYPE "... is not valid JSON
-Gzip compressed response           ...
-❌ Unexpected token '<', "<!DOCTYPE "... is not valid JSON
-Deflate compressed response        ...
-❌ Unexpected token '<', "<!DOCTYPE "... is not valid JSON
-Chunked response                   ...
-❌ (unexpected result)
-Follow redirect                    ...
-❌ (unexpected result)
-Multiple redirects (5)             ...
-❌ (unexpected result)
-Absolute redirect                  ...
-❌ (unexpected result)
-Set-Cookie header received         ...
-❌ (unexpected result)
-Send cookies                       ...
-❌ Unexpected token '<', "<!DOCTYPE "... is not valid JSON
-Binary response (image)            ...
-❌ (unexpected result)
-Large response (100KB)             ...
-❌ (unexpected result)
-UTF-8 encoding                     ...
-❌ (unexpected result)
-Status 201 Created                 ...
-❌ (unexpected result)
-Status 204 No Content              ...
-❌ (unexpected result)
-Status 418 Teapot                  ...
-❌ (unexpected result)
+Making requests with rotating session type...
 ============================================================
-PROTOCOL TEST RESULTS
+📊 ROTATION RESULTS
 ============================================================
-Passed: 0/23
-Failed: 23
+Total requests: 0
+Errors: 50
+Unique IPs: 0
+Rotation rate: 0.0% (IP changed between requests)
+IP diversity ratio: NaN%
 
-Failed tests:
-  ❌ GET request
-  ❌ POST with JSON body: Unexpected token '<', "<!DOCTYPE "... is not valid JSON
-  ❌ POST with form data: Unexpected token '<', "<!DOCTYPE "... is not valid JSON
-  ❌ PUT request
-  ❌ DELETE request
-  ❌ HEAD request
-  ❌ OPTIONS request
-  ❌ Custom headers preserved: Unexpected token '<', "<!DOCTYPE "... is not valid JSON
-  ❌ User-Agent preserved: Unexpected token '<', "<!DOCTYPE "... is not valid JSON
-  ❌ Gzip compressed response: Unexpected token '<', "<!DOCTYPE "... is not valid JSON
-  ❌ Deflate compressed response: Unexpected token '<', "<!DOCTYPE "... is not valid JSON
-  ❌ Chunked response
-  ❌ Follow redirect
-  ❌ Multiple redirects (5)
-  ❌ Absolute redirect
-  ❌ Set-Cookie header received
-  ❌ Send cookies: Unexpected token '<', "<!DOCTYPE "... is not valid JSON
-  ❌ Binary response (image)
-  ❌ Large response (100KB)
-  ❌ UTF-8 encoding
-  ❌ Status 201 Created
-  ❌ Status 204 No Content
-  ❌ Status 418 Teapot
-📊 Results saved to: protocol-test-2026-02-19T17-28-31-675Z.json
+📍 IP Distribution:
+TypeError: Cannot read properties of undefined (reading '0')
+    at runRotationTest (/root/clawd-secure/iploop-platform/tests/pilot/rotation-test.js:117:40)
+📊 Results saved to: rotation-test-2026-02-19T18-20-10-026Z.json
 ──────────────────────────────────────────────────
-❌ Test protocol-test FAILED in 4773ms
-❌ protocol-test.js - 4.8s
+❌ Test rotation-test FAILED in 10262ms
+❌ rotation-test.js - 10.3s
+
+──────────────────────────────────────────────────
+🧪 Running: sticky-stress.js
+──────────────────────────────────────────────────
+🧪 Running test: sticky-stress
+──────────────────────────────────────────────────
+🔗 IPLoop Sticky Session Stress Test
+============================================================
+Proxy: localhost:8080
+Concurrent sessions: 50
+Requests per session: 10
+Session lifetime: 60s
+============================================================
+[5.0s] Sessions: 0/50 | Requests: 0 | Sticky OK: 0 | Failed: 0
+[10.0s] Sessions: 0/50 | Requests: 0 | Sticky OK: 0 | Failed: 0
+============================================================
+📊 STICKY SESSION STRESS RESULTS
+============================================================
+Duration: 12.6s
+Total sessions: 50
+Total requests: 0
+Session Results:
+  ✅ Sticky maintained: 0 (0.0%)
+  ❌ Sticky broken: 0
+  ⚠️  Request errors: 500
+
+============================================================
+❌ FAIL: Significant session stickiness problems
+📊 Results saved to: sticky-stress-2026-02-19T18-20-23-719Z.json
+──────────────────────────────────────────────────
+❌ Test sticky-stress FAILED in 12628ms
+❌ sticky-stress.js - 12.7s
 
 ══════════════════════════════════════════════════
 📊 SUITE COMPLETE: 0/3 passed, 3 failed

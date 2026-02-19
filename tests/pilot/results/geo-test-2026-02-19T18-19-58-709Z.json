@@ -1,0 +1,11 @@
+{
+  "testName": "geo-test",
+  "timestamp": "2026-02-19T18:19:58.709Z",
+  "duration": 8105,
+  "passed": false,
+  "exitCode": 0,
+  "summary": {
+    "errors": 8
+  },
+  "output": "🗺️  IPLoop Geographic Targeting Test\n==================================================\nProxy: localhost:8080\n==================================================\n\nTesting US... ❌ Error: Parse error\nTesting DE... ❌ Error: Parse error\nTesting GB... ❌ Error: Parse error\nTesting FR... ❌ Error: Parse error\nTesting JP... ❌ Error: Parse error\nTesting AU... ❌ Error: Parse error\nTesting BR... ❌ Error: Parse error\nTesting IN... ❌ Error: Parse error\n\n==================================================\nSUMMARY\n==================================================\nPassed: 0/8\nFailed (wrong country): 0\nErrors: 8\n\n⚠️  Some geographic targeting tests failed\n"
+}

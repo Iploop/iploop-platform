@@ -1,0 +1,192 @@
+{
+  "timestamp": "2026-02-20T18:13:00Z",
+  "test_type": "comprehensive_real_world_qa",
+  "sdk_version": "1.3.3",
+  "api_key": "testkey123",
+  "test_duration_seconds": 149.3,
+  "overall_stats": {
+    "total_sites_tested": 38,
+    "successful_sites": 3,
+    "blocked_sites": 17,
+    "failed_sites": 1,
+    "partial_sites": 17,
+    "success_rate_percent": 7.9,
+    "block_rate_percent": 67.1,
+    "avg_response_time_ms": 2922
+  },
+  "category_results": {
+    "basic_connectivity": {
+      "status": "PASS",
+      "tests": 3,
+      "passed": 3,
+      "details": "All basic HTTP/HTTPS connectivity working"
+    },
+    "sticky_sessions": {
+      "status": "PASS", 
+      "tests": 3,
+      "passed": 3,
+      "details": "Session consistency and IP persistence working perfectly"
+    },
+    "ip_rotation": {
+      "status": "PASS",
+      "tests": 1,
+      "passed": 1,
+      "details": "8/8 unique IPs achieved in rotation test"
+    },
+    "country_targeting": {
+      "status": "FAIL",
+      "tests": 3,
+      "passed": 0,
+      "details": "All tested countries (US, GB, DE) returned 'XX' instead of correct country codes"
+    },
+    "ecommerce": {
+      "status": "BLOCKED",
+      "sites_tested": 7,
+      "sites_passed": 0,
+      "sites_blocked": 6,
+      "sites_partial": 1,
+      "block_rate_percent": 85.7,
+      "blocked_sites": ["Amazon Product", "eBay Search", "Walmart Search", "Target Search", "AliExpress", "Etsy Search"],
+      "details": "All major e-commerce sites blocked by CAPTCHA or 403 errors"
+    },
+    "travel": {
+      "status": "BLOCKED", 
+      "sites_tested": 7,
+      "sites_passed": 0,
+      "sites_blocked": 3,
+      "sites_partial": 4,
+      "block_rate_percent": 42.8,
+      "blocked_sites": ["Expedia", "TripAdvisor", "Airbnb"],
+      "details": "High block rate with rate limiting and CAPTCHA detection"
+    },
+    "tickets": {
+      "status": "MOSTLY_BLOCKED",
+      "sites_tested": 4, 
+      "sites_passed": 1,
+      "sites_blocked": 3,
+      "block_rate_percent": 75.0,
+      "working_sites": ["Vivid Seats"],
+      "blocked_sites": ["Ticketmaster", "StubHub", "Eventbrite"],
+      "details": "Only Vivid Seats accessible, major ticketing platforms blocked"
+    },
+    "social_media": {
+      "status": "MOSTLY_BLOCKED",
+      "sites_tested": 5,
+      "sites_passed": 1,
+      "sites_blocked": 0,
+      "sites_partial": 4,
+      "working_sites": ["Snapchat"],
+      "details": "Limited success, most sites return minimal content"
+    },
+    "seo_serp": {
+      "status": "BLOCKED",
+      "sites_tested": 6,
+      "sites_passed": 0,
+      "sites_blocked": 1, 
+      "sites_partial": 5,
+      "details": "Google rate limiting, other search engines return minimal content"
+    },
+    "real_estate": {
+      "status": "BLOCKED",
+      "sites_tested": 3,
+      "sites_passed": 0,
+      "sites_blocked": 2,
+      "sites_failed": 1,
+      "block_rate_percent": 66.7,
+      "blocked_sites": ["Zillow", "Realtor.com"],
+      "details": "Major real estate platforms completely inaccessible"
+    },
+    "financial": {
+      "status": "PARTIAL",
+      "sites_tested": 3,
+      "sites_passed": 1,
+      "sites_blocked": 2,
+      "working_sites": ["Yahoo Finance"],
+      "blocked_sites": ["NASDAQ", "Bloomberg"],
+      "details": "Limited financial data access"
+    }
+  },
+  "performance_metrics": {
+    "sequential_performance": {
+      "avg_response_time_ms": 1111,
+      "p50_response_time_ms": 1129,
+      "p95_response_time_ms": 1643,
+      "min_response_time_ms": 785,
+      "max_response_time_ms": 1643,
+      "requests_tested": 15,
+      "success_rate": 1.0
+    }
+  },
+  "critical_issues": [
+    {
+      "issue": "Extremely high block rate",
+      "severity": "CRITICAL", 
+      "impact": "67% of sites blocked - makes SDK unsuitable for production use",
+      "affected_categories": ["ecommerce", "travel", "tickets", "real_estate", "financial"]
+    },
+    {
+      "issue": "Country targeting completely broken",
+      "severity": "CRITICAL",
+      "impact": "All geo-targeting returns 'XX' instead of actual countries", 
+      "affected_features": ["country_targeting", "geo_verification"]
+    },
+    {
+      "issue": "Major e-commerce sites 100% blocked",
+      "severity": "CRITICAL", 
+      "impact": "Cannot perform price monitoring or product scraping",
+      "affected_sites": ["Amazon", "eBay", "Walmart", "Target", "AliExpress"]
+    },
+    {
+      "issue": "No Cloudflare bypass capability",
+      "severity": "HIGH",
+      "impact": "Most modern sites use Cloudflare protection",
+      "affected_sites": "Most major commercial websites"
+    }
+  ],
+  "recommendations": [
+    {
+      "priority": "CRITICAL",
+      "item": "Implement comprehensive anti-bot detection system",
+      "technical_details": "Add stealth headers, browser fingerprinting, request randomization"
+    },
+    {
+      "priority": "CRITICAL", 
+      "item": "Fix country targeting geo-verification",
+      "technical_details": "Implement proper geo-IP verification with fallback APIs"
+    },
+    {
+      "priority": "CRITICAL",
+      "item": "Add Cloudflare bypass mechanisms", 
+      "technical_details": "Integrate cloudscraper or similar bypass technology"
+    },
+    {
+      "priority": "HIGH",
+      "item": "Improve IP pool quality",
+      "technical_details": "Use residential IPs instead of datacenter IPs"
+    },
+    {
+      "priority": "HIGH", 
+      "item": "Implement site-specific configurations",
+      "technical_details": "Custom headers and behaviors for different site types"
+    }
+  ],
+  "business_impact": {
+    "production_readiness": "NOT_READY",
+    "customer_use_cases": {
+      "price_monitoring": "BLOCKED - 0% major e-commerce sites working",
+      "travel_aggregation": "SEVERELY_LIMITED - Most booking sites blocked",
+      "ad_verification": "LIMITED - Search engines partially working",
+      "seo_monitoring": "LIMITED - Rate limiting issues",
+      "social_media_analytics": "VERY_LIMITED - Minimal content access"
+    },
+    "competitive_assessment": "Far below industry standards (BrightData/Oxylabs achieve 70-80% success rates)",
+    "estimated_customer_satisfaction": "VERY_LOW - SDK cannot fulfill basic customer needs"
+  },
+  "next_steps": [
+    "Immediate: Stop any production releases until critical issues resolved",
+    "Week 1: Implement anti-detection and Cloudflare bypass",
+    "Week 2: Fix country targeting and improve IP pool", 
+    "Week 3: Add site-specific configurations",
+    "Week 4: Re-run comprehensive testing and validate improvements"
+  ]
+}

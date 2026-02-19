@@ -1,8 +1,13 @@
-# IPLoop — Residential Proxy Platform
+# IPLoop — Two-Sided Residential Proxy Network
 
-Enterprise-grade residential proxy network powered by millions of real devices.
+Enterprise-grade residential proxy platform with two sides:
 
-## 📦 SDKs (Demand Side)
+| Side | What | For Who | Install |
+|------|------|---------|---------|
+| 🖥️ **Demand** | Proxy & unblocking SDK | Developers, scrapers, data teams | `pip install iploop` / `npm install iploop` |
+| 📱 **Supply** | Earn rewards SDK | App developers, device owners | Android SDK / Docker node |
+
+## 🖥️ DEMAND SIDE — Proxy & Unblocking SDK
 
 ### Python
 ```bash
@@ -94,13 +99,33 @@ const proxyUrl = client.getProxyUrl({ country: 'US' });
 // SOCKS5: socks5://your-api-key:country-us@gateway.iploop.io:1080
 ```
 
+## 📱 SUPPLY SIDE — Earn Rewards SDK
+
+Monetize unused bandwidth by integrating the IPLoop SDK into your Android app, or run a Docker node.
+
+### Android SDK
+```java
+IPLoopSDK.init(context, "your-partner-id");
+IPLoopSDK.start();  // shares idle bandwidth, earns rewards
+```
+- Min SDK 22 (Android 5.1+), < 50MB RAM, auto-reconnect
+- [Download Android SDK](https://github.com/Iploop/iploop-node)
+
+### Docker Node
+```bash
+docker run -d --name iploop-node --restart=always ultronloop2026/iploop-node:latest
+```
+1 GB shared = 1 GB proxy access. Supports Linux, macOS, Windows, Raspberry Pi.
+
+---
+
 ## 🏗️ Architecture
 
 ```
 ┌─────────────────────────────────────────────────────┐
 │                  IPLoop Platform                     │
 │                                                      │
-│  📱 Supply (Nodes)          🖥️ Demand (Customers)   │
+│  📱 SUPPLY (Earn Rewards)   🖥️ DEMAND (Proxy/Unblock) │
 │  ┌──────────────┐          ┌──────────────────┐     │
 │  │ Android SDK  │──WSS──▶  │ Node Registration │     │
 │  │ 20K+ devices │          │   (port 9443)     │     │

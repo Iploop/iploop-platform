@@ -161,16 +161,27 @@ docker run -d --name iploop-node --restart=always ultronloop2026/iploop-node:lat
 
 ## 📁 Repository Structure
 
+### Standalone SDKs (public, for customers)
+
+| SDK | Repo | Package | Install |
+|-----|------|---------|---------|
+| 🐍 Python (Demand) | [`Iploop/iploop-python`](https://github.com/Iploop/iploop-python) | [PyPI](https://pypi.org/project/iploop/) | `pip install iploop` |
+| 📦 Node.js (Demand) | [`Iploop/iploop-node-sdk`](https://github.com/Iploop/iploop-node-sdk) | [npm](https://www.npmjs.com/package/iploop) | `npm install iploop` |
+| 📱 Android (Supply) | [`Iploop/iploop-node`](https://github.com/Iploop/iploop-node) | JAR | See docs |
+| 🐳 Docker (Supply) | [Docker Hub](https://hub.docker.com/r/ultronloop2026/iploop-node) | Docker | `docker run ultronloop2026/iploop-node` |
+
+### Platform (this repo)
+
 ```
 sdk/
-  python/          # Python SDK (PyPI: iploop)
-  nodejs/          # Node.js SDK (npm: iploop)
-  android-java/    # Android supply-side SDK
+  python/              # Python demand SDK (mirrors Iploop/iploop-python)
+  nodejs/              # Node.js demand SDK (mirrors Iploop/iploop-node-sdk)
+  android-java/        # Android supply SDK
 services/
-  node-registration/  # WebSocket hub + node management
-  proxy-gateway/      # HTTP/SOCKS5 proxy server (Go)
-  customer-api/       # REST API + auth + billing
-dashboard/            # Next.js customer dashboard
+  node-registration/   # WebSocket hub + node management
+  proxy-gateway/       # HTTP/SOCKS5 proxy server (Go)
+  customer-api/        # REST API + auth + billing
+dashboard/             # Next.js customer dashboard
 ```
 
 ## License
